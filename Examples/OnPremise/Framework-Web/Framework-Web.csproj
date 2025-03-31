@@ -113,10 +113,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\FiftyOne.IpIntelligence.Engine.OnPremise\FiftyOne.IpIntelligence.Engine.OnPremise.csproj">
-      <Project>{7f0c9119-057e-4552-bccb-3a00756154ed}</Project>
-      <Name>FiftyOne.IpIntelligence.Engine.OnPremise</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\FiftyOne.IpIntelligence.Examples\FiftyOne.IpIntelligence.Examples.csproj">
       <Project>{6e062311-b25d-42f3-978f-6868ced67942}</Project>
       <Name>FiftyOne.IpIntelligence.Examples</Name>
