@@ -1,6 +1,6 @@
 {
   "solution": {
-    "path": "FiftyOne.IpIntelligence.sln",
+    "path": "FiftyOne.IpIntelligence.Examples.sln",
     "projects": [
       "Examples\\FiftyOne.IpIntelligence.Examples\\FiftyOne.IpIntelligence.Examples.csproj",
       "Examples\\OnPremise\\GettingStarted-Console\\GettingStarted-Console.csproj",
