@@ -65,7 +65,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     // https://51degrees.com/documentation/_device_detection__features__performance_options.html
                     // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
                     // https://51degrees.com/documentation/_features__usage_sharing.html
-                    .SetPerformanceProfile(PerformanceProfiles.LowMemory)
+                    .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
                     // inhibit sharing usage for this example, usually this should be set to "true"
                     .SetShareUsage(false)
                     // inhibit auto-update of the data file for this test
@@ -125,15 +125,51 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
 
                     // TODO: Read other properties
                     {
-                        var name = ipData.Name;
+                        var ipRangeStart = ipData.IpRangeStart;
+                        if (!ipRangeStart.HasValue)
+                        {
+                            message.AppendLine($"\t{nameof(ipData.IpRangeStart)}: {ipRangeStart.NoValueMessage} - {ipRangeStart.NoValueMessage}");
+                        }
+                        else
+                        {
+                            var nameValues = string.Join(", ", ipRangeStart.Value.Select(x => $"('{x.Value}' @ {x.Weighting()})"));
+                            message.AppendLine($"\t{nameof(ipData.IpRangeStart)}  ({ipRangeStart.Value.Count}): {nameValues}");
+                        }
+                    }
+                    {
+                        var ipRangeEnd = ipData.IpRangeEnd;
+                        if (!ipRangeEnd.HasValue)
+                        {
+                            message.AppendLine($"\t{nameof(ipData.IpRangeEnd)}: {ipRangeEnd.NoValueMessage} - {ipRangeEnd.NoValueMessage}");
+                        }
+                        else
+                        {
+                            var nameValues = string.Join(", ", ipRangeEnd.Value.Select(x => $"('{x.Value}' @ {x.Weighting()})"));
+                            message.AppendLine($"\t{nameof(ipData.IpRangeEnd)}  ({ipRangeEnd.Value.Count}): {nameValues}");
+                        }
+                    }
+                    {
+                        var name = ipData.RegisteredName;
                         if (!name.HasValue)
                         {
-                            message.AppendLine($"\t{nameof(ipData.Name)}: {name.NoValueMessage} - {name.NoValueMessage}");
+                            message.AppendLine($"\t{nameof(ipData.RegisteredName)}: {name.NoValueMessage} - {name.NoValueMessage}");
                         }
                         else
                         {
                             var nameValues = string.Join(", ", name.Value.Select(x => $"('{x.Value}' @ {x.Weighting()})"));
-                            message.AppendLine($"\t{nameof(ipData.Name)}  ({name.Value.Count}): {nameValues}");
+                            message.AppendLine($"\t{nameof(ipData.RegisteredName)}  ({name.Value.Count}): {nameValues}");
+                        }
+                    }
+                    {
+                        var region = ipData.Region;
+                        if (!region.HasValue)
+                        {
+                            message.AppendLine($"\t{nameof(ipData.Region)}: {region.NoValueMessage} - {region.NoValueMessage}");
+                        }
+                        else
+                        {
+                            var valuesString = string.Join(", ", region.Value.Select(x => $"('{x.Value}' @ {x.Weighting()})"));
+                            message.AppendLine($"\t{nameof(ipData.Region)}  ({region.Value.Count}): {valuesString}");
                         }
                     }
                     {

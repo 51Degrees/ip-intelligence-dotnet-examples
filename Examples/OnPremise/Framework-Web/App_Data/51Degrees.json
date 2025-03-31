@@ -6,7 +6,7 @@
       {
         "BuilderName": "IpiOnPremiseEngine",
         "BuildParameters": {
-          "DataFile": "C:\\Projects\\Work\\ip-intelligence-dotnet-examples\\ip-intelligence-data\\51Degrees-LiteV4.1.ipi",
+          "DataFile": "C:\\Projects\\Work\\ip-intelligence-dotnet\\FiftyOne.IpIntelligence\\ip-intelligence-cxx\\ip-intelligence-data\\51Degrees-LiteV4.1.ipi",
           "CreateTempDataCopy": false,
           "AutoUpdate": false,
           "PerformanceProfile": "LowMemory",
