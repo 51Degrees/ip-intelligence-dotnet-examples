@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FiftyOne.IpIntelligence.Cloud" Version="0.0.1-alpha.11" />
-    <PackageReference Include="FiftyOne.IpIntelligence.Engine.OnPremise" Version="0.0.1-alpha.11" />
+    <PackageReference Include="FiftyOne.IpIntelligence.Cloud" Version="0.0.1-alpha.38" />
+    <PackageReference Include="FiftyOne.IpIntelligence.Engine.OnPremise" Version="0.0.1-alpha.38" />
     <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.17" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.4" />
