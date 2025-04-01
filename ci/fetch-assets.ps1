@@ -22,7 +22,7 @@ Move-Item -Path $RepoName/$ArchiveName -Destination $RepoName/$DataFileName
 
 # Move the data file to the correct location
 $DataFileSource = [IO.Path]::Combine($pwd, $RepoName, $DataFileName)
-$DataFileDir = [IO.Path]::Combine($pwd, $RepoName, "FiftyOne.IpIntelligence", "ip-intelligence-cxx", "ip-intelligence-data")
+$DataFileDir = [IO.Path]::Combine($pwd, $RepoName, "ip-intelligence-data")
 $DataFileDestination = [IO.Path]::Combine($DataFileDir, $DataFileName)
 Move-Item $DataFileSource $DataFileDestination
 
