@@ -25,7 +25,7 @@ if ($BuildMethod -eq "dotnet"){
 
     Write-Output "`n`nCleaning...`n`n"
     foreach($Project in $Projects){
-        Push-Location $Project
+        Push-Location (Get-ChildItem -Path $Project).Directory.FullName
         try {
             dotnet clean
         } finally {
