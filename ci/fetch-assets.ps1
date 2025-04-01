@@ -13,10 +13,12 @@ $DataFileName = "TAC-IpIntelligenceV41.ipi"
 
 # TODO: Use `fetch-hash-assets.ps1`
 # ./steps/fetch-hash-assets.ps1 -RepoName $RepoName -LicenseKey $DeviceDetection -Url $DeviceDetectionUrl -DataType "IpIntelligenceV41" -ArchiveName $DataFileName
-$ArchiveName = "$DataFileName.gz"
-Invoke-WebRequest -Uri $DeviceDetectionUrl -OutFile $ArchiveName
+$ArchivedName = "51Degrees-EnterpriseIpiV41.ipi 1"
+$ArchiveName = "$ArchivedName.gz"
+Invoke-WebRequest -Uri $DeviceDetectionUrl -OutFile $RepoName/$ArchiveName
 Write-Output "Extracting $ArchiveName"
 ./steps/gunzip-file.ps1 $RepoName/$ArchiveName
+Move-Item -Path $RepoName/$ArchiveName -Destination $RepoName/$DataFileName
 
 # Move the data file to the correct location
 $DataFileSource = [IO.Path]::Combine($pwd, $RepoName, $DataFileName)
