@@ -9,6 +9,7 @@
       "Examples\\OnPremise\\OfflineProcessing-Console\\OfflineProcessing-Console.csproj",
       "Examples\\OnPremise\\Performance-Console\\Performance-Console.csproj",
       "Examples\\OnPremise\\UpdateDataFile-Console\\UpdateDataFile-Console.csproj",
+      "Tests\\FiftyOne.DeviceDetection.Example.Tests.OnPremise\\FiftyOne.DeviceDetection.Example.Tests.OnPremise.csproj",
     ]
   }
 }
