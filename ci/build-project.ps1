@@ -14,7 +14,6 @@ if ($BuildMethod -eq "dotnet"){
     Write-Output "$Configuration"
     $Projects = @( 
         ".\Examples\FiftyOne.IpIntelligence.Examples\FiftyOne.IpIntelligence.Examples.csproj",
-        ".\Examples\OnPremise\Framework-Web\Framework-Web.csproj",
         ".\Examples\OnPremise\GettingStarted-Console\GettingStarted-Console.csproj",
         ".\Examples\OnPremise\GettingStarted-Web\GettingStarted-Web.csproj",
         ".\Examples\OnPremise\Metadata-Console\Metadata-Console.csproj",
