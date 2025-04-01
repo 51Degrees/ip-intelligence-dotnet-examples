@@ -25,9 +25,14 @@ if ($BuildMethod -eq "dotnet"){
 
     Write-Output "`n`nCleaning...`n`n"
     foreach($Project in $Projects){
-        dotnet clean $Project
+        Push-Location $Project
+        try {
+            dotnet clean
+        } finally {
+            Pop-Location
+        }
     }
-    
+
     Write-Output "`n`nClean done. Building...`n`n"
     foreach($Project in $Projects){
         ./dotnet/build-project-core.ps1 -RepoName $RepoName -ProjectDir $Project -Name $Name -Configuration $Configuration -Arch $Arch
