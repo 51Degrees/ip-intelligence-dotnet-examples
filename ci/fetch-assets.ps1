@@ -8,12 +8,17 @@ param (
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
 
-# File download doesn't work yet
-exit 0
-
 # Fetch the TAC data file for testing with
 $DataFileName = "TAC-IpIntelligenceV41.ipi"
-./steps/fetch-hash-assets.ps1 -RepoName $RepoName -LicenseKey $DeviceDetection -Url $DeviceDetectionUrl -DataType "IpIntelligenceV41" -ArchiveName $DataFileName
+
+# TODO: Use `fetch-hash-assets.ps1`
+# ./steps/fetch-hash-assets.ps1 -RepoName $RepoName -LicenseKey $DeviceDetection -Url $DeviceDetectionUrl -DataType "IpIntelligenceV41" -ArchiveName $DataFileName
+{
+    $ArchiveName = "$DataFileName.gz"
+    Invoke-WebRequest -Uri $DeviceDetectionUrl -OutFile $ArchiveName
+    Write-Output "Extracting $ArchiveName"
+    ./steps/gunzip-file.ps1 $RepoName/$ArchiveName
+}
 
 # Move the data file to the correct location
 $DataFileSource = [IO.Path]::Combine($pwd, $RepoName, $DataFileName)
