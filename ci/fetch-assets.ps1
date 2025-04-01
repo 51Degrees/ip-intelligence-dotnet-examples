@@ -16,8 +16,10 @@ $DataFileName = "TAC-IpIntelligenceV41.ipi"
 $ArchivedName = "51Degrees-EnterpriseIpiV41.ipi 1"
 $ArchiveName = "$ArchivedName.gz"
 Invoke-WebRequest -Uri $DeviceDetectionUrl -OutFile $RepoName/$ArchiveName
+Get-ChildItem $RepoName/$ArchiveName
 Write-Output "Extracting $ArchiveName"
 ./steps/gunzip-file.ps1 $RepoName/$ArchiveName
+Get-ChildItem $RepoName/$ArchivedName
 Move-Item -Path $RepoName/$ArchiveName -Destination $RepoName/$DataFileName
 
 # Move the data file to the correct location
