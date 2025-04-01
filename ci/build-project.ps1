@@ -23,6 +23,12 @@ if ($BuildMethod -eq "dotnet"){
         ".\Tests\FiftyOne.DeviceDetection.Example.Tests.OnPremise\FiftyOne.DeviceDetection.Example.Tests.OnPremise.csproj"
     )
 
+    Write-Output "`n`nCleaning...`n`n"
+    foreach($Project in $Projects){
+        dotnet clean $Project
+    }
+    
+    Write-Output "`n`nClean done. Building...`n`n"
     foreach($Project in $Projects){
         ./dotnet/build-project-core.ps1 -RepoName $RepoName -ProjectDir $Project -Name $Name -Configuration $Configuration -Arch $Arch
     }
