@@ -5,7 +5,6 @@ param(
     [string]$Name = "Release_x64",
     [string]$Arch = "x64",
     [string]$Configuration = "Release",
-    [string]$BuildMethod,
     [hashtable]$Keys
 )
 $ErrorActionPreference = "Stop"
@@ -13,7 +12,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 
 $RepoPath = [IO.Path]::Combine($pwd, $RepoName)
 
-if ($BuildMethod -ne "dotnet") {
+if (!$Configuration.Contains("Core")) {
 
     # Setup the MSBuild environment if it is required.
     ./environments/setup-msbuild.ps1
@@ -27,9 +26,13 @@ if ($IsLinux) {
 
 }
 
-# $env:DEVICEDETECTIONDATAFILE = [IO.Path]::Combine($RepoPath, "FiftyOne.DeviceDetection.Hash.Engine.OnPremise", "device-detection-cxx", "device-detection-data", "TAC-HashV41.hash")
-# $env:SUPER_RESOURCE_KEY = $Keys.TestResourceKey
-# $env:DEVICEDETECTIONLICENSEKEY_DOTNET = $Keys.DeviceDetection
+dotnet dev-certs https
+
+$env:IPINTELLIGENCEDATAFILE = [IO.Path]::Combine($RepoPath, "ip-intelligence-data", "TAC-IpIntelligenceV41.ipi")
+$env:SUPER_RESOURCE_KEY = $Keys.TestResourceKey
+$env:IPINTELLIGENCELICENSEKEY_DOTNET = $Keys.DeviceDetection # TBD
+
+# DD leftovers?
 # $env:ACCEPTCH_BROWSER_KEY = $Keys.AcceptCHBrowserKey
 # $env:ACCEPTCH_HARDWARE_KEY = $Keys.AcceptCHHardwareKey
 # $env:ACCEPTCH_PLATFORM_KEY = $Keys.AcceptCHPlatformKey
