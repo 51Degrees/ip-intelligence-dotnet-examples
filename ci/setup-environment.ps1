@@ -1,5 +1,8 @@
 param(
     [Parameter(Mandatory=$true)]
+    [string]$OrgName,
+    [string]$GitHubUser = "Automation51D",
+    [Parameter(Mandatory=$true)]
     [string]$RepoName,
     [string]$ProjectDir = ".",
     [string]$Name = "Release_x64",
@@ -37,3 +40,10 @@ $env:IPINTELLIGENCELICENSEKEY_DOTNET = $Keys.DeviceDetection # TBD
 # $env:ACCEPTCH_HARDWARE_KEY = $Keys.AcceptCHHardwareKey
 # $env:ACCEPTCH_PLATFORM_KEY = $Keys.AcceptCHPlatformKey
 # $env:ACCEPTCH_NONE_KEY = $Keys.AcceptCHNoneKey
+
+./dotnet/add-nuget-source.ps1 `
+    -Source "https://nuget.pkg.github.com/$OrgName/index.json" `
+    -UserName $GitHubUser `
+    -Key $env:GITHUB_TOKEN
+
+exit $LASTEXITCODE
