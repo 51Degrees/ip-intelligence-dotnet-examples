@@ -10,6 +10,17 @@ param(
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
 
-./dotnet/run-unit-tests.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name -Configuration $Configuration -Arch $Arch -BuildMethod $BuildMethod -DirNameFormatForDotnet "*" -DirNameFormatForNotDotnet "*" -Filter ".*\.sln"
+$SolutionFilter = (($BuildMethod -eq "dotnet") -and (-not $IsWindows)) ? ".*\.slnf" : ".*\.sln"
+
+./dotnet/run-unit-tests.ps1 `
+    -RepoName $RepoName `
+    -ProjectDir $ProjectDir `
+    -Name $Name `
+    -Configuration $Configuration `
+    -Arch $Arch `
+    -BuildMethod $BuildMethod `
+    -DirNameFormatForDotnet "*" `
+    -DirNameFormatForNotDotnet "*" `
+    -Filter $SolutionFilter
 
 exit $LASTEXITCODE
