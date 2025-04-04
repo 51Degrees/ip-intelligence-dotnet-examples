@@ -39,7 +39,7 @@ try {
     # Use Enterprise as Lite
     Copy-Item $DataFileName 51Degrees-LiteV41.ipi
 
-    foreach ($NextIpiFile in (Get-ChildItem -Include "*.ipi" | ForEach-Object { $_.Name })) {
+    foreach ($NextIpiFile in (Get-ChildItem "*.ipi" | ForEach-Object { $_.Name })) {
         $IpiFileHash = (Get-FileHash -Algorithm MD5 -Path $NextIpiFile).Hash
         Write-Output "MD5 ($NextIpiFile) = $IpiFileHash"
     }
