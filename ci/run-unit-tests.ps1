@@ -11,7 +11,7 @@ $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
 
 # Ignore Framwork-Web errors for now
-$SolutionFilter = ".*\.slnf"
+$SolutionFilter = ($BuildMethod -eq "dotnet") ? ".*\.slnf" : ".*\.sln"
 
 ./dotnet/run-unit-tests.ps1 `
     -RepoName $RepoName `
