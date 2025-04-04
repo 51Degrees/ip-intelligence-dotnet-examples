@@ -20,7 +20,7 @@ jobs:
       org-name: ${{ github.event.repository.owner.login }}
       dryrun: ${{ inputs.dryrun || false }}
       cache-assets: true
-      common-ci-ref: 9ab1d6c2c60d7208469f2597a70c7281cc73abdb
+      common-ci-ref: 6a1c370a09eebc616395874e6cf27fdb23b15e9a
     secrets:
       token: ${{ secrets.ACCESS_TOKEN }}
       DeviceDetection: ${{ secrets.DEVICE_DETECTION_KEY }}
