@@ -10,18 +10,31 @@ param(
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
 
-# Ignore Framwork-Web errors for now
-$SolutionFilter = ($BuildMethod -eq "dotnet") ? ".*\.slnf" : ".*\.sln"
+if ($BuildMethod -eq "dotnet") {
+    # Ignore Framwork-Web errors for now
+    $SolutionFilter = ".*\.slnf"
 
-./dotnet/run-unit-tests.ps1 `
-    -RepoName $RepoName `
-    -ProjectDir $ProjectDir `
-    -Name $Name `
-    -Configuration $Configuration `
-    -Arch $Arch `
-    -BuildMethod $BuildMethod `
-    -DirNameFormatForDotnet "*" `
-    -DirNameFormatForNotDotnet "*" `
-    -Filter $SolutionFilter
+    ./dotnet/run-unit-tests.ps1 `
+        -RepoName $RepoName `
+        -ProjectDir $ProjectDir `
+        -Name $Name `
+        -Configuration $Configuration `
+        -Arch $Arch `
+        -BuildMethod $BuildMethod `
+        -DirNameFormatForDotnet "*" `
+        -DirNameFormatForNotDotnet "*" `
+        -Filter $SolutionFilter
+
+} else {
+
+    ./dotnet/run-unit-tests.ps1 `
+        -RepoName $RepoName `
+        -ProjectDir $ProjectDir `
+        -Name $Name `
+        -Configuration $Configuration `
+        -Arch $Arch `
+        -BuildMethod $BuildMethod `
+        -Filter ".*Tests(|\.Core)\.dll"
+}
 
 exit $LASTEXITCODE
