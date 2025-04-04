@@ -34,7 +34,7 @@ if ($BuildMethod -eq "dotnet") {
         -Configuration $Configuration `
         -Arch $Arch `
         -BuildMethod $BuildMethod `
-        -Filter ".*Tests(|\.Core)\.dll"
+        -Filter ".*Tests(|\.OnPremise)(|\.Core)\.dll"
 }
 
 exit $LASTEXITCODE
