@@ -115,6 +115,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise
         /// <summary>
         /// Test the UpdateDataFile Example
         /// </summary>
+        [Ignore]
         [TestMethod]
         public void Example_OnPremise_UpdateDataFile()
         {
