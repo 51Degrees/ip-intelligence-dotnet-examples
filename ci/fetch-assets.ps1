@@ -20,7 +20,7 @@ $ArchiveHash = (Get-FileHash -Algorithm MD5 -Path $RepoName/$ArchiveName).Hash
 Write-Output "MD5 (fetched $ArchiveName) = $ArchiveHash"
 Write-Output "Extracting $ArchiveName"
 ./steps/gunzip-file.ps1 $RepoName/$ArchiveName
-Move-Item -Path $RepoName/$ArchiveName -Destination $RepoName/$DataFileName
+Move-Item -Path $RepoName/$ArchivedName -Destination $RepoName/$DataFileName
 
 $DataFileHash = (Get-FileHash -Algorithm MD5 -Path $RepoName/$DataFileName).Hash
 Write-Output "MD5 (fetched $DataFileName) = $DataFileHash"
