@@ -75,7 +75,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
         private static readonly PerformanceConfiguration[] _configs = new PerformanceConfiguration[]
         {
             new PerformanceConfiguration(true, PerformanceProfiles.MaxPerformance, false, true, false),
-            new PerformanceConfiguration(true, PerformanceProfiles.MaxPerformance, true, true, false),
+            //new PerformanceConfiguration(true, PerformanceProfiles.MaxPerformance, true, true, false),
             //new PerformanceConfiguration(false, PerformanceProfiles.LowMemory, false, true, false),
             //new PerformanceConfiguration(false, PerformanceProfiles.LowMemory, true, true, false)
         };
