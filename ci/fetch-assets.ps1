@@ -16,6 +16,8 @@ $DataFileName = "TAC-IpIntelligenceV41.ipi"
 $ArchivedName = "51Degrees-EnterpriseIpiV41.ipi 1"
 $ArchiveName = "$ArchivedName.gz"
 Invoke-WebRequest -Uri $DeviceDetectionUrl -OutFile $RepoName/$ArchiveName
+$ArchiveHash = (Get-FileHash -Algorithm MD5 -Path $RepoName/$ArchiveName).Hash
+Write-Output "MD5 (fetched $ArchiveName) = $ArchiveHash"
 Write-Output "Extracting $ArchiveName"
 ./steps/gunzip-file.ps1 $RepoName/$ArchiveName
 Move-Item -Path $RepoName/$ArchiveName -Destination $RepoName/$DataFileName
