@@ -20,6 +20,8 @@ Write-Output "Extracting $ArchiveName"
 ./steps/gunzip-file.ps1 $RepoName/$ArchiveName
 Move-Item -Path $RepoName/$ArchiveName -Destination $RepoName/$DataFileName
 
+Write-Output "MD5 (fetched $DataFileName) = $(Get-FileHash -Algorithm MD5 -Path $RepoName/$DataFileName)"
+
 # Move the data file to the correct location
 $DataFileSource = [IO.Path]::Combine($pwd, $RepoName, $DataFileName)
 $DataFileDir = [IO.Path]::Combine($pwd, $RepoName, "ip-intelligence-data")
@@ -32,6 +34,10 @@ Push-Location $DataFileDir
 try {
     Write-Output "Pulling evidence files"
     git lfs pull
+
+    Get-ChildItem -Include "*.ipi" | ForEach-Object {
+        Write-Output "MD5 ($($_.Name)) = $(Get-FileHash -Algorithm MD5 -Path $_.Name)"
+    }
 }
 finally {
     Pop-Location
