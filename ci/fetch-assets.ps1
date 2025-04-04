@@ -32,8 +32,11 @@ Move-Item $DataFileSource $DataFileDestination
 # But are not pulled by default.
 Push-Location $DataFileDir
 try {
-    Write-Output "Pulling evidence files"
-    git lfs pull
+    # Write-Output "Pulling evidence files"
+    # git lfs pull
+
+    # Use Enterprise as Lite
+    Copy-Item $DataFileName 51Degrees-LiteV41.ipi
 
     Get-ChildItem -Include "*.ipi" | ForEach-Object {
         Write-Output "MD5 ($($_.Name)) = $(Get-FileHash -Algorithm MD5 -Path $_.Name)"
