@@ -13,6 +13,6 @@ param(
     -UserName $GitHubUser `
     -Key $env:GITHUB_TOKEN
 
-./dotnet/run-update-dependencies.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name
+./dotnet/run-update-dependencies.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name -Debug
 
 exit $LASTEXITCODE
