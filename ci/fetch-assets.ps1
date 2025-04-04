@@ -20,7 +20,8 @@ Write-Output "Extracting $ArchiveName"
 ./steps/gunzip-file.ps1 $RepoName/$ArchiveName
 Move-Item -Path $RepoName/$ArchiveName -Destination $RepoName/$DataFileName
 
-Write-Output "MD5 (fetched $DataFileName) = $(Get-FileHash -Algorithm MD5 -Path $RepoName/$DataFileName)"
+$DataFileHash = (Get-FileHash -Algorithm MD5 -Path $RepoName/$DataFileName).Hash
+Write-Output "MD5 (fetched $DataFileName) = $DataFileHash"
 
 # Move the data file to the correct location
 $DataFileSource = [IO.Path]::Combine($pwd, $RepoName, $DataFileName)
