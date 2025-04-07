@@ -7,6 +7,8 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$RepoName
 )
+$ErrorActionPreference = "Stop"
+$PSNativeCommandUseErrorActionPreference = $true
 
 ./dotnet/add-nuget-source.ps1 `
     -Source "https://nuget.pkg.github.com/$OrgName/index.json" `
