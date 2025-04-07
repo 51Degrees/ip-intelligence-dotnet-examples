@@ -14,7 +14,7 @@ param(
     -Key $env:GITHUB_TOKEN
 
 if ($LASTEXITCODE -eq 0) {
-    ./dotnet/run-update-dependencies.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name
+    ./dotnet/run-update-dependencies.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name -IncludePrerelease
 }
 
 if ($LASTEXITCODE -ne 0) {
