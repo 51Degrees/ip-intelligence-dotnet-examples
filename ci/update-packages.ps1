@@ -7,14 +7,21 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$RepoName
 )
-$ErrorActionPreference = "Stop"
-$PSNativeCommandUseErrorActionPreference = $true
 
 ./dotnet/add-nuget-source.ps1 `
     -Source "https://nuget.pkg.github.com/$OrgName/index.json" `
     -UserName $GitHubUser `
     -Key $env:GITHUB_TOKEN
 
-./dotnet/run-update-dependencies.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name
+if ($LASTEXITCODE -eq 0) {
+    ./dotnet/run-update-dependencies.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name
+}
+
+if ($LASTEXITCODE -ne 0) {
+    $ErrorActionPreference = "Stop"
+    $PSNativeCommandUseErrorActionPreference = $true
+
+    Write-Error "LASTEXITCODE = $LASTEXITCODE"
+}
 
 exit $LASTEXITCODE
