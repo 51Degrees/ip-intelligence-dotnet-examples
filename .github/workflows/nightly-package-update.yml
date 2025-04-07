@@ -12,6 +12,6 @@ jobs:
     with:
       repo-name: ${{ github.event.repository.name }}
       org-name: ${{ github.event.repository.owner.login }}
-      common-ci-ref: 705ef41b2a54cfa5c0efe49b943b50cd14671443
+      common-ci-ref: ff513dc981a2993dfd9bb73b82757de05b49cf03
     secrets: 
       token: ${{ secrets.ACCESS_TOKEN }}
