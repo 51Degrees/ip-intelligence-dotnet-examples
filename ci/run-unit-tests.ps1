@@ -1,3 +1,4 @@
+[CmdletBinding()]
 param(
     [Parameter(Mandatory=$true)]
     [string]$RepoName,
@@ -5,36 +6,30 @@ param(
     [string]$Name = "Release_x64",
     [string]$Configuration = "Release",
     [string]$Arch = "x64",
-    [string]$BuildMethod = "dotnet"
+    [string]$BuildMethod = "dotnet",
+    [string]$OutputFolder = "unit"
 )
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
 
-if ($BuildMethod -eq "dotnet") {
-    # Ignore Framwork-Web errors for now
-    $SolutionFilter = ".*\.slnf"
+$RunTestsArgs = @{
+    RepoName = $RepoName
+    ProjectDir = $ProjectDir
+    Name = $Name
+    Configuration = $Configuration
+    Arch = $Arch
+    BuildMethod = $BuildMethod
+    OutputFolder = $OutputFolder
+} + (
+    ($BuildMethod -eq "dotnet") ? @{
+        DirNameFormatForDotnet = '*'
+        DirNameFormatForNotDotnet = "*"
+        Filter = ".*\.slnf"
+    } : @{
+        Filter = ".*Tests(|\.OnPremise)(|\.Core)\.dll"
+    }
+)
 
-    ./dotnet/run-unit-tests.ps1 `
-        -RepoName $RepoName `
-        -ProjectDir $ProjectDir `
-        -Name $Name `
-        -Configuration $Configuration `
-        -Arch $Arch `
-        -BuildMethod $BuildMethod `
-        -DirNameFormatForDotnet "*" `
-        -DirNameFormatForNotDotnet "*" `
-        -Filter $SolutionFilter
-
-} else {
-
-    ./dotnet/run-unit-tests.ps1 `
-        -RepoName $RepoName `
-        -ProjectDir $ProjectDir `
-        -Name $Name `
-        -Configuration $Configuration `
-        -Arch $Arch `
-        -BuildMethod $BuildMethod `
-        -Filter ".*Tests(|\.OnPremise)(|\.Core)\.dll"
-}
+./dotnet/run-unit-tests.ps1 @RunTestsArgs
 
 exit $LASTEXITCODE
