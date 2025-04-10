@@ -24,6 +24,7 @@ $RunTestsArgs = @{
 ./dotnet/run-unit-tests.ps1 @RunTestsArgs
 
 if ($LASTEXITCODE -ne 0) {
+    $RepoPath = [IO.Path]::Combine($pwd, $RepoName)
     $TestResultPath = [IO.Path]::Combine($RepoPath, "test-results", $OutputFolder, $Name)
     $DmpFiles = (Get-ChildItem -Path $TestResultPath -Recurse -Include *.dmp | ForEach-Object { $_.FullName })
     if ($DmpFiles.Length -gt 0) {
