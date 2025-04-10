@@ -34,7 +34,7 @@ if ($LASTEXITCODE -ne 0) {
         foreach ($NextDmpFile in $DmpFiles) {
             Write-Debug " - $NextDmpFile"
         }
-        $DmpZipName = (New-TemporaryFile | Select-Object -ExpandProperty FullName)
+        $DmpZipName = "dmp-files.zip"
         Write-Debug "Compressing into $DmpZipName..."
         Compress-Archive -Path $DmpFiles -DestinationPath $DmpZipName -Force
         Write-Debug "Converting to base64..."
@@ -42,6 +42,7 @@ if ($LASTEXITCODE -ne 0) {
         Write-Warning "----- *.DMP ZIP DUMP (base64) START -----"
         Write-Warning $base64Zip
         Write-Warning "----- *.DMP ZIP DUMP (base64) END -----"
+        Remove-Item -Path $DmpZipName
     }
 }
 
