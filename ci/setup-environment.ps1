@@ -7,6 +7,7 @@ param(
     [string]$ProjectDir = ".",
     [string]$Name = "Release_x64",
     [string]$Arch = "x64",
+    [string]$BuildMethod = "dotnet",
     [string]$Configuration = "Release",
     [hashtable]$Keys
 )
