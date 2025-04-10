@@ -26,23 +26,16 @@ $RunTestsArgs = @{
 if ($LASTEXITCODE -ne 0) {
     $RepoPath = [IO.Path]::Combine($pwd, $RepoName)
     $TestResultPath = [IO.Path]::Combine($RepoPath, "test-results", $OutputFolder, $Name)
-    $DmpFilesRaw = (Get-ChildItem -Path $TestResultPath -Recurse -Include *.dmp)
-    $DmpFilesCount = $DmpFilesRaw.Length
-    if ($DmpFilesCount -gt 0) {
-        Write-Debug "[DmpFiles] ($DmpFilesCount)"
-        $DmpFiles = ($DmpFilesRaw | ForEach-Object { $_.FullName })
-        foreach ($NextDmpFile in $DmpFiles) {
-            Write-Debug " - $NextDmpFile"
-        }
-        $DmpZipName = "dmp-files.zip"
-        Write-Debug "Compressing into $DmpZipName..."
-        $DmpFilesRaw | Compress-Archive -DestinationPath $DmpZipName -Force
+    $DmpFiles = (Get-ChildItem -Path $TestResultPath -Recurse -Include *.dmp)
+    foreach ($NextDmpFile in $DmpFiles) {
+        $NextDmpFileName = $NextDmpFile.FullName
+        $NextDmpFileLength = $NextDmpFile.Length
+        Write-Warning "[$NextDmpFileName] (length = $NextDmpFileLength)"
         Write-Debug "Converting to base64..."
-        $base64Zip = [Convert]::ToBase64String([IO.File]::ReadAllBytes($DmpZipName))
+        $base64Zip = [Convert]::ToBase64String([IO.File]::ReadAllBytes($NextDmpFileName))
         Write-Warning "----- *.DMP ZIP DUMP (base64) START -----"
         Write-Warning $base64Zip
         Write-Warning "----- *.DMP ZIP DUMP (base64) END -----"
-        Remove-Item -Path $DmpZipName
     }
 }
 
