@@ -6,30 +6,16 @@ param(
     [string]$Name = "Release_x64",
     [string]$Configuration = "Release",
     [string]$Arch = "x64",
-    [string]$BuildMethod = "dotnet",
-    [string]$OutputFolder = "unit"
-)
-$ErrorActionPreference = "Stop"
-$PSNativeCommandUseErrorActionPreference = $true
-
-$RunTestsArgs = @{
-    RepoName = $RepoName
-    ProjectDir = $ProjectDir
-    Name = $Name
-    Configuration = $Configuration
-    Arch = $Arch
-    BuildMethod = $BuildMethod
-    OutputFolder = $OutputFolder
-} + (
-    ($BuildMethod -eq "dotnet") ? @{
-        DirNameFormatForDotnet = '*'
-        DirNameFormatForNotDotnet = "*"
-        Filter = ".*\.slnf"
-    } : @{
-        Filter = ".*Tests(|\.OnPremise)(|\.Core)\.dll"
-    }
+    [string]$BuildMethod = "dotnet"
 )
 
-./dotnet/run-unit-tests.ps1 @RunTestsArgs
+./dotnet/run-unit-tests.ps1 `
+    -RepoName $RepoName `
+    -ProjectDir $ProjectDir `
+    -Name $Name `
+    -Configuration $Configuration `
+    -Arch $Arch `
+    -BuildMethod $BuildMethod `
+    -Filter ".*Tests\.((?!Web\.dll)).*\.dll"
 
 exit $LASTEXITCODE
