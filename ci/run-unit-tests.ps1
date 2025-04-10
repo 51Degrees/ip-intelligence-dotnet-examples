@@ -20,15 +20,8 @@ $RunTestsArgs = @{
     Arch = $Arch
     BuildMethod = $BuildMethod
     OutputFolder = $OutputFolder
-} + (
-    ($BuildMethod -eq "dotnet") ? @{
-        DirNameFormatForDotnet = '*'
-        DirNameFormatForNotDotnet = "*"
-        Filter = ".*\.slnf"
-    } : @{
-        Filter = ".*Tests(|\.OnPremise)(|\.Core)\.dll"
-    }
-)
+    Filter = ".*Tests(|\.OnPremise)(|\.Core)\.dll"
+}
 
 ./dotnet/run-unit-tests.ps1 @RunTestsArgs
 
