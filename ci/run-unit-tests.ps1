@@ -26,7 +26,7 @@ $RunTestsArgs = @{
 if ($LASTEXITCODE -ne 0) {
     $RepoPath = [IO.Path]::Combine($pwd, $RepoName)
     $TestResultPath = [IO.Path]::Combine($RepoPath, "test-results", $OutputFolder, $Name)
-    $DmpFilesRaw = (Get-ChildItem -Path $TestResultPath -Recurse -Include *.dmp | ForEach-Object { $_.FullName })
+    $DmpFilesRaw = (Get-ChildItem -Path $TestResultPath -Recurse -Include *.dmp)
     $DmpFilesCount = $DmpFilesRaw.Length
     if ($DmpFilesCount -gt 0) {
         Write-Debug "[DmpFiles] ($DmpFilesCount)"
