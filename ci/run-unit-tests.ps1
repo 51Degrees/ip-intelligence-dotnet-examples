@@ -9,8 +9,6 @@ param(
     [string]$BuildMethod = "dotnet",
     [string]$OutputFolder = "unit"
 )
-$ErrorActionPreference = "Stop"
-$PSNativeCommandUseErrorActionPreference = $true
 
 $RunTestsArgs = @{
     RepoName = $RepoName
