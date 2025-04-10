@@ -15,7 +15,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 
 $RepoPath = [IO.Path]::Combine($pwd, $RepoName)
 
-if (!$Configuration.Contains("Core")) {
+if ($BuildMethod -ne "dotnet") {
 
     # Setup the MSBuild environment if it is required.
     ./environments/setup-msbuild.ps1
