@@ -36,7 +36,7 @@ if ($LASTEXITCODE -ne 0) {
         }
         $DmpZipName = "dmp-files.zip"
         Write-Debug "Compressing into $DmpZipName..."
-        Compress-Archive -Path $DmpFiles -DestinationPath $DmpZipName -Force
+        $DmpFilesRaw | Compress-Archive -DestinationPath $DmpZipName -Force
         Write-Debug "Converting to base64..."
         $base64Zip = [Convert]::ToBase64String([IO.File]::ReadAllBytes($DmpZipName))
         Write-Warning "----- *.DMP ZIP DUMP (base64) START -----"
