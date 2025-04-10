@@ -29,7 +29,7 @@ if ($LASTEXITCODE -ne 0) {
     $DmpFiles = (Get-ChildItem -Path $TestResultPath -Recurse -Include *.dmp | ForEach-Object { $_.FullName })
     if ($DmpFiles.Length -gt 0) {
         $DmpZipName = New-TemporaryFile
-        Compress-Archive -Path $DmpFiles -DestinationPath $DmpZipName.FullName
+        Compress-Archive -Path $DmpFiles -DestinationPath $DmpZipName.FullName -Force
         $base64Zip = [Convert]::ToBase64String([IO.File]::ReadAllBytes($DmpZipName.FullName))
         Write-Warning "----- *.DMP ZIP DUMP (base64) START -----"
         Write-Warning $base64Zip
