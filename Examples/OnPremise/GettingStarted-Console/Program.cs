@@ -261,6 +261,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
 
                 ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
 
+            File.WriteAllText("GettigStarted_DataFileName.txt", dataFile);
+
             // Configure a logger to output to the console.
             var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
             var logger = loggerFactory.CreateLogger<Program>();

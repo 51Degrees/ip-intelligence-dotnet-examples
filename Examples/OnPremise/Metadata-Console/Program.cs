@@ -223,6 +223,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
                 // https://51degrees.com/pricing
                 ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
 
+            File.WriteAllText("Metadata_DataFileName.txt", dataFile);
+
             // Configure a logger to output to the console.
             var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
             var logger = loggerFactory.CreateLogger<Program>();

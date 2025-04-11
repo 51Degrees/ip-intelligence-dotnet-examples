@@ -23,4 +23,8 @@ $RunTestsArgs = @{
 
 ./dotnet/run-unit-tests.ps1 @RunTestsArgs
 
+foreach ($file in (Get-ChildItem -Recurse -File -Include "*_DataFileName.txt")) {
+    Write-Debug "[$($file.Name)]: <$(Get-Content -Path $file.FullName)>"
+}
+
 exit $LASTEXITCODE
