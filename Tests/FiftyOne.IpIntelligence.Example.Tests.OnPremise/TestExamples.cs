@@ -69,6 +69,8 @@ namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise
                     Constants.LITE_IPI_DATA_FILE_NAME);
             }
 
+            File.WriteAllText($"{nameof(TestExamples)}_DataFileName.txt", DataFile);
+
             // Set evidence file for offline processing example.
             EvidenceFile = Environment.GetEnvironmentVariable(
                 Constants.EVIDENCE_FILE_ENV_VAR);
