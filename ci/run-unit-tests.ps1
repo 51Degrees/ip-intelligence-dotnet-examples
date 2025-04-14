@@ -10,6 +10,8 @@ param(
     [string]$OutputFolder = "unit"
 )
 
+Write-Debug "env:IPINTELLIGENCEDATAFILE = <$($env:IPINTELLIGENCEDATAFILE)>"
+
 $RunTestsArgs = @{
     RepoName = $RepoName
     ProjectDir = $ProjectDir
