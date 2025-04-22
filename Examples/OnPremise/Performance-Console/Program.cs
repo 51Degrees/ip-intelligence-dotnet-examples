@@ -186,11 +186,15 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                             var ipData = data.Get<IIpIntelligenceData>();
 
                             result.Count++;
+
                             // Access a property to ensure compiler optimizer doesn't optimize
                             // out the very method that the benchmark is testing.
-                            foreach (var nextName in ipData.RegisteredName.Value)
+                            if (ipData.RegisteredName.HasValue)
                             {
-                                result.HashSum += nextName.Value[0].GetHashCode();
+                                foreach (var nextName in ipData.RegisteredName.Value)
+                                {
+                                    result.HashSum += nextName.Value[0].GetHashCode();
+                                }
                             }
                         }
 
