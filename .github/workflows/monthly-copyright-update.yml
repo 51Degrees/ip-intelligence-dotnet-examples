@@ -2,16 +2,19 @@ name: Monthly Copyright Update
 
 on:
   workflow_dispatch:
+    inputs:
+      dryrun:
+        default: false
+        description: Dry Run
   schedule:
-    # * is a special character in YAML so quote this string
-    - cron:  '0 0 1 * *'
+    - cron: '0 0 1 * *'
 
 jobs:
-  # Run the common workflow on each pull request
-  Monthly_Copyright_Update:
+  CopyrightUpdate:
     uses: 51Degrees/common-ci/.github/workflows/monthly-copyright-update.yml@main
     with:
       repo-name: ${{ github.event.repository.name }}
       org-name: ${{ github.event.repository.owner.login }}
+      dryrun: ${{ inputs.dryrun || false }}
     secrets:
       token: ${{ secrets.ACCESS_TOKEN }}
