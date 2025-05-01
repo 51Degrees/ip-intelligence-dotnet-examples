@@ -12,7 +12,7 @@ on:
 jobs:
   PackageUpdate:
     name: Nightly Package Update
-    uses: 51Degrees/common-ci/.github/workflows/nightly-package-update.yml
+    uses: 51Degrees/common-ci/.github/workflows/nightly-package-update.yml@main
     with:
       repo-name: ${{ github.event.repository.name }}
       org-name: ${{ github.event.repository.owner.login }}
@@ -22,7 +22,7 @@ jobs:
 
   SubmoduleUpdate:
     name: Nightly Submodule Update
-    uses: 51Degrees/common-ci/.github/workflows/nightly-submodule-update.yml
+    uses: 51Degrees/common-ci/.github/workflows/nightly-submodule-update.yml@main
     with:
       repo-name: ${{ github.event.repository.name }}
       org-name: ${{ github.event.repository.owner.login }}
@@ -34,7 +34,7 @@ jobs:
     if: ${{ !cancelled() }}
     needs: [PackageUpdate, SubmoduleUpdate]
     name: Nightly Pull Requests
-    uses: 51Degrees/common-ci/.github/workflows/nightly-pull-requests.yml
+    uses: 51Degrees/common-ci/.github/workflows/nightly-pull-requests.yml@main
     with:
       repo-name: ${{ github.event.repository.name }}
       org-name: ${{ github.event.repository.owner.login }}
