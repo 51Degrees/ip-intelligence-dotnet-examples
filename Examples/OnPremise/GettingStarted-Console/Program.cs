@@ -37,12 +37,12 @@ using System.Text;
 /// 
 /// @include{doc} example-getting-started-onpremise.txt
 /// 
-/// This example is available in full on [GitHub](https://github.com/51Degrees/device-detection-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-Console/Program.cs). 
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-Console/Program.cs). 
 /// 
 /// @include{doc} example-require-datafile.txt
 /// 
 /// Required NuGet Dependencies:
-/// - FiftyOne.DeviceDetection
+/// - FiftyOne.IpIntelligence
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
 {
@@ -52,7 +52,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
         {
             public void Run(string dataFile, ILoggerFactory loggerFactory, TextWriter output)
             {
-                // In this example, we use the DeviceDetectionPipelineBuilder and configure it
+                // In this example, we use the IpiPipelineBuilder and configure it
                 // in code. For more information about builders in general see the documentation at
                 // https://51degrees.com/documentation/_concepts__configuration__builders__index.html
 
@@ -62,7 +62,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     // We use the low memory profile as its performance is sufficient for this
                     // example. See the documentation for more detail on this and other
                     // configuration options:
-                    // https://51degrees.com/documentation/_device_detection__features__performance_options.html
+                    // https://51degrees.com/documentation/_ip_intelligence__features__performance_options.html
                     // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
                     // https://51degrees.com/documentation/_features__usage_sharing.html
                     .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
@@ -83,7 +83,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     .Build())
                 {
                     // carry out some sample detections
-                    // and collect device IDs
+                    // and collect IP addresses
                     foreach (var evidence in ExampleUtils.EvidenceValues)
                     {
                         AnalyseEvidence(evidence, pipeline, output);
@@ -105,7 +105,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 // Dictionary<string, object> of header name/value entries.
                 //
                 // FlowData is wrapped in a using block in order to ensure that the unmanaged
-                // resources allocated by the native device detection library are freed
+                // resources allocated by the native IP Intelligence library are freed
                 using (var data = pipeline.CreateFlowData())
                 {
                     StringBuilder message = new StringBuilder();
@@ -127,8 +127,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     message = new StringBuilder();
                     message.AppendLine("Results:");
                     // Now that it's been processed, the flow data will have been populated with
-                    // the result. In this case, we want information about the device, which we
-                    // can get by asking for a result matching the `IDeviceData` interface.
+                    // the result. In this case, we want information about the IP address, which we
+                    // can get by asking for a result matching the `IIpIntelligenceData` interface.
                     var ipData = data.Get<IIpIntelligenceData>();
 
                     {
@@ -212,8 +212,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
             } 
             else
             {
-                logger.LogError("Failed to find a device detection data file. Make sure the " +
-                    "device-detection-data submodule has been updated by running " +
+                logger.LogError("Failed to find a IP Intelligence data file. Make sure the " +
+                    "ip-intelligence-data submodule has been updated by running " +
                     "`git submodule update --recursive`.");
             }
 

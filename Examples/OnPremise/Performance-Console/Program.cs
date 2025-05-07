@@ -40,7 +40,7 @@ using System.Threading.Tasks;
 /// The example illustrates a "clock-time" benchmark for assessing detection speed.
 ///
 /// Using a YAML formatted evidence file - "20000 Evidence Records.yml" - supplied with the
-/// distribution or can be obtained from the [data repository on Github](https://github.com/51Degrees/device-detection-data/blob/master/20000%20Evidence%20Records.yml).
+/// distribution or can be obtained from the [data repository on Github](https://github.com/51Degrees/ip-intelligence-data/blob/master/20000%20Evidence%20Records.yml).
 ///
 /// It's important to understand the trade-offs between performance, memory usage and accuracy, that
 /// the 51Degrees pipeline configuration makes available, and this example shows a range of
@@ -50,16 +50,16 @@ using System.Threading.Tasks;
 /// properties from multiple components. If you don't specify any properties to detect, then all 
 /// properties are detected.
 ///
-/// Please review [performance options](https://51degrees.com/documentation/_device_detection__features__performance_options.html)
-/// and [hash dataset options](https://51degrees.com/documentation/_device_detection__hash.html#DeviceDetection_Hash_DataSetProduction_Performance)
+/// Please review [performance options](https://51degrees.com/documentation/_ip_intelligence__features__performance_options.html)
+/// and [IPI dataset options](https://51degrees.com/documentation/_ip_intelligence__on_premise.html#IpIntelligence_OnPremise_DataSetProduction_Performance)
 /// for more information about adjusting performance.
 /// 
-/// This example is available in full on [GitHub](https://github.com/51Degrees/device-detection-dotnet-examples/blob/master/Examples/OnPremise/Performance-Console/Program.cs).
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Performance-Console/Program.cs).
 /// 
 /// @include{doc} example-require-datafile.txt
 /// 
 /// Required NuGet Dependencies:
-/// - FiftyOne.DeviceDetection
+/// - FiftyOne.IpIntelligence
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
 {
@@ -175,7 +175,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                     {
                         result.Timer.Start();
                         // A using block MUST be used for the FlowData instance. This ensures that
-                        // native resources created by the device detection engine are freed in
+                        // native resources created by the IP Intelligence engine are freed in
                         // good time.
                         using (var data = _pipeline.CreateFlowData())
                         {
@@ -290,8 +290,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                     if (string.IsNullOrWhiteSpace(dataFile))
                     {
                         serviceProvider.GetRequiredService<ILogger<Program>>().LogError(
-                            "Failed to find a device detection data file. Make sure the " +
-                            "device-detection-data submodule has been updated by running " +
+                            "Failed to find a IP Intelligence data file. Make sure the " +
+                            "ip-intelligence-data submodule has been updated by running " +
                             "`git submodule update --recursive`.");
                         return null;
                     }
@@ -328,7 +328,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                 // Do the same for the yaml evidence file.
                 var evidenceFile = options.EvidenceFile != null ? options.EvidenceFile :
                     // This file contains the 20,000 most commonly seen combinations of header values 
-                    // that are relevant to device detection. For example, User-Agent and UA-CH headers.
+                    // that are relevant to IP Intelligence. For example, User-Agent and UA-CH headers.
                     ExampleUtils.FindFile(Constants.YAML_EVIDENCE_FILE_NAME);
 
                 var results = new Dictionary<PerformanceConfiguration, IList<BenchmarkResult>>();

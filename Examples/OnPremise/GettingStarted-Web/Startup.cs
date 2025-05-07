@@ -32,13 +32,13 @@ using System.Threading.Tasks;
 /// 
 /// @include{doc} example-getting-started-web.txt
 /// 
-/// The source code for this example is available in full on [GitHub](https://github.com/51Degrees/device-detection-dotnet-examples/tree/master/Examples/OnPremise/GettingStarted-Web). 
+/// The source code for this example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/tree/master/Examples/OnPremise/GettingStarted-Web). 
 /// 
 /// @include{doc} example-require-datafile.txt
 /// 
 /// Required NuGet Dependencies:
 /// - [Microsoft.AspNetCore.App](https://www.nuget.org/packages/Microsoft.AspNetCore.App/)
-/// - [FiftyOne.DeviceDetection](https://www.nuget.org/packages/FiftyOne.DeviceDetection/)
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
 /// - [FiftyOne.Pipeline.Web](https://www.nuget.org/packages/FiftyOne.Pipeline.Web/)
 /// 
 /// ## Overview
@@ -46,7 +46,7 @@ using System.Threading.Tasks;
 /// The `UseFiftyOne` extension method is used to create a Pipeline instance from the configuration 
 /// that is supplied. The `AddFiftyOne` extension method adds a 
 /// [middleware](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/middleware) 
-/// component that will intercept requests and perform device detection. The results will be 
+/// component that will intercept requests and perform IP Intelligence. The results will be 
 /// stored in the [HttpContext](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.httpcontext.items).
 /// The middleware will also handle setting response headers (e.g. Accept-CH for User-Agent 
 /// Client Hints) and serving requests for client-side JavaScript and JSON resources.
@@ -60,20 +60,8 @@ using System.Threading.Tasks;
 /// can then be used to interrogate the data.
 /// ```{cs}
 /// var flowData = _provider.GetFlowData();
-/// var deviceData = flowData.Get<IDeviceData>();
-/// var hardwareVendor = deviceData.HardwareVendor;
-/// ```
-/// 
-/// Results can also be accessed in client-side code by using the `fod` object. See the 
-/// [JavaScriptBuilderElementBuilder](https://51degrees.com/pipeline-dotnet/class_fifty_one_1_1_pipeline_1_1_java_script_builder_1_1_flow_element_1_1_java_script_builder_element_builder.html)
-/// for details on available settings such as changing the `fod` name.
-/// ```{js}
-/// window.onload = function () {
-///     fod.complete(function(data) {
-///         var hardwareName = data.device.hardwarename;
-///         alert(hardwareName.join(", "));
-///     }
-/// }
+/// var ipiData = flowData.Get<IIpIntelligenceData>();
+/// var hardwareVendor = ipiData.HardwareVendor;
 /// ```
 ///
 /// ## Configuration
@@ -115,7 +103,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
             // Add the hash engine builder to services so that the system can find the builder
             // when it needs to.
             services.AddSingleton<IpiOnPremiseEngineBuilder>();
-            // Configure the services needed by device detection and create the 51Degrees Pipeline
+            // Configure the services needed by IP Intelligence and create the 51Degrees Pipeline
             // instance that will be used to process requests.
             services.AddFiftyOne(Configuration);
         }
@@ -130,8 +118,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
             app.UseMiddleware<UserAgentCorrectionMiddleware>();
 
             // Add the 51Degrees middleware component.
-            // This will pass any incoming requests through the pipeline API, performing device
-            // detection. The IFlowData that is used will be stored in the data associated with 
+            // This will pass any incoming requests through the pipeline API, performing IP Intelligence
+            // The IFlowData that is used will be stored in the data associated with 
             // the current HTTP session.
             // The IFlowDataAccessor provides an easy way to retrieve this data. See HomeController
             // for an example of this.
@@ -156,7 +144,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
         /// multiple values using spaces as a delimiter. These are then re-combined using commas 
         /// as a delimiter. Essentially, replacing spaces with commas in the User-Agent.
         /// See https://github.com/dotnet/aspnetcore/issues/18198
-        /// This causes the device detection to fail, so we need to deal with it via a custom 
+        /// This causes the IP Intelligence to fail, so we need to deal with it via a custom 
         /// middleware.
         /// </summary>
         private class UserAgentCorrectionMiddleware

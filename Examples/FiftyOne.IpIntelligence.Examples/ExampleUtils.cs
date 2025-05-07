@@ -239,7 +239,7 @@ namespace FiftyOne.IpIntelligence.Examples
         /// <param name="logger"></param>
         public static void CheckDataFile(IPipeline pipeline, ILogger logger)
         {
-            // Get the 'engine' element within the pipeline that performs device detection.
+            // Get the 'engine' element within the pipeline that performs IP Intelligence.
             // We can use this to get details about the data file as well as meta-data describing
             // things such as the available properties.
             var engine = pipeline.GetElement<IpiOnPremiseEngine>();
@@ -291,9 +291,9 @@ namespace FiftyOne.IpIntelligence.Examples
                 {
                     logger.LogWarning($"This example is using a data file that is more than " +
                         $"{DataFileAgeWarning} days old. A more recent data file may be needed " +
-                        $"to correctly detect the latest devices, browsers, etc. The latest lite " +
-                        $"data file is available from the device-detection-data repository on " +
-                        $"GitHub https://github.com/51Degrees/device-detection-data. Find out " +
+                        $"for a more precise detection. The latest lite " +
+                        $"data file is available from the ip-intelligence-data repository on " +
+                        $"GitHub https://github.com/51Degrees/ip-intelligence-data. Find out " +
                         $"about the Enterprise data file, which includes automatic daily " +
                         $"updates, on our pricing page: https://51degrees.com/pricing");
                 }
@@ -338,8 +338,8 @@ namespace FiftyOne.IpIntelligence.Examples
         }
 
         /// <summary>
-        /// This collection contains the various input values that will be passed to the device 
-        /// detection algorithm when running examples
+        /// This collection contains the various input values that will be passed to the
+        /// IP Intelligence algorithm when running examples
         /// </summary>
         public static readonly List<Dictionary<string, object>>
             EvidenceValues = new List<Dictionary<string, object>>()

@@ -52,7 +52,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
             Engine = FlowData.Pipeline.GetElement<IpiOnPremiseEngine>();
             // Get meta-data about the data file.
             DataFile = Engine.DataFiles[0];
-            // Get the evidence that was used when performing device detection
+            // Get the evidence that was used when performing IP Intelligence
             Evidence = FlowData.GetEvidence().AsDictionary()
                 .Select(e => new EvidenceModel()
                 {
@@ -62,13 +62,13 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
                 })
                 .ToList();
 
-            // Get the results of device detection.
-            var deviceData = FlowData.Get<IIpIntelligenceData>();
+            // Get the results of IP Intelligence.
+            var ipiData = FlowData.Get<IIpIntelligenceData>();
             // Use helper functions to get a human-readable string representation of various
             // property values. These helpers handle situations such as the property missing
-            // due to using a lite data file or the property not having a value because device
-            // detection didn't find a match.
-            Name = deviceData.TryGetValue(d => d.RegisteredName.GetHumanReadable());
+            // due to using a lite data file or the property not having a value because
+            // IP intelligence didn't find a match.
+            Name = ipiData.TryGetValue(d => d.RegisteredName.GetHumanReadable());
         }
     }
 }

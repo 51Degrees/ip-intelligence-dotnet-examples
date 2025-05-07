@@ -34,7 +34,7 @@ using System.Text;
 /// <summary>
 /// @example OnPremise/Metadata-Console/Program.cs
 ///
-/// The device detection data file contains meta data that can provide additional information
+/// The IP Intelligence data file contains meta data that can provide additional information
 /// about the various records in the data model.
 /// This example shows how to access this data and display the values available.
 /// 
@@ -49,16 +49,16 @@ using System.Text;
 /// There are too many profiles to display, so we just list the number of profiles for each 
 /// component.
 /// 
-/// Finally, the evidence keys that are accepted by device detection are listed. These are the 
+/// Finally, the evidence keys that are accepted by IP Intelligence are listed. These are the 
 /// keys that, when added to the evidence collection in flow data, could have some impact on the
-/// result returned by device detection.
+/// result returned by IP Intelligence.
 /// 
-/// This example is available in full on [GitHub](https://github.com/51Degrees/device-detection-dotnet-examples/blob/master/Examples/OnPremise/Metadata-Console/Program.cs). 
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Metadata-Console/Program.cs). 
 /// 
 /// @include{doc} example-require-datafile.txt
 /// 
 /// Required NuGet Dependencies:
-/// - FiftyOne.DeviceDetection
+/// - FiftyOne.IpIntelligence
 /// - Microsoft.Extensions.Logging.Console
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
@@ -73,12 +73,12 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
                 // Note that there is no need to construct a complete pipeline in order to access
                 // the meta-data.
                 // If you already have a pipeline and just want to get a reference to the engine 
-                // then you can use `var engine = pipeline.GetElement<DeviceDetectionHashEngine>();`
+                // then you can use `var engine = pipeline.GetElement<IpiOnPremiseEngine>();`
                 using (var ddEngine = new IpiOnPremiseEngineBuilder(loggerFactory)
                     // We use the low memory profile as its performance is sufficient for this
                     // example. See the documentation for more detail on this and other
                     // configuration options:
-                    // https://51degrees.com/documentation/_device_detection__features__performance_options.html
+                    // https://51degrees.com/documentation/_ip_intelligence__features__performance_options.html
                     // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
                     .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
                     // inhibit auto-update of the data file for this test
@@ -171,9 +171,6 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
                         $"({property.Type.Name}) - {property.Description}");
 
                     // Next, output a list of the possible values this property can have.
-                    // Most properties in the Device Metrics category do not have defined
-                    // values so exclude them.
-                    if (property.Category != "Device Metrics")
                     {
                         values.Clear();
                         values.Append("Possible values (");
@@ -250,8 +247,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
             }
             else
             {
-                logger.LogError("Failed to find a device detection data file. Make sure the " +
-                    "device-detection-data submodule has been updated by running " +
+                logger.LogError("Failed to find a IP Intelligence data file. Make sure the " +
+                    "ip-intelligence-data submodule has been updated by running " +
                     "`git submodule update --recursive`. By default, the 'lite' file included " +
                     "with this code will be used. A different file can be specified " +
                     "by supplying the full path as a command line argument");
