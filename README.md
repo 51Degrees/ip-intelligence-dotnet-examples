@@ -1,23 +1,21 @@
-## Examples
+# ![51Degrees](https://51degrees.com/img/logo.png?utm_source=github&utm_medium=repository&utm_content=readme_main&utm_campaign=dotnet-open-source "Data rewards the curious") IP Intelligence Engine Examples
 
-Examples can be found in the `Examples/` folder, there are separate sources for cloud and on-premise implementations and solutions for .NET Core and .NET Framework. See below for a list of examples.
+This repository contains the examples for [[ip-intelligence-dotnet](../ip-intelligence-dotnet/)].
 
-### IP Intelligence
+Projects can be found in the `Examples/` folder, there are separate sources for cloud and on-premise implementations and solutions for .NET and .NET Framework. See below for a list of examples.
 
-|Example|Description|Implementations|
-|-------|-----------|---------------|
-|ConfigureFromFile|This example shows how to build a Pipeline from a configuration file.|On-premise|
-|GettingStarted|This example uses 51Degrees IP intelligence to determine in which country a given IP address is located.|On-premise / Cloud|
-|Metadata|This example shows how to get all the properties from the IP intelligence engine and print their information details.|On-premise|
-|Performance|This example demonstrates the performance of the maximum performance IP intelligence configuration profile.|On-premise|
-|GetAllProperties|This example demonstrates how to iterate through all properties in a response.|Cloud|
+## ⚠️ Required files
 
-### Web Integrations
+See [[ip-intelligence-data/README](./ip-intelligence-data/README)] on how to pull and/or generate necessary files.
 
-These examples show how to integrate the Pipeline API into a simple web app.
+## On-Premise
 
-|Example|Description|
-|-------|-----------|
-|Cloud IpIntelligenceWebDemo NetCore 3.1|This example demonstrates how to use the 51Degrees cloud to perform IP intelligence from an ASP.NET Core 3.1 web application|
-|IpIntelligenceWebDemo NetCore 2.1|This example demonstrates how to use on-premise IP intelligence from an ASP.NET Core 2.1 web application|
-|IpIntelligenceWebDemo NetCore 3.1|This example demonstrates how to use on-premise IP intelligence from an ASP.NET Core 3.1 web application|
+|Example|Target|Use case|
+|---|---|---|
+|Framework-Web|.NET Framework 4.6.2|ASP.NET Framework project.|
+|GettingStarted-Console|.NET 8.0|Simple console app.|
+|GettingStarted-Web|.NET 8.0|ASP.NET Core project.|
+|Metadata-Console|.NET 8.0|Accessing data file's metadata (e.g. listing properties).|
+|OfflineProcessing-Console|.NET 8.0|Batch-processing of IP addresses from a YAML file.|
+|Performance-Console|.NET 8.0|"Clock-time" benchmark for assessing detection speed.|
+|UpdateDataFile-Console|.NET 8.0|Auto-update features: Daily / on Start-Up / Filesystem Watcher|
