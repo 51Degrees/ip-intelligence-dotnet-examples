@@ -182,7 +182,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                             // Add the evidence to the flow data.
                             data.AddEvidence(evidence).Process();
 
-                            // Get the device from the engine.
+                            // Get the data from the engine.
                             var ipData = data.Get<IIpIntelligenceData>();
 
                             result.Count++;
@@ -228,7 +228,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                     .AddLogging(l => l.AddConsole())
                     .AddTransient<PipelineBuilder>()
                     .AddTransient<IpiOnPremiseEngineBuilder>()
-                    // Add a factory to create the singleton DeviceDetectionHashEngine instance.
+                    // Add a factory to create the singleton IpiOnPremiseEngineBuilder instance.
                     .AddSingleton((x) =>
                     {
                         var builder = x.GetRequiredService<IpiOnPremiseEngineBuilder>()
