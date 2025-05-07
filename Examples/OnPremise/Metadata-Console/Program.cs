@@ -175,7 +175,10 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
                         values.Clear();
                         values.Append("Possible values (");
                         long count = (property as PropertyMetaDataIpi)?.GetValuesCount() ?? (long)property.Values.Count();
-                        int limit = property.Name == "RegisteredCountry" ? (int)Math.Min(count, int.MaxValue) : 20;
+                        int limit = (
+                            // The next line can be uncommented if you want to see ALL values for some SPECIFIC property
+                            //property.Name == "RegisteredCountry" ? (int)Math.Min(count, int.MaxValue) : 
+                            20); // <- or just change SHARED maximum here
                         values.Append(count);
                         values.AppendLine("):");
                         bool first = true;
