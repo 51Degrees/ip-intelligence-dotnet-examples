@@ -6,7 +6,7 @@ Projects can be found in the `Examples/` folder, there are separate sources for 
 
 ## ⚠️ Required files
 
-See [[ip-intelligence-data/README](./ip-intelligence-data/README)] on how to pull and/or generate necessary files.
+See `ip-intelligence-data/README` ([local](./ip-intelligence-data/README) / [GitHub](https://github.com/51Degrees/ip-intelligence-data/)) on how to pull and/or generate necessary files.
 
 ## On-Premise
 
