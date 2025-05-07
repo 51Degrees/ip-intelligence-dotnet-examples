@@ -60,7 +60,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise
             LicenseKey = string.IsNullOrWhiteSpace(licenseKey) == false ?
                 licenseKey: "!!YOUR_LICENSE_KEY!!";
 
-            // Set Device Data file
+            // Set IP Intelligence Data file
             DataFile = Environment.GetEnvironmentVariable(
                 Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
             if (string.IsNullOrWhiteSpace(DataFile))

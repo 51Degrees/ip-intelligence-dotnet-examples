@@ -25,27 +25,27 @@ using System.Web.UI;
 
 /// @example OnPremise/Framework-Web/Default.aspx.cs
 /// 
-/// This example demonstrates how to use the cloud-based device detection API in a .NET Framework 
+/// This example demonstrates how to use the cloud-based IP Intelligence API in a .NET Framework 
 /// website.
 /// 
-/// The source code for this example is available in full on [GitHub](https://github.com/51Degrees/device-detection-dotnet-examples/tree/master/Examples/OnPremise/Framework-Web).
+/// The source code for this example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/tree/master/Examples/OnPremise/Framework-Web).
 /// 
 /// @include{doc} example-require-datafile.txt
 /// 
 /// Required NuGet Dependencies: 
-/// - [FiftyOne.DeviceDetection](https://www.nuget.org/packages/FiftyOne.DeviceDetection/)
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
 /// - [FiftyOne.Pipeline.Web](https://www.nuget.org/packages/FiftyOne.Pipeline.Web/)
 /// 
 /// ## Overview
 /// 
 /// The FiftyOne.Pipeline.Web package includes an IHttpModule implementation called 
 /// 'PipelineModule'. This is inserted into the start of the ASP.NET processing pipeline so
-/// that it can intercept the request and perform device detection.
+/// that it can intercept the request and perform IP Intelligence.
 /// 
 /// The module replaces the default `HttpCapabilitiesBase.BrowserCapabilitiesProvider` with a 
 /// 51Degrees version.
 /// This means that when values are requested (e.g. Request.Browser.IsMobileDevice), we can 
-/// intercept that request and supply a result from our device detection.
+/// intercept that request and supply a result from our Device Detection and/or IP Intelligence.
 /// 
 /// If you require access to properties and features that are not available through 
 /// `BrowserCapabilitiesProvider`, you will need to cast browser capabilities to our 
@@ -53,14 +53,14 @@ using System.Web.UI;
 /// 
 /// ```
 /// var flowData = ((PipelineCapabilities)Request.Browser).FlowData;
-/// var deviceData = flowData.Get<IDeviceData>();
+/// var ipiData = flowData.Get<IIpIntelligenceData>();
 /// ```
 /// 
 /// The 'IPipeline' instance that is being used can also be accessed through the static 
 /// `WebPipeline` class:
 /// 
 /// ```
-/// var deviceDetectionPipeline = WebPipeline.GetInstance();
+/// var ipiPipeline = WebPipeline.GetInstance();
 /// ```
 /// 
 /// ## Configuration
@@ -71,8 +71,8 @@ using System.Web.UI;
 /// the same as those that will be available in the configuration file. 
 /// 
 /// Note that you will need to update the configuration with the complete path to a data file. 
-/// The free 'lite' file is included with this repository under the path 
-/// `FiftyOne.DeviceDetection\device-detection-cxx\device-detection-data`
+/// The free 'lite' file is included with this repository under the path `ip-intelligence-data`
+/// 
 /// Alternatively, you can obtain a [license key](http://51degrees.com/pricing) which can be used 
 /// to download a data file from our 
 /// [Distributor](https://51degrees.com/documentation/_info__distributor.html) service.
@@ -133,8 +133,7 @@ using System.Web.UI;
 /// ## Results
 /// 
 /// This example includes a simple demonstration page that shows how to access different values 
-/// from the results. This page also demonstrates how to use client-side evidence to determine 
-/// the model of Apple devices.
+/// from the results.
 /// 
 /// @include OnPremise/Framework-Web/Default.aspx
 namespace Framework_Web

@@ -32,8 +32,8 @@ using System.Net.Http;
 /// @example OnPremise/UpdateDataFile-Console/Program.cs
 /// 
 /// This example illustrates various parameters that can be adjusted when using the on-premise
-/// device detection engine, and controls when a new data file is sought and when it is loaded by
-/// the device detection software.
+/// IP Intelligence engine, and controls when a new data file is sought and when it is loaded by
+/// the IP Intelligence software.
 /// 
 /// Three main aspects are demonstrated:
 /// - Update on Start-Up
@@ -63,7 +63,7 @@ using System.Net.Http;
 /// ## Lite Data File
 /// Lite data files (free-to-use, limited capabilities, no license key required) are created roughly
 /// once a month and cannot be updated using auto-update, they may be downloaded from
-/// [Github](https://github.com/51Degrees/device-detection-data) and are included with
+/// [Github](https://github.com/51Degrees/ip-intelligence-data) and are included with
 /// source distributions of this software.
 /// 
 /// # Update on Start-Up
@@ -87,9 +87,9 @@ using System.Net.Http;
 /// ```
 /// 
 /// # File System Watcher
-/// You can configure the pipeline builder to watch for changes to the currently loaded device
-/// detection data file, and to replace the file currently in use with the new one. This is
-/// useful, for example, if you wish to download and update the device detection file "manually" -
+/// You can configure the pipeline builder to watch for changes to the currently loaded
+/// IP Intelligence data file, and to replace the file currently in use with the new one. This is
+/// useful, for example, if you wish to download and update the IP Intelligence file "manually" -
 /// i.e. you would download it then drop it into place with the same path as the currently loaded
 /// file.
 ///
@@ -108,7 +108,7 @@ using System.Net.Http;
 /// for when the next data file is expected. You can configure the pipeline so that it starts
 /// looking for a newer data file after that time, by connecting to the 51Degrees distributor to
 /// see if an update is available. If one is, then it is downloaded and will replace the existing
-/// device detection file, which is currently in use.
+/// IP Intelligence file, which is currently in use.
 ///
 /// ## Pre-Requisites
 /// - a license key
@@ -132,7 +132,7 @@ using System.Net.Http;
 /// ```
 /// 
 /// # Location
-/// This example is available in full on [GitHub](https://github.com/51Degrees/device-detection-dotnet-examples/blob/master/Examples/OnPremise/UpdateDataFile-Console/Program.cs).
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/UpdateDataFile-Console/Program.cs).
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
 {
@@ -145,7 +145,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
             /// </summary>
             public IpiPipelineBuilder PipelineBuilder { get; private set; }
             /// <summary>
-            /// Builder used to create an on-premise device detection engine.
+            /// Builder used to create an on-premise IP Intelligence engine.
             /// </summary>
             public IpiOnPremiseEngineBuilder EngineBuilder { get; private set; }
             public ILogger<Example> Logger { get; private set; }
@@ -164,10 +164,10 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
             /// Constructor
             /// </summary>
             /// <param name="pipelineBuilder">
-            /// A builder used to create a pipeline that includes device detection.
+            /// A builder used to create a pipeline that includes IP Intelligence.
             /// </param>
             /// <param name="engineBuilder">
-            /// A builder used to create an on-premise device detection engine.
+            /// A builder used to create an on-premise IP Intelligence engine.
             /// Generally, we wouldn't need this in addition to the pipeline builder above.
             /// In this example, we use it to check information about the data file before 
             /// creating the full pipeline.
@@ -249,7 +249,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                 Logger.LogInformation("Creating pipeline and initiating update on start-up - " +
                     "please wait for that to complete");
 
-                // Build the device detection pipeline  and pass in the desired settings to configure
+                // Build the IP Intelligence pipeline  and pass in the desired settings to configure
                 // automatic updates.
                 try
                 {
@@ -265,7 +265,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                         .UseOnPremise(dataFile, licenseKey, true)
                         // Enable update on startup, the auto update system
                         // will be used to check for an update before the
-                        // device detection engine is created. This will block
+                        // IP Intelligence engine is created. This will block
                         // creation of the pipeline until the data file is downloaded.
                         .SetDataUpdateOnStartUp(true)
                         // Enable automatic updates once the pipeline has started.

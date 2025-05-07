@@ -32,7 +32,7 @@ using YamlDotNet.Serialization;
 /// <summary>
 /// @example OnPremise/OfflineProcessing-Console/Program.cs
 /// 
-/// Provides an example of processing a YAML file containing evidence for device detection. 
+/// Provides an example of processing a YAML file containing evidence for IP Intelligence. 
 /// There are 20,000 examples in the supplied file of evidence representing HTTP Headers.
 /// For example:
 /// 
@@ -44,20 +44,20 @@ using YamlDotNet.Serialization;
 /// header.sec-ch-ua-platform: '"Android"'
 /// ```
 /// 
-/// We create a device detection pipeline to read the data and find out about the associated device,
+/// We create a IP Intelligence pipeline to read the data and find out about the associated IP address,
 /// we write this data to a YAML formatted output stream.
 /// 
 /// As well as explaining the basic operation of off line processing using the defaults, for
-/// advanced operation this example can be used to experiment with tuning device detection for
+/// advanced operation this example can be used to experiment with tuning IP Intelligence for
 /// performance and predictive power using Performance Profile, Graph and Difference and Drift 
 /// settings.
 /// 
-/// This example is available in full on [GitHub](https://github.com/51Degrees/device-detection-dotnet-examples/blob/master/Examples/OnPremise/OfflineProcessing-Console/Program.cs). 
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/OfflineProcessing-Console/Program.cs). 
 /// 
 /// @include{doc} example-require-datafile.txt
 /// 
 /// Required NuGet Dependencies:
-/// - FiftyOne.DeviceDetection
+/// - FiftyOne.IpIntelligence
 /// - Microsoft.Extensions.Logging.Console
 /// - YamlDotNet
 /// </summary>
@@ -72,7 +72,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
             /// the processed evidence.
             /// </summary>
             /// <param name="dataFile">
-            /// The path to the device detection data file
+            /// The path to the IP Intelligence data file
             /// </param>
             /// <param name="evidenceYaml">
             /// Reader containing the yaml representation of the evidence to process
@@ -90,7 +90,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
                 TextWriter output)
             {
                 var logger = loggerFactory.CreateLogger<Program>();
-                // In this example, we use the DeviceDetectionPipelineBuilder and configure it
+                // In this example, we use the IpiPipelineBuilder and configure it
                 // in code. For more information about builders in general see the documentation at
                 // https://51degrees.com/documentation/_concepts__configuration__builders__index.html
 
@@ -100,7 +100,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
                     // We use the low memory profile as its performance is sufficient for this
                     // example. See the documentation for more detail on this and other
                     // configuration options:
-                    // https://51degrees.com/documentation/_device_detection__features__performance_options.html
+                    // https://51degrees.com/documentation/_ip_intelligence__features__performance_options.html
                     // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
                     // https://51degrees.com/documentation/_features__usage_sharing.html
                     .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
@@ -109,7 +109,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
                     // This is because it will not contain the full set of information that is 
                     // required by our data processing back-end and will be discarded.
                     // If you specifically want to share data that is being processed off line
-                    // in order to help us improve detection of new devices/browsers/etc, then
+                    // in order to help us improve the detection, then
                     // this additional data will need to be collected and included as evidence
                     // to the Pipeline. See
                     // https://51degrees.com/documentation/_features__usage_sharing.html#Low_Level_Usage_Sharing
@@ -151,7 +151,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
                 // Dictionary<string, object> of header name/value entries.
                 //
                 // FlowData is wrapped in a using block in order to ensure that the unmanaged
-                // resources allocated by the native device detection library are freed
+                // resources allocated by the native IP Intelligence library are freed
                 using (var data = pipeline.CreateFlowData())
                 {
                     // Add the evidence values to the flow data
@@ -182,19 +182,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
                                 $"\t{nameof(ipData.RegisteredName)}  ({name.Value.Count}): {nameValues}");
                         }
                     }
-                    // DeviceId is a unique identifier for the combination of hardware, operating
-                    // system, browser and crawler that has been detected.
-                    // Our device detection solution uses machine learning to find the optimal
-                    // way to identify devices based on the real-world evidence values that we
+                    // Our IP Intelligence solution uses machine learning to find the optimal
+                    // way to perform identification based on the real-world evidence values that we
                     // observe each day.
                     // As this changes over time, the result of detection can potentially change
-                    // as well. By storing the device id, we can use this as a lookup in future
-                    // rather than performing detection with the original evidence again.
-                    // Do this by passing an evidence entry with:
-                    // key = query.51D_ProfileIds
-                    // value = [the device id]
-                    // This is much faster and avoids the potential for getting a different 
-                    // result.
+                    // as well.
                     serializer.Serialize(writer, output);
                 }
             }
@@ -218,7 +210,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
             // Do the same for the yaml evidence file.
             var evidenceFile = args.Length > 1 ? args[1] :
                 // This file contains the 20,000 most commonly seen combinations of header values 
-                // that are relevant to device detection. For example, User-Agent and UA-CH headers.
+                // that are relevant to IP Intelligence. For example, User-Agent and UA-CH headers.
                 ExampleUtils.FindFile(Constants.YAML_EVIDENCE_FILE_NAME);
             // Finally, get the location for the output file. Use the same location as the
             // evidence if a path is not supplied on the command line.
@@ -240,8 +232,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
             }
             else
             {
-                logger.LogError("Failed to find a device detection data file. Make sure the " +
-                    "device-detection-data submodule has been updated by running " +
+                logger.LogError("Failed to find a IP Intelligence data file. Make sure the " +
+                    "ip-intelligence-data submodule has been updated by running " +
                     "`git submodule update --recursive`.");
             }
 

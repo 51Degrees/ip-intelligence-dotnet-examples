@@ -35,7 +35,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
         private ILogger<HomeController> _logger;
 
         // The controller has a dependency on IFlowDataProvider. This is used to access the 
-        // IFlowData that contains the device detection results for the current HTTP request.
+        // IFlowData that contains the IP Intelligence results for the current HTTP request.
         public HomeController(IFlowDataProvider provider, ILogger<HomeController> logger)
         {
             _provider = provider;
@@ -50,8 +50,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
                 ExampleUtils.CheckDataFile(_provider.GetFlowData().Pipeline, _logger);
                 _checkedDataFile = true;
             }
-            // Use the provider to get the flow data. This contains the results of device
-            // detection that has been performed by the pipeline.
+            // Use the provider to get the flow data. This contains the results of
+            // IP address lookup that has been performed by the pipeline.
             return View(new IndexModel(_provider.GetFlowData(), Response.Headers));
         }
     }
