@@ -1,6 +1,6 @@
 # ![51Degrees](https://51degrees.com/img/logo.png?utm_source=github&utm_medium=repository&utm_content=readme_main&utm_campaign=dotnet-open-source "Data rewards the curious") IP Intelligence Engine Examples
 
-This repository contains the examples for [[ip-intelligence-dotnet](../ip-intelligence-dotnet/README)].
+This repository contains the examples for [[ip-intelligence-dotnet](https://github.com/51Degrees/ip-intelligence-dotnet/README)].
 
 Projects can be found in the `Examples/` folder, there are separate sources for cloud and on-premise implementations and solutions for .NET and .NET Framework. See below for a list of examples.
 
