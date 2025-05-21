@@ -8,6 +8,18 @@ Projects can be found in the `Examples/` folder, there are separate sources for 
 
 See `ip-intelligence-data/README` ([local](./ip-intelligence-data/README) / [GitHub](https://github.com/51Degrees/ip-intelligence-data/)) on how to pull and/or generate necessary files.
 
+## 📦 NuGet Package
+
+Examples currently depend on a pre-release version of the [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence) package.  
+
+❗Make sure to enable pre-release packages when installing it:
+* Using the .NET CLI:
+```sh
+dotnet add package FiftyOne.IpIntelligence --prerelease
+```
+
+* In Visual Studio: check the “Include prerelease” box in the NuGet Package Manager UI.
+
 ## On-Premise
 
 |Example|Target|Use case|
