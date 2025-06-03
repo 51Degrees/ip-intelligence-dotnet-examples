@@ -2,7 +2,11 @@
 
 This repository contains the examples for [[ip-intelligence-dotnet](https://github.com/51Degrees/ip-intelligence-dotnet/)].
 
-Projects can be found in the `Examples/` folder, there are separate sources for cloud and on-premise implementations and solutions for .NET and .NET Framework. See below for a list of examples.
+Projects can be found in the `Examples/` folder. Currently, only on-premise examples are available. See below for a list of examples.
+
+## Cloud (coming soon)
+
+Cloud examples will be added once the cloud service for IP Intelligence becomes available.
 
 ## ⚠️ Required files
 
