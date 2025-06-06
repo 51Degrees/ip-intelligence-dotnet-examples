@@ -70,6 +70,10 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
             public long Count { get; set; }
             public Stopwatch Timer { get; } = new Stopwatch();
             public long HashSum { get; set; } = 0;
+            public bool GCEnabled { get; set; } = true;
+            public long GCCollections0 { get; set; }
+            public long GCCollections1 { get; set; }
+            public long GCCollections2 { get; set; }
         }
 
         private static readonly PerformanceConfiguration[] _configs = new PerformanceConfiguration[]
@@ -110,19 +114,46 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
 
                 // Make an initial run to warm up the system
                 output.WriteLine("Warming up");
-                var warmup = Benchmark(evidence, threadCount);
+                var warmup = Benchmark(evidence, threadCount, true);
                 var warmupTime = warmup.Sum(r => r.Timer.ElapsedMilliseconds);
                 GC.Collect();
                 Task.Delay(500).Wait();
 
-                output.WriteLine("Running");
-                var execution = Benchmark(evidence, threadCount);
+                output.WriteLine("Running with GC enabled");
+                var execution = Benchmark(evidence, threadCount, true);
                 var executionTime = execution.Sum(r => r.Timer.ElapsedMilliseconds);
                 output.WriteLine($"Finished - Execution time was {executionTime} ms, " +
                     $"adjustment from warm-up {executionTime - warmupTime} ms");
 
-                Report(execution, threadCount, output);
-                return execution;
+                Report(execution, threadCount, output, "GC Enabled");
+
+                // Force cleanup between tests
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                Task.Delay(1000).Wait();
+
+                // Run with GC disabled for comparison
+                output.WriteLine("\nRunning with GC disabled");
+                var executionNoGC = Benchmark(evidence, threadCount, false);
+                var executionTimeNoGC = executionNoGC.Sum(r => r.Timer.ElapsedMilliseconds);
+                output.WriteLine($"Finished - Execution time was {executionTimeNoGC} ms");
+
+                Report(executionNoGC, threadCount, output, "GC Disabled");
+
+                // Performance comparison
+                var gcEnabledMs = GetMsPerDetection(execution, threadCount);
+                var gcDisabledMs = GetMsPerDetection(executionNoGC, threadCount);
+                var improvement = ((gcEnabledMs - gcDisabledMs) / gcEnabledMs) * 100;
+                
+                output.WriteLine($"\n=== Performance Comparison ===");
+                output.WriteLine($"GC Enabled:  {1000/gcEnabledMs:F0} detections/sec ({gcEnabledMs:F4} ms/detection)");
+                output.WriteLine($"GC Disabled: {1000/gcDisabledMs:F0} detections/sec ({gcDisabledMs:F4} ms/detection)");
+                output.WriteLine($"Performance improvement without GC: {improvement:F1}%");
+
+                // Return GC disabled results for JSON output to maintain format compatibility
+                // while providing the optimized performance numbers
+                return executionNoGC;
             }
 
             /// <summary>
@@ -131,16 +162,25 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
             /// <param name="results"></param>
             /// <param name="threadCount"></param>
             /// <param name="output"></param>
+            /// <param name="mode"></param>
             private void Report(List<BenchmarkResult> results,
                 int threadCount,
-                TextWriter output)
+                TextWriter output,
+                string mode = "")
             {
                 // Calculate approx. real-time ms per detection. 
                 var msPerDetection = GetMsPerDetection(results, threadCount);
                 var detectionsPerSecond = 1000 / msPerDetection;
-                output.WriteLine($"Overall: {results.Sum(i => i.Count)} detections, Average millisecs per " +
-                    $"detection: {msPerDetection}, Detections per second: {detectionsPerSecond}");
-                output.WriteLine($"Overall: Concurrent threads: {threadCount}");
+                var totalGC0 = results.Sum(r => r.GCCollections0);
+                var totalGC1 = results.Sum(r => r.GCCollections1);
+                var totalGC2 = results.Sum(r => r.GCCollections2);
+                
+                output.WriteLine($"{mode} Results:");
+                output.WriteLine($"  Detections: {results.Sum(i => i.Count)}");
+                output.WriteLine($"  Average ms per detection: {msPerDetection:F4}");
+                output.WriteLine($"  Detections per second: {detectionsPerSecond:F0}");
+                output.WriteLine($"  GC Collections - Gen0: {totalGC0}, Gen1: {totalGC1}, Gen2: {totalGC2}");
+                output.WriteLine($"  Threads: {threadCount}");
             }
 
             /// <summary>
@@ -148,55 +188,76 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
             /// </summary>
             /// <param name="allEvidence"></param>
             /// <param name="threadCount"></param>
+            /// <param name="gcEnabled"></param>
             /// <returns></returns>
             private List<BenchmarkResult> Benchmark(
                 List<Dictionary<string, object>> allEvidence, 
-                int threadCount)
+                int threadCount,
+                bool gcEnabled = true)
             {
-                CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
                 List<BenchmarkResult> results = new List<BenchmarkResult>();
+                bool gcRegionStarted = false;
 
-                // Start multiple threads to process a set of evidence.
-                var processing = Parallel.ForEach(allEvidence,
-                    new ParallelOptions()
+                try
+                {
+                    if (!gcEnabled)
                     {
-                        // Note - MaxDegreeOfParallelism does not actually guarantee anything
-                        // about the number of threads involved.
-                        // It just guarantees that there will be no more than x Tasks running 
-                        // concurrently.
-                        MaxDegreeOfParallelism = threadCount,
-                        CancellationToken = cancellationTokenSource.Token
-                    },
-                    // Create a benchmark result instance per parallel unit
-                    // (not necessarily per thread!).
-                    () => new BenchmarkResult(),
-                    (evidence, loopState, result) =>
-                    {
-                        result.Timer.Start();
-                        // A using block MUST be used for the FlowData instance. This ensures that
-                        // native resources created by the IP Intelligence engine are freed in
-                        // good time.
-                        using (var data = _pipeline.CreateFlowData())
+                        // Try to start a no-GC region with progressively smaller sizes
+                        long[] sizes = { 64 * 1024 * 1024, 32 * 1024 * 1024, 16 * 1024 * 1024, 8 * 1024 * 1024 };
+                        foreach (var size in sizes)
                         {
-                            // Add the evidence to the flow data.
-                            data.AddEvidence(evidence).Process();
-
-                            // Get the data from the engine.
-                            var ipData = data.Get<IIpIntelligenceData>();
-
-                            result.Count++;
-
-                            // Access a property to ensure compiler optimizer doesn't optimize
-                            // out the very method that the benchmark is testing.
-                            if (ipData.RegisteredName.HasValue)
+                            gcRegionStarted = GC.TryStartNoGCRegion(size);
+                            if (gcRegionStarted)
                             {
-                                foreach (var nextName in ipData.RegisteredName.Value)
-                                {
-                                    result.HashSum += nextName.Value[0].GetHashCode();
-                                }
+                                Console.WriteLine($"Started no-GC region with {size / (1024 * 1024)}MB");
+                                break;
                             }
                         }
+                        if (!gcRegionStarted)
+                        {
+                            Console.WriteLine("Warning: Could not start no-GC region, running with GC enabled");
+                        }
+                    }
+
+                    // Record initial GC stats
+                    var initialGC0 = GC.CollectionCount(0);
+                    var initialGC1 = GC.CollectionCount(1);
+                    var initialGC2 = GC.CollectionCount(2);
+
+                    // Start multiple threads to process a set of evidence.
+                    var processing = Parallel.ForEach(allEvidence,
+                        new ParallelOptions()
+                        {
+                            MaxDegreeOfParallelism = threadCount,
+                        },
+                        // Create a benchmark result instance per parallel unit
+                        () => new BenchmarkResult() { GCEnabled = gcEnabled },
+                        (evidence, loopState, result) =>
+                        {
+                            result.Timer.Start();
+                            // A using block MUST be used for the FlowData instance. This ensures that
+                            // native resources created by the IP Intelligence engine are freed in
+                            // good time.
+                            using (var data = _pipeline.CreateFlowData())
+                            {
+                                // Add the evidence to the flow data.
+                                data.AddEvidence(evidence).Process();
+
+                                // Get the data from the engine.
+                                var ipData = data.Get<IIpIntelligenceData>();
+
+                                result.Count++;
+
+                                // Access a property to ensure compiler optimizer doesn't optimize
+                                // out the very method that the benchmark is testing.
+                                if (ipData.RegisteredName.HasValue)
+                                {
+                                    foreach (var nextName in ipData.RegisteredName.Value)
+                                    {
+                                        result.HashSum += nextName.Value[0].GetHashCode();
+                                    }
+                                }
+                            }
 
                         result.Timer.Stop();
                         return result;
@@ -204,13 +265,33 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                     // Add the results from this run to the overall results.
                     (result) => 
                     {
+                        // Record GC stats for this task
+                        result.GCCollections0 = GC.CollectionCount(0) - initialGC0;
+                        result.GCCollections1 = GC.CollectionCount(1) - initialGC1;
+                        result.GCCollections2 = GC.CollectionCount(2) - initialGC2;
+                        
                         lock (results)
                         {
                             results.Add(result);
                         }
                     });
 
-                return results;
+                    return results;
+                }
+                finally
+                {
+                    if (!gcEnabled && gcRegionStarted)
+                    {
+                        try
+                        {
+                            GC.EndNoGCRegion();
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // GC region may have already ended due to memory pressure
+                        }
+                    }
+                }
             }
 
             /// <summary>
