@@ -45,7 +45,7 @@ using System.Web.UI;
 /// The module replaces the default `HttpCapabilitiesBase.BrowserCapabilitiesProvider` with a 
 /// 51Degrees version.
 /// This means that when values are requested (e.g. Request.Browser.IsMobileDevice), we can 
-/// intercept that request and supply a result from our Device Detection and/or IP Intelligence.
+/// intercept that request and supply a result from our IP Intelligence.
 /// 
 /// If you require access to properties and features that are not available through 
 /// `BrowserCapabilitiesProvider`, you will need to cast browser capabilities to our 
