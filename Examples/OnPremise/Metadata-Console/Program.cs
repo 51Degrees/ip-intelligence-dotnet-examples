@@ -69,7 +69,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
         {
             public void Run(string dataFile, ILoggerFactory loggerFactory, TextWriter output)
             {
-                // Build a new on-premise Hash engine with the low memory performance profile.
+                // Build a new on-premise IP Intelligence engine with the low memory performance profile.
                 // Note that there is no need to construct a complete pipeline in order to access
                 // the meta-data.
                 // If you already have a pipeline and just want to get a reference to the engine 
