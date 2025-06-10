@@ -32,7 +32,7 @@ if ($IsLinux) {
 
 dotnet dev-certs https
 
-$env:IPINTELLIGENCEDATAFILE = [IO.Path]::Combine($RepoPath, "ip-intelligence-data", "TAC-IpIntelligenceV41.ipi")
+$env:IPINTELLIGENCEDATAFILE = [IO.Path]::Combine($RepoPath, "ip-intelligence-data", "51Degrees-EnterpriseIpiV41.ipi")
 $env:SUPER_RESOURCE_KEY = $Keys.TestResourceKey
 $env:IPINTELLIGENCELICENSEKEY_DOTNET = $Keys.DeviceDetection # TBD
 
