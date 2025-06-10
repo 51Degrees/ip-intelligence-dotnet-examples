@@ -2,8 +2,8 @@
 param (
     [string]$RepoName,
     [Parameter(Mandatory=$true)]
-    [string]$DeviceDetection,
-    [string]$DeviceDetectionUrl
+    [string]$IpIntelligence,
+    [string]$IpIntelligenceUrl
 )
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
@@ -12,10 +12,10 @@ $PSNativeCommandUseErrorActionPreference = $true
 $DataFileName = "51Degrees-EnterpriseIpiV41.ipi"
 
 # TODO: Use `fetch-hash-assets.ps1`
-# ./steps/fetch-hash-assets.ps1 -RepoName $RepoName -LicenseKey $DeviceDetection -Url $DeviceDetectionUrl -DataType "IpIntelligenceV41" -ArchiveName $DataFileName
-$ArchivedName = "51Degrees-EnterpriseIpiV41.ipi 1"
+# ./steps/fetch-hash-assets.ps1 -RepoName $RepoName -LicenseKey $IpIntelligence -Url $IpIntelligenceUrl -DataType "IpIntelligenceV41" -ArchiveName $DataFileName
+$ArchivedName = "51Degrees-EnterpriseIpiV41.ipi"
 $ArchiveName = "$ArchivedName.gz"
-Invoke-WebRequest -Uri $DeviceDetectionUrl -OutFile $RepoName/$ArchiveName
+Invoke-WebRequest -Uri $IpIntelligenceUrl -OutFile $RepoName/$ArchiveName
 $ArchiveHash = (Get-FileHash -Algorithm MD5 -Path $RepoName/$ArchiveName).Hash
 Write-Output "MD5 (fetched $ArchiveName) = $ArchiveHash"
 Write-Output "Extracting $ArchiveName"
