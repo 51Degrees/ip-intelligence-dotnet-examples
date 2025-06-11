@@ -2,11 +2,15 @@
 param (
     [string]$RepoName,
     [Parameter(Mandatory=$true)]
-    [string]$IpIntelligence,
-    [string]$IpIntelligenceUrl
+    [string]$DeviceDetection,
+    [string]$DeviceDetectionUrl
 )
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
+
+# Use IP Intelligence naming internally
+$IpIntelligence = $DeviceDetection
+$IpIntelligenceUrl = $DeviceDetectionUrl
 
 # Fetch the enterprise IPI data file for testing with
 $DataFileName = "51Degrees-EnterpriseIpiV41.ipi"
