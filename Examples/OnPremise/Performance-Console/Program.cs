@@ -78,9 +78,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
 
         private static readonly PerformanceConfiguration[] _configs = new PerformanceConfiguration[]
         {
-            new PerformanceConfiguration(true, PerformanceProfiles.MaxPerformance, false, true, false),
+           // new PerformanceConfiguration(true, PerformanceProfiles.MaxPerformance, false, true, false),
             //new PerformanceConfiguration(true, PerformanceProfiles.MaxPerformance, true, true, false),
-            //new PerformanceConfiguration(false, PerformanceProfiles.LowMemory, false, true, false),
+            new PerformanceConfiguration(false, PerformanceProfiles.LowMemory, false, true, false),
             //new PerformanceConfiguration(false, PerformanceProfiles.LowMemory, true, true, false)
         };
 
@@ -350,10 +350,10 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                         }
                         else
                         {
-                            using (MemoryStream stream = new MemoryStream(File.ReadAllBytes(dataFile)))
-                            {
-                                engine = builder.Build(stream);
-                            }
+                            using var fs = new FileStream(dataFile, FileMode.Open, FileAccess.Read);
+                            using var stream = new MemoryStream();
+                            fs.CopyTo(stream);
+                            engine = builder.Build(stream);
                         }
                         startupTimer.Stop();
                         output.WriteLine($"Engine startup time: {startupTimer.ElapsedMilliseconds} ms");
