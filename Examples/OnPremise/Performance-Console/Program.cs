@@ -81,7 +81,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
         private static readonly PerformanceConfiguration[] _configs = new PerformanceConfiguration[]
         {
             new PerformanceConfiguration(PerformanceProfiles.MaxPerformance, false),
-            //new PerformanceConfiguration(PerformanceProfiles.LowMemory, false),
+            new PerformanceConfiguration(PerformanceProfiles.LowMemory, false),
         };
 
         private const ushort DEFAULT_THREAD_COUNT = 4;
@@ -274,6 +274,10 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
             public static List<BenchmarkResult> Run(string dataFile, string evidenceFile, 
                 PerformanceConfiguration config, TextWriter output, ushort threadCount)
             {
+                // Output benchmarking configuration first
+                output.WriteLine($"Benchmarking with profile '{config.Profile}', " +
+                    $"AllProperties {config.AllProperties}");
+                
                 // Initialize a service collection which will be used to create the services
                 // required by the Pipeline and manage their lifetimes.
                 using (var serviceProvider = new ServiceCollection()
@@ -349,9 +353,6 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                         
                         output.WriteLine($"Engine startup time: {_startupTimeMs} ms");
                         output.WriteLine($"Processing evidence from '{evidenceFile}'");
-                        output.WriteLine($"Data loaded from 'disk'");
-                        output.WriteLine($"Benchmarking with profile '{config.Profile}', " +
-                            $"AllProperties {config.AllProperties}");
 
                         return serviceProvider.GetRequiredService<Example>().Run(evidenceReader, output, threadCount);
                     }
@@ -380,10 +381,14 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                     ExampleUtils.FindFile(Constants.YAML_EVIDENCE_FILE_NAME);
 
                 var results = new Dictionary<PerformanceConfiguration, IList<BenchmarkResult>>();
-                foreach (var config in _configs)
+                for (int i = 0; i < _configs.Length; i++)
                 {
-                    var result = Example.Run(dataFile, evidenceFile, config, Console.Out, DEFAULT_THREAD_COUNT);
-                    results[config] = result;
+                    if (i > 0)
+                    {
+                        Console.WriteLine(); // Add blank line between configurations
+                    }
+                    var result = Example.Run(dataFile, evidenceFile, _configs[i], Console.Out, DEFAULT_THREAD_COUNT);
+                    results[_configs[i]] = result;
                 }
 
                 if (string.IsNullOrEmpty(options.JsonOutput) == false)
