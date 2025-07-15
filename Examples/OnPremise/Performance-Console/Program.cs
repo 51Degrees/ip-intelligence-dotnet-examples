@@ -65,6 +65,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
 {
     public class Program
     {
+        private static long _startupTimeMs = 0;
+        
         public class BenchmarkResult
         {
             public long Count { get; set; }
@@ -328,7 +330,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                         }
                       
                         startupTimer.Stop();
-                        output.WriteLine($"Engine startup time: {startupTimer.ElapsedMilliseconds} ms");
+                        _startupTimeMs = startupTimer.ElapsedMilliseconds;
 
                         return engine;
                     })
@@ -356,6 +358,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                         ExampleUtils.CheckDataFile(
                             serviceProvider.GetRequiredService<IPipeline>(), 
                             serviceProvider.GetRequiredService<ILogger<Program>>());
+                        
+                        output.WriteLine($"Engine startup time: {_startupTimeMs} ms");
                         output.WriteLine($"Processing evidence from '{evidenceFile}'");
                         output.WriteLine($"Data loaded from 'disk'");
                         output.WriteLine($"Benchmarking with profile '{config.Profile}', " +
