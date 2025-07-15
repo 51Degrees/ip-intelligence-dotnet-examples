@@ -78,10 +78,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
 
         private static readonly PerformanceConfiguration[] _configs = new PerformanceConfiguration[]
         {
-           // new PerformanceConfiguration(true, PerformanceProfiles.MaxPerformance, false, true, false),
-            //new PerformanceConfiguration(true, PerformanceProfiles.MaxPerformance, true, true, false),
-            new PerformanceConfiguration(false, PerformanceProfiles.LowMemory, false, true, false),
-            //new PerformanceConfiguration(false, PerformanceProfiles.LowMemory, true, true, false)
+            new PerformanceConfiguration(PerformanceProfiles.MaxPerformance, false),
+            //new PerformanceConfiguration(PerformanceProfiles.LowMemory, false),
         };
 
         private const ushort DEFAULT_THREAD_COUNT = 4;
@@ -114,46 +112,20 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
 
                 // Make an initial run to warm up the system
                 output.WriteLine("Warming up");
-                var warmup = Benchmark(evidence, threadCount, true);
+                var warmup = Benchmark(evidence, threadCount, false);
                 var warmupTime = warmup.Sum(r => r.Timer.ElapsedMilliseconds);
                 GC.Collect();
                 Task.Delay(500).Wait();
 
-                output.WriteLine("Running with GC enabled");
-                var execution = Benchmark(evidence, threadCount, true);
+                output.WriteLine("Running");
+                var execution = Benchmark(evidence, threadCount, false);
                 var executionTime = execution.Sum(r => r.Timer.ElapsedMilliseconds);
                 output.WriteLine($"Finished - Execution time was {executionTime} ms, " +
                     $"adjustment from warm-up {executionTime - warmupTime} ms");
 
-                Report(execution, threadCount, output, "GC Enabled");
+                Report(execution, threadCount, output);
 
-                // Force cleanup between tests
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-                Task.Delay(1000).Wait();
-
-                // Run with GC disabled for comparison
-                output.WriteLine("\nRunning with GC disabled");
-                var executionNoGC = Benchmark(evidence, threadCount, false);
-                var executionTimeNoGC = executionNoGC.Sum(r => r.Timer.ElapsedMilliseconds);
-                output.WriteLine($"Finished - Execution time was {executionTimeNoGC} ms");
-
-                Report(executionNoGC, threadCount, output, "GC Disabled");
-
-                // Performance comparison
-                var gcEnabledMs = GetMsPerDetection(execution, threadCount);
-                var gcDisabledMs = GetMsPerDetection(executionNoGC, threadCount);
-                var improvement = ((gcEnabledMs - gcDisabledMs) / gcEnabledMs) * 100;
-                
-                output.WriteLine($"\n=== Performance Comparison ===");
-                output.WriteLine($"GC Enabled:  {1000/gcEnabledMs:F0} detections/sec ({gcEnabledMs:F4} ms/detection)");
-                output.WriteLine($"GC Disabled: {1000/gcDisabledMs:F0} detections/sec ({gcDisabledMs:F4} ms/detection)");
-                output.WriteLine($"Performance improvement without GC: {improvement:F1}%");
-
-                // Return GC disabled results for JSON output to maintain format compatibility
-                // while providing the optimized performance numbers
-                return executionNoGC;
+                return execution;
             }
 
             /// <summary>
@@ -165,8 +137,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
             /// <param name="mode"></param>
             private void Report(List<BenchmarkResult> results,
                 int threadCount,
-                TextWriter output,
-                string mode = "")
+                TextWriter output)
             {
                 // Calculate approx. real-time ms per detection. 
                 var msPerDetection = GetMsPerDetection(results, threadCount);
@@ -175,7 +146,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                 var totalGC1 = results.Sum(r => r.GCCollections1);
                 var totalGC2 = results.Sum(r => r.GCCollections2);
                 
-                output.WriteLine($"{mode} Results:");
+                output.WriteLine($"Results:");
                 output.WriteLine($"  Detections: {results.Sum(i => i.Count)}");
                 output.WriteLine($"  Average ms per detection: {msPerDetection:F4}");
                 output.WriteLine($"  Detections per second: {detectionsPerSecond:F0}");
@@ -193,7 +164,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
             private List<BenchmarkResult> Benchmark(
                 List<Dictionary<string, object>> allEvidence, 
                 int threadCount,
-                bool gcEnabled = true)
+                bool gcEnabled = false)
             {
                 List<BenchmarkResult> results = new List<BenchmarkResult>();
                 bool gcRegionStarted = false;
@@ -209,7 +180,6 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                             gcRegionStarted = GC.TryStartNoGCRegion(size);
                             if (gcRegionStarted)
                             {
-                                Console.WriteLine($"Started no-GC region with {size / (1024 * 1024)}MB");
                                 break;
                             }
                         }
@@ -231,7 +201,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                             MaxDegreeOfParallelism = threadCount,
                         },
                         // Create a benchmark result instance per parallel unit
-                        () => new BenchmarkResult() { GCEnabled = gcEnabled },
+                        () => new BenchmarkResult() { GCEnabled = false },
                         (evidence, loopState, result) =>
                         {
                             result.Timer.Start();
@@ -344,6 +314,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                         // make another copy of the data in memory for little benefit.
                         IpiOnPremiseEngine engine = null;
                         var startupTimer = Stopwatch.StartNew();
+
                         if (config.LoadFromDisk)
                         {
                             engine = builder.Build(dataFile, false);
@@ -355,6 +326,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                             fs.CopyTo(stream);
                             engine = builder.Build(stream);
                         }
+                      
                         startupTimer.Stop();
                         output.WriteLine($"Engine startup time: {startupTimer.ElapsedMilliseconds} ms");
 
@@ -385,7 +357,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                             serviceProvider.GetRequiredService<IPipeline>(), 
                             serviceProvider.GetRequiredService<ILogger<Program>>());
                         output.WriteLine($"Processing evidence from '{evidenceFile}'");
-                        output.WriteLine($"Data loaded from '{(config.LoadFromDisk ? "disk" : "memory")}'");
+                        output.WriteLine($"Data loaded from 'disk'");
                         output.WriteLine($"Benchmarking with profile '{config.Profile}', " +
                             $"AllProperties {config.AllProperties}");
 
