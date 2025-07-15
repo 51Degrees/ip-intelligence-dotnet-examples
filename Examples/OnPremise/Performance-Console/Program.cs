@@ -343,6 +343,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                         // in memory. Using MaxPerformance would just cause the native code to 
                         // make another copy of the data in memory for little benefit.
                         IpiOnPremiseEngine engine = null;
+                        var startupTimer = Stopwatch.StartNew();
                         if (config.LoadFromDisk)
                         {
                             engine = builder.Build(dataFile, false);
@@ -354,6 +355,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                                 engine = builder.Build(stream);
                             }
                         }
+                        startupTimer.Stop();
+                        output.WriteLine($"Engine startup time: {startupTimer.ElapsedMilliseconds} ms");
 
                         return engine;
                     })
