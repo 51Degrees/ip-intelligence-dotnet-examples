@@ -28,9 +28,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
     {
         public PerformanceProfiles Profile { get; set; }
         public bool AllProperties { get; set; }
+        public bool LoadFromDisk { get; set; }
 
-        public PerformanceConfiguration(PerformanceProfiles profile, bool allProperties)
+        public PerformanceConfiguration(bool loadFromDisk, PerformanceProfiles profile, bool allProperties)
         {
+            LoadFromDisk = loadFromDisk;
             Profile = profile;
             AllProperties = allProperties;
         }

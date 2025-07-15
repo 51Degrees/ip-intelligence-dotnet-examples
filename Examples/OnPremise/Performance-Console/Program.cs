@@ -80,8 +80,10 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
 
         private static readonly PerformanceConfiguration[] _configs = new PerformanceConfiguration[]
         {
-            new PerformanceConfiguration(PerformanceProfiles.MaxPerformance, false),
-            //new PerformanceConfiguration(PerformanceProfiles.LowMemory, false),
+            new PerformanceConfiguration(true, PerformanceProfiles.LowMemory, false),
+            new PerformanceConfiguration(true, PerformanceProfiles.MaxPerformance, false),
+            new PerformanceConfiguration(false, PerformanceProfiles.LowMemory, false),
+            new PerformanceConfiguration(false, PerformanceProfiles.MaxPerformance, false),
         };
 
         private const ushort DEFAULT_THREAD_COUNT = 4;
@@ -316,7 +318,19 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                         // make another copy of the data in memory for little benefit.
                         IpiOnPremiseEngine engine = null;
                         var startupTimer = Stopwatch.StartNew();
-                        engine = builder.Build(dataFile, false);
+
+                        if (config.LoadFromDisk)
+                        {
+                            engine = builder.Build(dataFile, false);
+                        }
+                        else
+                        {
+                            using var fs = new FileStream(dataFile, FileMode.Open, FileAccess.Read);
+                            using var stream = new MemoryStream();
+                            fs.CopyTo(stream);
+                            engine = builder.Build(stream);
+                        }
+                      
                         startupTimer.Stop();
                         _startupTimeMs = startupTimer.ElapsedMilliseconds;
 
@@ -349,7 +363,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                         
                         output.WriteLine($"Engine startup time: {_startupTimeMs} ms");
                         output.WriteLine($"Processing evidence from '{evidenceFile}'");
-                        output.WriteLine($"Data loaded from 'disk'");
+                        output.WriteLine($"Data loaded from '{(config.LoadFromDisk ? "disk" : "memory")}'");
                         output.WriteLine($"Benchmarking with profile '{config.Profile}', " +
                             $"AllProperties {config.AllProperties}");
 
