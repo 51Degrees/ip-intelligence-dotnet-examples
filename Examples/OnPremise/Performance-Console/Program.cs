@@ -80,8 +80,10 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
 
         private static readonly PerformanceConfiguration[] _configs = new PerformanceConfiguration[]
         {
-            new PerformanceConfiguration(PerformanceProfiles.MaxPerformance, false),
-            //new PerformanceConfiguration(PerformanceProfiles.LowMemory, false),
+            new PerformanceConfiguration(true, PerformanceProfiles.LowMemory, false),
+            new PerformanceConfiguration(true, PerformanceProfiles.MaxPerformance, false),
+            new PerformanceConfiguration(false, PerformanceProfiles.LowMemory, false),
+            new PerformanceConfiguration(false, PerformanceProfiles.MaxPerformance, false),
         };
 
         private const ushort DEFAULT_THREAD_COUNT = 4;
@@ -361,7 +363,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                         
                         output.WriteLine($"Engine startup time: {_startupTimeMs} ms");
                         output.WriteLine($"Processing evidence from '{evidenceFile}'");
-                        output.WriteLine($"Data loaded from 'disk'");
+                        output.WriteLine($"Data loaded from '{(config.LoadFromDisk ? "disk" : "memory")}'");
                         output.WriteLine($"Benchmarking with profile '{config.Profile}', " +
                             $"AllProperties {config.AllProperties}");
 
