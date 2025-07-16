@@ -75,11 +75,19 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     .SetProperty("RegisteredCountry")
                     .SetProperty("RegisteredOwner")
                     .SetProperty("RegisteredName")
+                    .SetProperty("IpRangeStart")
+                    .SetProperty("IpRangeEnd")
+                    .SetProperty("Country")
+                    .SetProperty("CountryCode")
+                    .SetProperty("CountryCode3")
                     .SetProperty("Region")
+                    .SetProperty("State")
+                    .SetProperty("Town")
                     .SetProperty("Latitude")
                     .SetProperty("Longitude")
                     .SetProperty("Areas")
                     .SetProperty("AccuracyRadius")
+                    .SetProperty("TimeZoneOffset")
                     .Build())
                 {
                     // carry out some sample detections
@@ -131,45 +139,43 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     // can get by asking for a result matching the `IIpIntelligenceData` interface.
                     var ipData = data.Get<IIpIntelligenceData>();
 
-                    {
-                        var name = ipData.RegisteredName;
-                        if (!name.HasValue)
-                        {
-                            message.AppendLine($"\t{nameof(ipData.RegisteredName)}: {name.NoValueMessage} - {name.NoValueMessage}");
-                        }
-                        else
-                        {
-                            var nameValues = string.Join(", ", name.Value.Select(x => $"('{x.Value}' @ {x.Weighting()})"));
-                            message.AppendLine($"\t{nameof(ipData.RegisteredName)}  ({name.Value.Count}): {nameValues}");
-                        }
-                    }
-                    {
-                        var RegisteredOwner = ipData.RegisteredOwner;
-                        if (!RegisteredOwner.HasValue)
-                        {
-                            message.AppendLine($"\t{nameof(ipData.RegisteredOwner)}: {RegisteredOwner.NoValueMessage} - {RegisteredOwner.NoValueMessage}");
-                        }
-                        else
-                        {
-                            var nameValues = string.Join(", ", RegisteredOwner.Value.Select(x => $"('{x.Value}' @ {x.Weighting()})"));
-                            message.AppendLine($"\t{nameof(ipData.RegisteredOwner)}  ({RegisteredOwner.Value.Count}): {nameValues}");
-                        }
-                    }
-                    {
-                        var RegisteredCountry = ipData.RegisteredCountry;
-                        if (!RegisteredCountry.HasValue)
-                        {
-                            message.AppendLine($"\t{nameof(ipData.RegisteredCountry)}: {RegisteredCountry.NoValueMessage} - {RegisteredCountry.NoValueMessage}");
-                        }
-                        else
-                        {
-                            var nameValues = string.Join(", ", RegisteredCountry.Value.Select(x => $"('{x.Value}' @ {x.Weighting()})"));
-                            message.AppendLine($"\t{nameof(ipData.RegisteredCountry)}  ({RegisteredCountry.Value.Count}): {nameValues}");
-                        }
-                    }
+                    // Output all the properties
+                    OutputListProperty(nameof(ipData.RegisteredName), ipData.RegisteredName, message);
+                    OutputListProperty(nameof(ipData.RegisteredOwner), ipData.RegisteredOwner, message);
+                    OutputListProperty(nameof(ipData.RegisteredCountry), ipData.RegisteredCountry, message);
+                    OutputWeightedIPAddressValues(nameof(ipData.IpRangeStart), ipData.IpRangeStart, message);
+                    OutputWeightedIPAddressValues(nameof(ipData.IpRangeEnd), ipData.IpRangeEnd, message);
+                    OutputListProperty(nameof(ipData.Country), ipData.Country, message);
+                    OutputListProperty(nameof(ipData.CountryCode), ipData.CountryCode, message);
+                    OutputListProperty(nameof(ipData.CountryCode3), ipData.CountryCode3, message);
+                    OutputListProperty(nameof(ipData.Region), ipData.Region, message);
+                    OutputListProperty(nameof(ipData.State), ipData.State, message);
+                    OutputListProperty(nameof(ipData.Town), ipData.Town, message);
+                    OutputWeightedFloatValues(nameof(ipData.Latitude), ipData.Latitude, message);
+                    OutputWeightedFloatValues(nameof(ipData.Longitude), ipData.Longitude, message);
+                    OutputListProperty(nameof(ipData.Areas), ipData.Areas, message);
+                    OutputWeightedIntValues(nameof(ipData.AccuracyRadius), ipData.AccuracyRadius, message);
+                    OutputWeightedIntValues(nameof(ipData.TimeZoneOffset), ipData.TimeZoneOffset, message);
                     output.WriteLine(message.ToString());
                 }
             }
+
+            private void OutputListProperty(string name, 
+                IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> property,
+                StringBuilder message)
+            {
+                if (!property.HasValue)
+                {
+                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
+                }
+                else
+                {
+                    var values = string.Join(", ", property.Value.Select(x => 
+                        x.Weighting() == 1 ? $"'{x.Value}'" : $"('{x.Value}' @ {x.Weighting()})"));
+                    message.AppendLine($"\t{name} ({property.Value.Count}): {values}");
+                }
+            }
+
 
             private void OutputValue(string name, 
                 IAspectPropertyValue value,
@@ -180,9 +186,62 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 // If the value has not been set then trying to access the `Value` property will
                 // throw an exception. `AspectPropertyValue` also includes the `NoValueMessage`
                 // property, which describes why the value has not been set.
-                message.AppendLine(value.HasValue ?
-                    $"\t{name}: " + value.Value :
-                    $"\t{name}: " + value.NoValueMessage);
+                if (!value.HasValue)
+                {
+                    message.AppendLine($"\t{name}: {value.NoValueMessage}");
+                }
+                else
+                {
+                    message.AppendLine($"\t{name}: {value.Value}");
+                }
+            }
+
+            private void OutputWeightedIntValues(string name, 
+                IAspectPropertyValue<IReadOnlyList<IWeightedValue<int>>> property,
+                StringBuilder message)
+            {
+                if (!property.HasValue)
+                {
+                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
+                }
+                else
+                {
+                    var values = property.Value.Select(x => 
+                        Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString() : $"({x.Value} @ {x.Weighting():F4})");
+                    message.AppendLine($"\t{name} ({property.Value.Count}): {string.Join(", ", values)}");
+                }
+            }
+
+            private void OutputWeightedFloatValues(string name, 
+                IAspectPropertyValue<IReadOnlyList<IWeightedValue<float>>> property,
+                StringBuilder message)
+            {
+                if (!property.HasValue)
+                {
+                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
+                }
+                else
+                {
+                    var values = property.Value.Select(x => 
+                        Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString("F6") : $"({x.Value:F6} @ {x.Weighting():F4})");
+                    message.AppendLine($"\t{name} ({property.Value.Count}): {string.Join(", ", values)}");
+                }
+            }
+
+            private void OutputWeightedIPAddressValues(string name, 
+                IAspectPropertyValue<IReadOnlyList<IWeightedValue<System.Net.IPAddress>>> property,
+                StringBuilder message)
+            {
+                if (!property.HasValue)
+                {
+                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
+                }
+                else
+                {
+                    var values = property.Value.Select(x => 
+                        Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString() : $"({x.Value} @ {x.Weighting():F4})");
+                    message.AppendLine($"\t{name} ({property.Value.Count}): {string.Join(", ", values)}");
+                }
             }
         }
 
