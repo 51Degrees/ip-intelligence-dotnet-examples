@@ -23,15 +23,15 @@
 @using FiftyOne.IpIntelligence.Examples
 @model FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model.IndexModel
 @{
-    ViewData["Title"] = "Web Integration Example";
+    ViewData["Title"] = "IP Intelligence Web Integration Example";
 }
 
 <link rel="stylesheet" href="~/css/site.css" />
 
-<h2>Web Integration Example</h2>
+<h2>IP Intelligence Web Integration Example</h2>
 
 <p>
-    This example demonstrates the use of the Pipeline API to perform device detection within a
+    This example demonstrates the use of the Pipeline API to perform IP Intelligence lookups within a
     simple ASP.NET Core web project.
 </p>
 
@@ -55,17 +55,41 @@
 }
 
 <div id="content">
+    <h3>IP Intelligence Lookup</h3>
+    <form method="post" asp-action="Index">
+        <div style="margin-bottom: 20px;">
+            <label for="ipAddress">Enter IP Address:</label>
+            <input type="text" id="ipAddress" name="ipAddress" value="@Model.InputIpAddress" 
+                   placeholder="e.g., 116.154.188.222" style="margin-left: 10px; padding: 5px;">
+            <button type="submit" style="margin-left: 10px; padding: 5px 15px;">Look Up</button>
+        </div>
+    </form>
+    
     <h3>Detection results</h3>
     <p>
-        The following values are determined by sever-side device detection
-        on the first request:
+        The following values are determined by IP Intelligence analysis:
     </p>
     <table>
         <tr>
-            <th>Key</th>
+            <th>Property</th>
             <th>Value</th>
         </tr>
-        <tr class="lightyellow"><td><b>Network Name:</b></td><td> @Model.Name</td></tr>
+        <tr class="lightyellow"><td><b>Registered Name:</b></td><td>@Model.Name</td></tr>
+        <tr class="lightgreen"><td><b>Registered Owner:</b></td><td>@Model.RegisteredOwner</td></tr>
+        <tr class="lightyellow"><td><b>Registered Country:</b></td><td>@Model.RegisteredCountry</td></tr>
+        <tr class="lightgreen"><td><b>IP Range Start:</b></td><td>@Model.IpRangeStart</td></tr>
+        <tr class="lightyellow"><td><b>IP Range End:</b></td><td>@Model.IpRangeEnd</td></tr>
+        <tr class="lightgreen"><td><b>Country:</b></td><td>@Model.Country</td></tr>
+        <tr class="lightyellow"><td><b>Country Code:</b></td><td>@Model.CountryCode</td></tr>
+        <tr class="lightgreen"><td><b>Country Code 3:</b></td><td>@Model.CountryCode3</td></tr>
+        <tr class="lightyellow"><td><b>Region:</b></td><td>@Model.Region</td></tr>
+        <tr class="lightgreen"><td><b>State:</b></td><td>@Model.State</td></tr>
+        <tr class="lightyellow"><td><b>Town:</b></td><td>@Model.Town</td></tr>
+        <tr class="lightgreen"><td><b>Latitude:</b></td><td>@Model.Latitude</td></tr>
+        <tr class="lightyellow"><td><b>Longitude:</b></td><td>@Model.Longitude</td></tr>
+        <tr class="lightgreen"><td><b>Areas:</b></td><td>@Model.Areas</td></tr>
+        <tr class="lightyellow"><td><b>Accuracy Radius:</b></td><td>@Model.AccuracyRadius</td></tr>
+        <tr class="lightgreen"><td><b>Time Zone Offset:</b></td><td>@Model.TimeZoneOffset</td></tr>
     </table>
     <br />
 
@@ -77,7 +101,7 @@
                 <th>Key</th>
                 <th>Value</th>
             </tr>
-            @foreach (var entry in Model.Evidence)
+            @foreach (var entry in Model.Evidence.Where(e => e.Key.Equals("server.client-ip", StringComparison.OrdinalIgnoreCase)))
             {
                 <tr class="@(entry.Used ? "lightgreen" : "lightyellow")">
                     <td><b>@(entry.Key)</b></td>
@@ -114,21 +138,3 @@
     }
 </div>
 
-@* This View Component is embedded within the FiftyOne.Pipeline.Web package.
-    it adds a JavaScript include for 51Degrees.core.js.
-    The FiftyOne degrees middleware will intercept the request for this file and serve dynamically
-    generated JavaScript, which includes a JSON representation of the contents of flow data.
-    i.e. The results from device detection.
-
-    In addition, this JavaScript will look for properties that have a flag set indicating that
-    they contain executable script snippets.
-    These snippets will be executed and the values they obtain will be sent back to the server
-    in order for it to perform the detection process again with the new information.
-    This callback will also include any User-Agent Client Hints headers that have been requested
-    with the 'Accept-CH' header. (assuming the browser is willing to send them)
-
-    When the server responds, the JSON representation of the results will be updated with the
-    new values and the 'complete' event will fire.
-    Below, we subscribe to this complete event and display the values from the updated JSON.
-*@
-@await Component.InvokeAsync("FiftyOneJS")

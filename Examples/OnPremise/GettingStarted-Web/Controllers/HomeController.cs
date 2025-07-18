@@ -24,6 +24,9 @@ using Microsoft.AspNetCore.Mvc;
 using FiftyOne.Pipeline.Web.Services;
 using FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model;
 using Microsoft.Extensions.Logging;
+using FiftyOne.Pipeline.Core.FlowElements;
+using FiftyOne.Pipeline.Core.Data;
+using System.Net;
 
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controllers
 {
@@ -33,13 +36,15 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
 
         private IFlowDataProvider _provider;
         private ILogger<HomeController> _logger;
+        private IPipeline _pipeline;
 
         // The controller has a dependency on IFlowDataProvider. This is used to access the 
         // IFlowData that contains the IP Intelligence results for the current HTTP request.
-        public HomeController(IFlowDataProvider provider, ILogger<HomeController> logger)
+        public HomeController(IFlowDataProvider provider, ILogger<HomeController> logger, IPipeline pipeline)
         {
             _provider = provider;
             _logger = logger;
+            _pipeline = pipeline;
         }
 
         public IActionResult Index()
@@ -52,7 +57,38 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
             }
             // Use the provider to get the flow data. This contains the results of
             // IP address lookup that has been performed by the pipeline.
-            return View(new IndexModel(_provider.GetFlowData(), Response.Headers));
+            var model = new IndexModel(_provider.GetFlowData(), Response.Headers);
+            return View(model);
+        }
+
+        [HttpPost]
+        public IActionResult Index(string ipAddress)
+        {
+            // Log warnings if the data file is too old or the 'Lite' file is being used.
+            if(_checkedDataFile == false)
+            {
+                ExampleUtils.CheckDataFile(_pipeline, _logger);
+                _checkedDataFile = true;
+            }
+
+            IFlowData flowData;
+            
+            if (!string.IsNullOrWhiteSpace(ipAddress))
+            {
+                // Create new flow data with custom IP address
+                flowData = _pipeline.CreateFlowData();
+                flowData.AddEvidence("server.client-ip", ipAddress);
+                flowData.Process();
+            }
+            else
+            {
+                // Use the default flow data from the current request
+                flowData = _provider.GetFlowData();
+            }
+
+            var model = new IndexModel(flowData, Response.Headers);
+            model.InputIpAddress = ipAddress;
+            return View(model);
         }
     }
 }

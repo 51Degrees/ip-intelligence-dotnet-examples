@@ -32,6 +32,22 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
     public class IndexModel
     {
         public string Name { get; private set; }
+        public string RegisteredOwner { get; private set; }
+        public string RegisteredCountry { get; private set; }
+        public string IpRangeStart { get; private set; }
+        public string IpRangeEnd { get; private set; }
+        public string Country { get; private set; }
+        public string CountryCode { get; private set; }
+        public string CountryCode3 { get; private set; }
+        public string Region { get; private set; }
+        public string State { get; private set; }
+        public string Town { get; private set; }
+        public string Latitude { get; private set; }
+        public string Longitude { get; private set; }
+        public string Areas { get; private set; }
+        public string AccuracyRadius { get; private set; }
+        public string TimeZoneOffset { get; private set; }
+        public string InputIpAddress { get; set; }
 
         public IFlowData FlowData { get; private set; }
 
@@ -69,6 +85,21 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
             // due to using a lite data file or the property not having a value because
             // IP intelligence didn't find a match.
             Name = ipiData.TryGetValue(d => d.RegisteredName.GetHumanReadable());
+            RegisteredOwner = ipiData.TryGetValue(d => d.RegisteredOwner.GetHumanReadable());
+            RegisteredCountry = ipiData.TryGetValue(d => d.RegisteredCountry.GetHumanReadable());
+            IpRangeStart = ipiData.TryGetValue(d => d.IpRangeStart.GetHumanReadable());
+            IpRangeEnd = ipiData.TryGetValue(d => d.IpRangeEnd.GetHumanReadable());
+            Country = ipiData.TryGetValue(d => d.Country.GetHumanReadable());
+            CountryCode = ipiData.TryGetValue(d => d.CountryCode.GetHumanReadable());
+            CountryCode3 = ipiData.TryGetValue(d => d.CountryCode3.GetHumanReadable());
+            Region = ipiData.TryGetValue(d => d.Region.GetHumanReadable());
+            State = ipiData.TryGetValue(d => d.State.GetHumanReadable());
+            Town = ipiData.TryGetValue(d => d.Town.GetHumanReadable());
+            Latitude = ipiData.TryGetValue(d => d.Latitude.GetHumanReadable());
+            Longitude = ipiData.TryGetValue(d => d.Longitude.GetHumanReadable());
+            Areas = ipiData.TryGetValue(d => d.Areas.GetHumanReadable());
+            AccuracyRadius = ipiData.TryGetValue(d => d.AccuracyRadius.GetHumanReadable());
+            TimeZoneOffset = ipiData.TryGetValue(d => d.TimeZoneOffset.GetHumanReadable());
         }
     }
 }
