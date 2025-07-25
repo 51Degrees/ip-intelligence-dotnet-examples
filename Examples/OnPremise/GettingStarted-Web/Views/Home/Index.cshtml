@@ -28,7 +28,61 @@
 
 <link rel="stylesheet" href="~/css/site.css" />
 
-<h2>IP Intelligence Web Integration Example</h2>
+<style>
+    .split-container {
+        display: flex;
+        width: 100%;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+    }
+    
+    .left-panel {
+        width: 50%;
+        height: 100vh;
+        padding: 20px;
+        border-right: 2px solid #ccc;
+        overflow-y: auto;
+        box-sizing: border-box;
+    }
+    
+    .right-panel {
+        width: 50%;
+        height: 100vh;
+        padding: 0;
+        background-color: #f9f9f9;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+    
+    .comparison-iframe {
+        width: 100%;
+        height: calc(100vh - 50px);
+        border: none;
+        background-color: white;
+    }
+    
+    .panel-header {
+        background-color: #d32f2f;
+        color: white;
+        padding: 10px 20px;
+        margin: -20px -20px 20px -20px;
+        font-weight: bold;
+    }
+    
+    .comparison-header {
+        background-color: #2196F3;
+        color: white;
+        padding: 10px 20px;
+        margin: 0;
+        font-weight: bold;
+    }
+</style>
+
+<div class="split-container">
+    <div class="left-panel">
+        <div class="panel-header">51Degrees IP Intelligence</div>
 
 <p>
     This example demonstrates the use of the Pipeline API to perform IP Intelligence lookups within a
@@ -243,4 +297,25 @@
         }
     }
 </script>
+
+    </div> <!-- End left-panel -->
+    
+    <div class="right-panel">
+        <div class="comparison-header">BigDataCloud IP Lookup Comparison</div>
+        @if (!string.IsNullOrWhiteSpace(Model.InputIpAddress))
+        {
+            <iframe src="https://bigdatacloud.com/ip-lookup/@Model.InputIpAddress" 
+                    class="comparison-iframe" 
+                    title="BigDataCloud IP Lookup">
+            </iframe>
+        }
+        else
+        {
+            <div style="padding: 20px; text-align: center; color: #666;">
+                <p>Enter an IP address to see comparison data</p>
+            </div>
+        }
+    </div> <!-- End right-panel -->
+    
+</div> <!-- End split-container -->
 
