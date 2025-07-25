@@ -136,5 +136,111 @@
         <a href="https://51degrees.com/pricing">pricing page</a>.
     </div>
     }
+    
+    <br />
+    <div id="map-section" style="display: none;">
+        <h3 id="map-title">Location Map</h3>
+        <div id="map" style="height: 400px; width: 100%; border: 1px solid #ccc;"></div>
+    </div>
 </div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/wellknown@0.5.0/wellknown.js"></script>
+
+<script>
+    // Map configuration - English only
+    var mapConfig = {
+        title: 'Location Map',
+        ipLocationLabel: 'IP Location',
+        latitudeLabel: 'Lat',
+        longitudeLabel: 'Lng'
+    };
+    
+    // Constants
+    var UNKNOWN_VALUE = 'Unknown';
+    var EMPTY_POLYGON = 'POLYGON EMPTY';
+    
+    // Helper function to check if a value is valid (not unknown or empty)
+    function isValidValue(value) {
+        return value && !value.includes(UNKNOWN_VALUE) && value !== '0' && value !== '';
+    }
+    
+    // Get the Areas value from the model
+    var areasWkt = '@Html.Raw(Model.Areas?.Replace("'", "\\'") ?? "")';
+    var latitude = '@Model.Latitude';
+    var longitude = '@Model.Longitude';
+    
+    if (isValidValue(areasWkt) && areasWkt !== EMPTY_POLYGON) {
+        // Show the map section
+        document.getElementById('map-section').style.display = 'block';
+        
+        // Initialize the map
+        var map = L.map('map');
+        
+        // Add CartoDB Positron tile layer - shows all place names in English
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap contributors © CARTO',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+        
+        try {
+            // Parse WKT to GeoJSON using wellknown library
+            var geoJson = wellknown.parse(areasWkt);
+            
+            if (geoJson) {
+                // Add the polygon to the map
+                var polygon = L.geoJSON(geoJson, {
+                    style: {
+                        color: '#ff0000',
+                        weight: 2,
+                        opacity: 0.8,
+                        fillColor: '#ff0000',
+                        fillOpacity: 0.2
+                    }
+                }).addTo(map);
+                
+                // Fit the map to the polygon bounds
+                map.fitBounds(polygon.getBounds());
+                
+                // If we have valid coordinates, add a marker for the IP location
+                if (isValidValue(latitude) && isValidValue(longitude)) {
+                    var lat = parseFloat(latitude);
+                    var lng = parseFloat(longitude);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        L.marker([lat, lng])
+                            .addTo(map)
+                            .bindPopup(mapConfig.ipLocationLabel + '<br>' + mapConfig.latitudeLabel + ': ' + lat + '<br>' + mapConfig.longitudeLabel + ': ' + lng)
+                            .openPopup();
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing polygon:', e);
+            document.getElementById('map-section').style.display = 'none';
+        }
+    } else if (isValidValue(latitude) && isValidValue(longitude)) {
+        // If no polygon but we have coordinates, show just the marker
+        document.getElementById('map-section').style.display = 'block';
+        
+        var lat = parseFloat(latitude);
+        var lng = parseFloat(longitude);
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+            var map = L.map('map').setView([lat, lng], 10);
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap contributors © CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+            
+            L.marker([lat, lng])
+                .addTo(map)
+                .bindPopup(mapConfig.ipLocationLabel + '<br>' + mapConfig.latitudeLabel + ': ' + lat + '<br>' + mapConfig.longitudeLabel + ': ' + lng)
+                .openPopup();
+        }
+    }
+</script>
 
