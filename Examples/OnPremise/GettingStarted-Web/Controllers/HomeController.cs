@@ -47,7 +47,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
             _pipeline = pipeline;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(string ipAddress = null)
         {
             // Log warnings if the data file is too old or the 'Lite' file is being used.
             if(_checkedDataFile == false)
@@ -55,40 +55,36 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
                 ExampleUtils.CheckDataFile(_provider.GetFlowData().Pipeline, _logger);
                 _checkedDataFile = true;
             }
-            // Use the provider to get the flow data. This contains the results of
-            // IP address lookup that has been performed by the pipeline.
-            var model = new IndexModel(_provider.GetFlowData(), Response.Headers);
-            return View(model);
-        }
 
-        [HttpPost]
-        public IActionResult Index(string ipAddress)
-        {
-            // Log warnings if the data file is too old or the 'Lite' file is being used.
-            if(_checkedDataFile == false)
-            {
-                ExampleUtils.CheckDataFile(_pipeline, _logger);
-                _checkedDataFile = true;
-            }
+            // Get the visitor's IP address from the request
+            var visitorIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+            
+            // If no custom IP provided, use the visitor's IP
+            var targetIp = !string.IsNullOrWhiteSpace(ipAddress) ? ipAddress : visitorIp;
 
             IFlowData flowData;
             
-            if (!string.IsNullOrWhiteSpace(ipAddress))
+            if (!string.IsNullOrWhiteSpace(targetIp))
             {
-                // Create new flow data with custom IP address
-                flowData = _pipeline.CreateFlowData();
-                flowData.AddEvidence("server.client-ip", ipAddress);
-                flowData.Process();
+                // Create new flow data with specified IP address (custom or visitor's)
+                using (flowData = _pipeline.CreateFlowData())
+                {
+                    flowData.AddEvidence("server.client-ip", targetIp);
+                    flowData.Process();
+                    
+                    var model = new IndexModel(flowData, Response.Headers);
+                    model.InputIpAddress = targetIp;
+                    return View(model);
+                }
             }
             else
             {
-                // Use the default flow data from the current request
+                // Fallback to default flow data if we can't determine IP
                 flowData = _provider.GetFlowData();
+                var model = new IndexModel(flowData, Response.Headers);
+                model.InputIpAddress = visitorIp;
+                return View(model);
             }
-
-            var model = new IndexModel(flowData, Response.Headers);
-            model.InputIpAddress = ipAddress;
-            return View(model);
         }
     }
 }
