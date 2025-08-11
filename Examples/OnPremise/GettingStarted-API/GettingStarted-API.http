@@ -1,0 +1,23 @@
+@GettingStarted_API_HostAddress = http://localhost:5225
+
+###
+GET {{GettingStarted_API_HostAddress}}/swagger
+###
+GET {{GettingStarted_API_HostAddress}}/ipi/8.8.8.8
+Accept: application/json
+###
+GET {{GettingStarted_API_HostAddress}}/ip-name/8.8.8.8
+Accept: text/plain
+###
+GET {{GettingStarted_API_HostAddress}}/ipi/8.40.5.6
+Accept: application/json
+###
+GET {{GettingStarted_API_HostAddress}}/ip-name/8.40.5.6
+Accept: text/plain
+###
+GET {{GettingStarted_API_HostAddress}}/ipi/
+Accept: application/json
+###
+GET {{GettingStarted_API_HostAddress}}/ip-name/
+Accept: text/plain
+###
