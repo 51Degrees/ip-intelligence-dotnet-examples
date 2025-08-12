@@ -69,7 +69,7 @@ namespace GettingStarted_API
                     flowData.Process();
                     if (flowData.Get<IJsonBuilderElementData>()?.Json is { } json)
                     {
-                        return Results.Json(json);
+                        return Results.Text(json);
                     }
                 }
                 return Results.NotFound("No IP");
@@ -122,7 +122,7 @@ namespace GettingStarted_API
 
                 if (flowData.Get<IJsonBuilderElementData>()?.Json is { } json)
                 {
-                    return Results.Json(json);
+                    return Results.Text(json);
                 }
                 return Results.NotFound("No results.");
             })
