@@ -5,6 +5,7 @@ using FiftyOne.IpIntelligence.Examples;
 using FiftyOne.Pipeline.Core.Configuration;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
+using FiftyOne.Pipeline.Engines.FlowElements;
 using FiftyOne.Pipeline.JsonBuilder.Data;
 using FiftyOne.Pipeline.Web.Services;
 using FiftyOne.Pipeline.Web.Shared;
@@ -96,6 +97,34 @@ namespace GettingStarted_API
                 return Results.NotFound("No IP");
             })
             .WithName("IpRangeName");
+
+            app.MapGet("/accessibleproperties", (HttpContext httpContext, IPipeline pipeline) =>
+            {
+                IList<PropertyMetaData> props = pipeline.FlowElements
+                .Select(x => x as IAspectEngine)
+                .Where(x => x is not null)
+                .SelectMany(x => x.Properties)
+                .Select(x => new PropertyMetaData(x))
+                .ToList();
+
+                return new ProductMetaData
+                {
+                    Properties = props,
+                };
+            })
+            .WithName("AccessibleProperties");
+
+            app.MapGet("/evidencekeys", (HttpContext httpContext, IPipeline pipeline) =>
+            {
+                var keys = pipeline.FlowElements
+                .Select(x => x.EvidenceKeyFilter as EvidenceKeyFilterWhitelist)
+                .Where(x => x is not null)
+                .SelectMany(x => x.Whitelist.Keys)
+                .Distinct()
+                .ToList();
+                return keys;
+            })
+            .WithName("EvidenceKeys");
 
             app.Run();
         }
