@@ -69,7 +69,7 @@ namespace GettingStarted_API
                     flowData.Process();
                     if (flowData.Get<IJsonBuilderElementData>()?.Json is { } json)
                     {
-                        return Results.Text(json);
+                        return Results.Text(json, "application/json");
                     }
                 }
                 return Results.NotFound("No IP");
@@ -91,7 +91,8 @@ namespace GettingStarted_API
                     {
                         return Results.Text(string.Join(", ",
                             name.Value.Select(
-                                weighted => $"(Weighting={weighted.Weighting()}, Value={weighted.Value})")));
+                                weighted => $"(Weighting={weighted.Weighting()}, Value={weighted.Value})")),
+                            "text/plain");
                     }
                 }
                 return Results.NotFound("No IP");
@@ -122,7 +123,7 @@ namespace GettingStarted_API
 
                 if (flowData.Get<IJsonBuilderElementData>()?.Json is { } json)
                 {
-                    return Results.Text(json);
+                    return Results.Text(json, "application/json");
                 }
                 return Results.NotFound("No results.");
             })
@@ -130,17 +131,18 @@ namespace GettingStarted_API
 
             app.MapGet("/accessibleproperties", (HttpContext httpContext, IPipeline pipeline) =>
             {
-                IList<PropertyMetaData> props = pipeline.FlowElements
-                .Select(x => x as IAspectEngine)
-                .Where(x => x is not null)
-                .SelectMany(x => x.Properties)
-                .Select(x => new PropertyMetaData(x))
-                .ToList();
+                Dictionary<string, ProductMetaData> products = new(
+                    pipeline.FlowElements
+                    .SelectMany(x => x is IAspectEngine eng ? [eng] : (IEnumerable<IAspectEngine>)[])
+                    .Select(eng => new KeyValuePair<string, ProductMetaData>(eng.ElementDataKey, new ProductMetaData
+                    {
+                        Properties = eng!.Properties.Select(prop => new PropertyMetaData(prop)).ToList(),
+                    })));
 
-                return new ProductMetaData
+                return Results.Json(new LicencedProducts
                 {
-                    Properties = props,
-                };
+                    Products = products,
+                });
             })
             .WithName("AccessibleProperties");
 
@@ -152,7 +154,7 @@ namespace GettingStarted_API
                 .SelectMany(x => x.Whitelist.Keys)
                 .Distinct()
                 .ToList();
-                return keys;
+                return Results.Json(keys);
             })
             .WithName("EvidenceKeys");
 
