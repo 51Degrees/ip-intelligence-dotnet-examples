@@ -9,6 +9,17 @@ Accept: application/json
 GET {{GettingStarted_API_HostAddress}}/evidencekeys
 Accept: application/json
 ###
+GET {{GettingStarted_API_HostAddress}}/KEY.json?query.client-ip=8.10.15.16
+Accept: application/json
+###
+GET {{GettingStarted_API_HostAddress}}/KEY.json
+Accept: application/json
+Cookie: query.client-ip=8.12.15.16
+###
+GET {{GettingStarted_API_HostAddress}}/KEY.json
+Accept: application/json
+query.client-ip: 8.15.15.16
+###
 GET {{GettingStarted_API_HostAddress}}/ipi/8.8.8.8
 Accept: application/json
 ###
