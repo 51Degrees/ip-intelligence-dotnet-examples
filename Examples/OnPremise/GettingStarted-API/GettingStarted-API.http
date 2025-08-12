@@ -3,6 +3,12 @@
 ###
 GET {{GettingStarted_API_HostAddress}}/swagger
 ###
+GET {{GettingStarted_API_HostAddress}}/accessibleproperties
+Accept: application/json
+###
+GET {{GettingStarted_API_HostAddress}}/evidencekeys
+Accept: application/json
+###
 GET {{GettingStarted_API_HostAddress}}/ipi/8.8.8.8
 Accept: application/json
 ###
