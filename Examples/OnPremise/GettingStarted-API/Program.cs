@@ -98,6 +98,36 @@ namespace GettingStarted_API
             })
             .WithName("IpRangeName");
 
+            app.MapGet("/{key}.json", (string key, HttpContext context, IPipeline pipeline) =>
+            {
+                var aggregated = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+                // Query Parameters
+                foreach (var kvp in context.Request.Query)
+                {
+                    aggregated[kvp.Key] = kvp.Value.LastOrDefault() ?? string.Empty;
+                }
+                foreach (var kvp in context.Request.Headers)
+                {
+                    aggregated[kvp.Key] = kvp.Value.LastOrDefault() ?? string.Empty;
+                }
+                foreach (var kvp in context.Request.Cookies)
+                {
+                    aggregated[kvp.Key] = kvp.Value;
+                }
+
+                using var flowData = pipeline.CreateFlowData();
+                flowData.AddEvidence(aggregated);
+                flowData.Process();
+
+                if (flowData.Get<IJsonBuilderElementData>()?.Json is { } json)
+                {
+                    return Results.Json(json);
+                }
+                return Results.NotFound("No results.");
+            })
+            .WithName("ProcessEvidence");
+
             app.MapGet("/accessibleproperties", (HttpContext httpContext, IPipeline pipeline) =>
             {
                 IList<PropertyMetaData> props = pipeline.FlowElements
