@@ -3,7 +3,7 @@
 ###
 GET {{GettingStarted_API_HostAddress}}/swagger
 ###
-GET {{GettingStarted_API_HostAddress}}/accessibleproperties
+GET {{GettingStarted_API_HostAddress}}/accessibleproperties?resource=KEY
 Accept: application/json
 ###
 GET {{GettingStarted_API_HostAddress}}/evidencekeys
