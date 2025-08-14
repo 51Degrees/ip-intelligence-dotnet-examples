@@ -1,6 +1,6 @@
 /* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
- * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
+ * Copyright 2023 51 Degrees Mobile Experts Limited, Davidson House,
  * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
  * This Original Work is licensed under the European Union Public Licence
@@ -20,90 +20,68 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+using FiftyOne.IpIntelligence.Cloud.FlowElements;
+using FiftyOne.Pipeline.CloudRequestEngine.FlowElements;
+using FiftyOne.Pipeline.Core.Configuration;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
-using FiftyOne.Pipeline.Engines;
 using FiftyOne.Pipeline.Engines.Data;
+using FiftyOne.Pipeline.Engines.FiftyOne.FlowElements;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Text;
 
 /// <summary>
-/// @example OnPremise/GettingStarted-Console/Program.cs
+/// @example Cloud/GettingStarted-Console/Program.cs
+///
+/// @include{doc} example-getting-started-cloud.txt
 /// 
-/// @include{doc} example-getting-started-onpremise.txt
+/// This example is available in full on [GitHub](https://github.com/51Degrees/device-detection-dotnet-examples/blob/main/Examples/Cloud/GettingStarted-Console/Program.cs). 
 /// 
-/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-Console/Program.cs). 
-/// 
-/// @include{doc} example-require-datafile.txt
-/// 
+/// @include{doc} example-require-resourcekey.txt
+///
 /// Required NuGet Dependencies:
 /// - FiftyOne.IpIntelligence
+/// - Microsoft.Extensions.Configuration.Json
+/// - Microsoft.Extensions.DependencyInjection
+/// - Microsoft.Extensions.Logging.Console
 /// </summary>
-namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
+namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedConsole
 {
     public class Program
     {
-        public class Example : ExampleBase
+        public class Example
         {
-            public void Run(string dataFile, ILoggerFactory loggerFactory, TextWriter output)
+            public void Run(IServiceProvider serviceProvider, TextWriter output)
             {
-                // In this example, we use the IpiPipelineBuilder and configure it
-                // in code. For more information about builders in general see the documentation at
+                var pipelineOptions = serviceProvider.GetRequiredService<PipelineOptions>();
+                var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+
+                // In this example, we use the FiftyOnePipelineBuilder and configure it from a file.
+                // For more information about builders in general see the documentation at
                 // https://51degrees.com/documentation/_concepts__configuration__builders__index.html
 
-                // Note that we wrap the creation of a pipeline in a using to control its life cycle
-                using (var pipeline = new IpiPipelineBuilder()
-                    .UseOnPremise(dataFile, null, false)
-                    // We use the low memory profile as its performance is sufficient for this
-                    // example. See the documentation for more detail on this and other
-                    // configuration options:
-                    // https://51degrees.com/documentation/_ip_intelligence__features__performance_options.html
-                    // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
-                    // https://51degrees.com/documentation/_features__usage_sharing.html
-                    .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
-                    // inhibit sharing usage for this example, usually this should be set to "true"
-                    .SetShareUsage(false)
-                    // inhibit auto-update of the data file for this test
-                    .SetAutoUpdate(false)
-                    .SetDataUpdateOnStartUp(false)
-                    .SetDataFileSystemWatcher(false)
-                    .SetProperty("RegisteredCountry")
-                    .SetProperty("RegisteredOwner")
-                    .SetProperty("RegisteredName")
-                    .SetProperty("IpRangeStart")
-                    .SetProperty("IpRangeEnd")
-                    .SetProperty("Country")
-                    .SetProperty("CountryCode")
-                    .SetProperty("CountryCode3")
-                    .SetProperty("Region")
-                    .SetProperty("State")
-                    .SetProperty("Town")
-                    .SetProperty("Latitude")
-                    .SetProperty("Longitude")
-                    .SetProperty("Areas")
-                    .SetProperty("AccuracyRadius")
-                    .SetProperty("TimeZoneOffset")
-                    .Build())
+                // Create the pipeline using the service provider and the configured options.
+                using (var pipeline = new FiftyOnePipelineBuilder(loggerFactory, serviceProvider)
+                    .BuildFromConfiguration(pipelineOptions))
                 {
-                    // carry out some sample detections
-                    // and collect IP addresses
-                    foreach (var evidence in ExampleUtils.EvidenceValues)
+                    // Carry out some sample detections
+                    foreach (var values in ExampleUtils.EvidenceValues)
                     {
-                        AnalyseEvidence(evidence, pipeline, output);
+                        AnalyseEvidence(values, pipeline, output);
                     }
-
-                    ExampleUtils.CheckDataFile(pipeline, loggerFactory.CreateLogger<Program>());
                 }
             }
 
             private void AnalyseEvidence(
                 Dictionary<string, object> evidence,
-                IPipeline pipeline, 
+                IPipeline pipeline,
                 TextWriter output)
             {
                 // FlowData is a data structure that is used to convey information required for
@@ -112,8 +90,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 // of a number of HTTP Header field values, in this case represented by a
                 // Dictionary<string, object> of header name/value entries.
                 //
-                // FlowData is wrapped in a using block in order to ensure that the unmanaged
-                // resources allocated by the native IP Intelligence library are freed
+                // FlowData is wrapped in a using block in order to ensure that the resources
+                // are freed in a timely manner.
                 using (var data = pipeline.CreateFlowData())
                 {
                     StringBuilder message = new StringBuilder();
@@ -134,6 +112,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
 
                     message = new StringBuilder();
                     message.AppendLine("Results:");
+
                     // Now that it's been processed, the flow data will have been populated with
                     // the result. In this case, we want information about the IP address, which we
                     // can get by asking for a result matching the `IIpIntelligenceData` interface.
@@ -160,7 +139,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 }
             }
 
-            private void OutputListProperty(string name, 
+            private void OutputListProperty(string name,
                 IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> property,
                 StringBuilder message)
             {
@@ -170,13 +149,13 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 }
                 else
                 {
-                    var values = string.Join(", ", property.Value.Select(x => 
+                    var values = string.Join(", ", property.Value.Select(x =>
                         x.Weighting() == 1 ? $"'{x.Value}'" : $"('{x.Value}' @ {x.Weighting()})"));
                     message.AppendLine($"\t{name} ({property.Value.Count}): {values}");
                 }
             }
 
-            private void OutputWeightedIntValues(string name, 
+            private void OutputWeightedIntValues(string name,
                 IAspectPropertyValue<IReadOnlyList<IWeightedValue<int>>> property,
                 StringBuilder message)
             {
@@ -186,13 +165,13 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 }
                 else
                 {
-                    var values = property.Value.Select(x => 
+                    var values = property.Value.Select(x =>
                         Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString() : $"({x.Value} @ {x.Weighting():F4})");
                     message.AppendLine($"\t{name} ({property.Value.Count}): {string.Join(", ", values)}");
                 }
             }
 
-            private void OutputWeightedFloatValues(string name, 
+            private void OutputWeightedFloatValues(string name,
                 IAspectPropertyValue<IReadOnlyList<IWeightedValue<float>>> property,
                 StringBuilder message)
             {
@@ -202,13 +181,13 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 }
                 else
                 {
-                    var values = property.Value.Select(x => 
+                    var values = property.Value.Select(x =>
                         Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString("F6") : $"({x.Value:F6} @ {x.Weighting():F4})");
                     message.AppendLine($"\t{name} ({property.Value.Count}): {string.Join(", ", values)}");
                 }
             }
 
-            private void OutputWeightedIPAddressValues(string name, 
+            private void OutputWeightedIPAddressValues(string name,
                 IAspectPropertyValue<IReadOnlyList<IWeightedValue<System.Net.IPAddress>>> property,
                 StringBuilder message)
             {
@@ -218,46 +197,94 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 }
                 else
                 {
-                    var values = property.Value.Select(x => 
+                    var values = property.Value.Select(x =>
                         Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString() : $"({x.Value} @ {x.Weighting():F4})");
                     message.AppendLine($"\t{name} ({property.Value.Count}): {string.Join(", ", values)}");
+                }
+            }
+
+            /// <summary>
+            /// This Run method is called by the example test to avoid the need to duplicate the 
+            /// service provider setup logic.
+            /// </summary>
+            /// <param name="options"></param>
+            public void Run(PipelineOptions options, TextWriter output)
+            {
+                // Initialize a service collection which will be used to create the services
+                // required by the Pipeline and manage their lifetimes.
+                using (var serviceProvider = new ServiceCollection()
+                    // Add the configuration to the services collection.
+                    .AddSingleton(options)
+                    // Make sure we're logging to the console.
+                    .AddLogging(l => l.AddConsole())
+                    // Add an HttpClient instance. This is used for making requests to the
+                    // cloud service.
+                    .AddSingleton<HttpClient>()
+                    // Add the builders that will be needed to create the engines specified in the 
+                    // configuration file.
+                    .AddSingleton<CloudRequestEngineBuilder>()
+                    .AddSingleton<IpiCloudEngineBuilder>()
+                    .BuildServiceProvider())
+                {
+                    // Get the resource key setting from the config file. 
+                    var resourceKey = options.GetResourceKey();
+
+                    // If we don't have a resource key then log an error.
+                    if (string.IsNullOrWhiteSpace(resourceKey))
+                    {
+                        serviceProvider.GetRequiredService<ILogger<Program>>().LogError(
+                            $"No resource key specified in the configuration file " +
+                            $"'appsettings.json' or the environment variable " +
+                            $"'{ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR}'. The 51Degrees cloud " +
+                            $"service is accessed using a 'ResourceKey'. For more information " +
+                            $"see " +
+                            $"https://51degrees.com/documentation/_info__resource_keys.html. " +
+                            $"A resource key with the properties required by this example can be " +
+                            $"created for free at https://configure.51degrees.com/1QWJwHxl. " +
+                            $"Once complete, populate the config file or environment variable " +
+                            $"mentioned at the start of this message with the key.");
+                    }
+                    else
+                    {
+                        new Example().Run(serviceProvider, output);
+                    }
                 }
             }
         }
 
         static void Main(string[] args)
         {
-            // Use the supplied path for the data file or find the lite file that is included
-            // in the repository.
-            var dataFile = args.Length > 0 ? args[0] :
-                // In this example, by default, the 51degrees "Lite" file needs to be somewhere in the
-                // project space, or you may specify another file as a command line parameter.
-                //
-                // Note that the Lite data file is only used for illustration, and has limited accuracy
-                // and capabilities. Find out about the Enterprise data file on our pricing page:
-                // https://51degrees.com/pricing
+            // Use the command line args to get the resource key if present.
+            // Otherwise, get it from the environment variable.
+            string resourceKey = args.Length > 0 ? args[0] :
+                Environment.GetEnvironmentVariable(
+                    ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR);
 
-                ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
+            // Load the configuration file
+            var config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .Build();
 
-            File.WriteAllText("GettigStarted_DataFileName.txt", dataFile);
+            // Bind the configuration to a pipeline options instance
+            PipelineOptions options = new PipelineOptions();
+			var section = config.GetRequiredSection("PipelineOptions");
+            // Use the 'ErrorOnUnknownConfiguration' option to warn us if we've got any
+            // misnamed configuration keys.
+            section.Bind(options, (o) => { o.ErrorOnUnknownConfiguration = true; });
 
-            // Configure a logger to output to the console.
-            var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
-            var logger = loggerFactory.CreateLogger<Program>();
+            // Get the resource key setting from the config file. 
+            var resourceKeyFromConfig = options.GetResourceKey();
+            var configHasKey = string.IsNullOrWhiteSpace(resourceKeyFromConfig) == false &&
+                    resourceKeyFromConfig.StartsWith("!!") == false;
 
-            if (dataFile != null)
+            // If no resource key is specified in the config file then override it with the key
+            // from the environment variable / command line. 
+            if (configHasKey == false)
             {
-                new Example().Run(dataFile, loggerFactory, Console.Out);
-            } 
-            else
-            {
-                logger.LogError("Failed to find a IP Intelligence data file. Make sure the " +
-                    "ip-intelligence-data submodule has been updated by running " +
-                    "`git submodule update --recursive`.");
+                options.SetResourceKey(resourceKey);
             }
 
-            // Dispose the logger to ensure any messages get flushed
-            loggerFactory.Dispose();
+            new Example().Run(options, Console.Out);
         }
     }
 }
