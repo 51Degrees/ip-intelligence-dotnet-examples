@@ -129,7 +129,7 @@ namespace GettingStarted_API
             })
             .WithName("ProcessEvidence");
 
-            app.MapGet("/accessibleproperties", (HttpContext httpContext, IPipeline pipeline) =>
+            app.MapGet("/accessibleproperties", (string resource, HttpContext httpContext, IPipeline pipeline) =>
             {
                 Dictionary<string, ProductMetaData> products = new(
                     pipeline.FlowElements
