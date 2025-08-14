@@ -22,6 +22,8 @@
 
 using FiftyOne.IpIntelligence.Cloud.FlowElements;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
+using FiftyOne.Pipeline.CloudRequestEngine.FlowElements;
+
 //using FiftyOne.Pipeline.CloudRequestEngine.FlowElements;
 using FiftyOne.Pipeline.Core.Configuration;
 using System;
@@ -54,7 +56,7 @@ namespace FiftyOne.IpIntelligence.Examples
         /// <returns></returns>
         public static string GetResourceKey(this PipelineOptions options)
         {
-            var cloudConfig = options.GetElementConfig(nameof(IpiCloudEngine));
+            var cloudConfig = options.GetElementConfig(nameof(CloudRequestEngine));
             cloudConfig.BuildParameters.TryGetValue(RESOURCE_KEY_SETTING_NAME,
                 out var resourceKeyObj);
             return resourceKeyObj?.ToString();
