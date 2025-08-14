@@ -142,6 +142,7 @@ namespace GettingStarted_API
                 return Results.Json(new LicencedProducts
                 {
                     Products = products,
+                    Errors = [],
                 });
             })
             .WithName("AccessibleProperties");
