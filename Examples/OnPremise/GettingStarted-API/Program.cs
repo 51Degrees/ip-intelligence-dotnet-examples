@@ -25,12 +25,8 @@ namespace GettingStarted_API
             // Add services to the container.
             builder.Services.AddAuthorization();
 
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
 
             // Add Swagger services
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
 
             // Add the hash engine builder to services so that the system can find the builder
             // when it needs to.
@@ -41,13 +37,6 @@ namespace GettingStarted_API
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.MapOpenApi(); 
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
 
             app.UseHttpsRedirection();
             app.UseAuthorization();
@@ -99,22 +88,26 @@ namespace GettingStarted_API
             })
             .WithName("IpRangeName");
 
-            app.MapGet("/{key}.json", (string key, HttpContext context, IPipeline pipeline) =>
+            app.MapPost("/json", (HttpContext context, IPipeline pipeline) =>
             {
                 var aggregated = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
                 // Query Parameters
                 foreach (var kvp in context.Request.Query)
                 {
-                    aggregated[kvp.Key] = kvp.Value.LastOrDefault() ?? string.Empty;
+                    aggregated["query." + kvp.Key] = kvp.Value.LastOrDefault() ?? string.Empty;
                 }
                 foreach (var kvp in context.Request.Headers)
                 {
-                    aggregated[kvp.Key] = kvp.Value.LastOrDefault() ?? string.Empty;
+                    aggregated["header." + kvp.Key] = kvp.Value.LastOrDefault() ?? string.Empty;
                 }
                 foreach (var kvp in context.Request.Cookies)
                 {
-                    aggregated[kvp.Key] = kvp.Value;
+                    aggregated["cookie." + kvp.Key] = kvp.Value;
+                }
+                foreach (var kvp in context.Request.Form)
+                {
+                    aggregated["query." + kvp.Key] = kvp.Value.ToString();
                 }
 
                 using var flowData = pipeline.CreateFlowData();
@@ -139,10 +132,9 @@ namespace GettingStarted_API
                         Properties = eng!.Properties.Select(prop => new PropertyMetaData(prop)).ToList(),
                     })));
 
-                return Results.Json(new LicencedProducts
+                return Results.Json(new 
                 {
                     Products = products,
-                    Errors = [],
                 });
             })
             .WithName("AccessibleProperties");
