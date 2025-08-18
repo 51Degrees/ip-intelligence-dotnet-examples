@@ -2,7 +2,6 @@
   "solution": {
     "path": "FiftyOne.IpIntelligence.Examples.sln",
     "projects": [
-      "Examples\\Cloud\\Configurator-Console\\Configurator-Console.csproj",
       "Examples\\Cloud\\GetAllProperties-Console\\GetAllProperties.csproj",
       "Examples\\Cloud\\GettingStarted-Console\\GettingStarted-Console.csproj",
       "Examples\\Cloud\\GettingStarted-Web\\GettingStarted-Web.csproj",
@@ -15,7 +14,7 @@
       "Examples\\OnPremise\\OfflineProcessing-Console\\OfflineProcessing-Console.csproj",
       "Examples\\OnPremise\\Performance-Console\\Performance-Console.csproj",
       "Examples\\OnPremise\\UpdateDataFile-Console\\UpdateDataFile-Console.csproj",
-      "Tests\\FiftyOne.IpIntelligence.Example.Tests.OnPremise\\FiftyOne.IpIntelligence.Example.Tests.OnPremise.csproj",
+      "Tests\\FiftyOne.IpIntelligence.Example.Tests.OnPremise\\FiftyOne.IpIntelligence.Example.Tests.OnPremise.csproj"
     ]
   }
 }

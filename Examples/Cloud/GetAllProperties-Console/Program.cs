@@ -39,10 +39,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
     {
         public class Example
         {
-            private static string mobileUserAgent =
-                "Mozilla/5.0 (Linux; Android 9; SAMSUNG SM-G960U) " +
-                "AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/10.1 " +
-                "Chrome/71.0.3578.99 Mobile Safari/537.36";
+            private const string SomeIpAddress = "8.8.8.8";
 
             public void Run(string resourceKey, string cloudEndPoint = "")
             {
@@ -61,23 +58,23 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
                 using (var pipeline = builder.Build())
                 {
                     // Output details for a mobile User-Agent.
-                    AnalyseUserAgent(mobileUserAgent, pipeline);
+                    AnalyseUserAgent(SomeIpAddress, pipeline);
                 }
             }
 
-            static void AnalyseUserAgent(string userAgent, IPipeline pipeline)
+            static void AnalyseUserAgent(string ipAddress, IPipeline pipeline)
             {
                 // Create the FlowData instance.
                 using (var data = pipeline.CreateFlowData())
                 {
                     // Add a User-Agent as evidence.
-                    data.AddEvidence(FiftyOne.Pipeline.Core.Constants.EVIDENCE_QUERY_USERAGENT_KEY, userAgent);
+                    data.AddEvidence(FiftyOne.Pipeline.Core.Constants.EVIDENCE_CLIENTIP_KEY, ipAddress);
                     // Process the supplied evidence.
                     data.Process();
                     // Get device data from the flow data.
                     var device = data.Get<IIpIntelligenceData>();
                     Console.WriteLine($"What property values are associated with " +
-                        $"the User-Agent '{userAgent}'?");
+                        $"the User-Agent '{ipAddress}'?");
 
                     // Iterate through device data results, displaying all values.
                     foreach (var property in device.AsDictionary()
@@ -153,7 +150,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
         static void Main(string[] args)
         {
             // Obtain a resource key for free at https://configure.51degrees.com
-            string resourceKey = "!!YOUR_RESOURCE_KEY!!";
+            string resourceKey = "3yfhdgh";
 
             if (resourceKey.StartsWith("!!"))
             {

@@ -26,6 +26,9 @@ using FiftyOne.Pipeline.Core.Data;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
+using System.Linq;
+using System.Text;
+using FiftyOne.Pipeline.Engines.Data;
 
 /// <summary>
 /// @example Cloud/Metadata-Console/Program.cs
@@ -118,8 +121,10 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Metadata
                     Console.BackgroundColor = ConsoleColor.DarkRed;
                     output.Write($"Property - {property.Name}");
                     Console.ResetColor();
-                    var typeName = property.Type.IsGenericType ? 
-                        property.Type.GenericTypeArguments[0].Name : property.Type.Name;
+                    var typeName = GetPrettyTypeName(
+                        typeof(IAspectPropertyValue).IsAssignableFrom(property.Type)
+                            ? property.Type.GenericTypeArguments[0] 
+                            : property.Type);
                     output.WriteLine($"[Category: {property.Category}] ({typeName})");
                 }
             }
@@ -157,6 +162,35 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Metadata
 
             // Dispose the logger to ensure any messages get flushed
             loggerFactory.Dispose();
+        }
+
+        private static void AppendPrettyTypeName(Type type, StringBuilder typeNameBuilder)
+        {
+            if (!type.IsGenericType)
+            {
+                typeNameBuilder.Append(type.Name);
+                return;
+            }
+
+            var typeName = type.Name;
+            var genericTypeName = typeName.Substring(0, typeName.IndexOf('`'));
+            typeNameBuilder.Append(genericTypeName);
+            var genericArguments = type.GetGenericArguments();
+            typeNameBuilder.Append('<');
+            for (int i = 0; i < genericArguments.Length; i++)
+            {
+                if (i > 0)
+                    typeNameBuilder.Append(", ");
+                AppendPrettyTypeName(genericArguments[i], typeNameBuilder);
+            }
+            typeNameBuilder.Append('>');
+        }
+
+        private static string GetPrettyTypeName(Type type)
+        {
+            var typeNameBuilder = new StringBuilder();
+            AppendPrettyTypeName(type, typeNameBuilder);
+            return typeNameBuilder.ToString();
         }
     }
 }
