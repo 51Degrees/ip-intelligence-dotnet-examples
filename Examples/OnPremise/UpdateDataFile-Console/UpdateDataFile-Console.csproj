@@ -10,13 +10,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.120" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" />
     <PackageReference Include="System.Text.Json" Version="8.0.6" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\FiftyOne.IpIntelligence.Examples\FiftyOne.IpIntelligence.Examples.csproj" />
+    <ProjectReference Include="..\..\FiftyOne.IpIntelligence.Examples.OnPremise\FiftyOne.IpIntelligence.Examples.OnPremise.csproj" />
   </ItemGroup>
 
 </Project>

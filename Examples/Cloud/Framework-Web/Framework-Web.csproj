@@ -16,7 +16,7 @@
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <RuntimeIdentifiers>win;win-x86;win-x64</RuntimeIdentifiers>
     <UseIISExpress>true</UseIISExpress>
-    <Use64BitIISExpress />
+    <Use64BitIISExpress>true</Use64BitIISExpress>
     <IISExpressSSLPort>44351</IISExpressSSLPort>
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
@@ -79,12 +79,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\FiftyOne.IpIntelligence.Examples\FiftyOne.IpIntelligence.Examples.csproj">
-      <Project>{CDAD980C-BF23-4BDB-8391-BFB6ED8DDCFC}</Project>
-      <Name>FiftyOne.IpIntelligence.Examples</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="FiftyOne.Pipeline.JavaScriptBuilder" Version="4.4.138" />
     <PackageReference Include="FiftyOne.Pipeline.Web" Version="4.4.138" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json">
@@ -95,6 +89,12 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json.Schema" Version="4.0.1" />
     <PackageReference Include="System.Text.Json" Version="8.0.6" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\FiftyOne.IpIntelligence.Examples.Cloud\FiftyOne.IpIntelligence.Examples.Cloud.csproj">
+      <Project>{92baf1e2-9a11-1eb1-0983-21dc7d2938bd}</Project>
+      <Name>FiftyOne.IpIntelligence.Examples.Cloud</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

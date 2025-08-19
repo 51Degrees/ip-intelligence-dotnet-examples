@@ -2,6 +2,7 @@
 using FiftyOne.IpIntelligence;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using FiftyOne.IpIntelligence.Examples;
+using FiftyOne.IpIntelligence.Examples.OnPremise;
 using FiftyOne.Pipeline.Core.Configuration;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
@@ -196,7 +197,7 @@ namespace GettingStarted_API
             // ExampleUtils.FindFile function.
             else if (Path.IsPathRooted(dataFile) == false)
             {
-                var newPath = ExampleUtils.FindFile(dataFile);
+                var newPath = FiftyOne.IpIntelligence.Examples.ExampleUtils.FindFile(dataFile);
                 if (newPath != null)
                 {
                     // Add an override for the absolute path to the data file.

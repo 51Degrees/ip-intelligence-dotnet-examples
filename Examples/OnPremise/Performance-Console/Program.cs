@@ -364,7 +364,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
         {
             // Use the supplied path for the data file or find the lite file that is included
             // in the repository.
-            var options = ExampleUtils.ParseOptions(args);
+            var options = Examples.ExampleUtils.ParseOptions(args);
             if (options != null) {
                 var dataFile = options.DataFilePath != null ? options.DataFilePath :
                     // In this example, by default, the 51degrees "Lite" file needs to be somewhere in the
@@ -373,12 +373,12 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                     // Note that the Lite data file is only used for illustration, and has limited accuracy
                     // and capabilities. Find out about the Enterprise data file on our pricing page:
                     // https://51degrees.com/pricing
-                    ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
+                    Examples.ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
                 // Do the same for the yaml evidence file.
                 var evidenceFile = options.EvidenceFile != null ? options.EvidenceFile :
                     // This file contains the 20,000 most commonly seen combinations of header values 
                     // that are relevant to IP Intelligence. For example, User-Agent and UA-CH headers.
-                    ExampleUtils.FindFile(Constants.YAML_EVIDENCE_FILE_NAME);
+                    Examples.ExampleUtils.FindFile(Constants.YAML_EVIDENCE_FILE_NAME);
 
                 var results = new Dictionary<PerformanceConfiguration, IList<BenchmarkResult>>();
                 for (int i = 0; i < _configs.Length; i++)

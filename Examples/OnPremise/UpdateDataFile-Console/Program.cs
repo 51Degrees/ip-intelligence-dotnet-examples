@@ -215,7 +215,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                     // Let's check this file out
                     var metadata = ExampleUtils.GetDataFileInfo(dataFile, EngineBuilder);
                     // and output the results
-                    ExampleUtils.LogDataFileInfo(metadata, Logger);
+                    Examples.ExampleUtils.LogDataFileInfo(metadata, Logger);
                     if (metadata.Tier.Equals("Lite"))
                     {
                         Logger.LogError("Will not download an 'Enterprise' data file over the top of " +
@@ -354,7 +354,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                         "license key " + keySubmissionPaths);
                     throw new ArgumentException("No license key available", nameof(licenseKey));
                 }
-                if (ExampleUtils.IsInvalidKey(licenseKey))
+                if (Examples.ExampleUtils.IsInvalidKey(licenseKey))
                 {
                     logger.LogWarning("The license key supplied (" + keySubmissionPaths + ") is probably invalid.");
                 }
@@ -373,7 +373,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                 // Work out where the data file is if we don't have an absolute path.
                 if (dataFile != null && Path.IsPathRooted(dataFile) == false)
                 {
-                    var fullPath = ExampleUtils.FindFile(dataFile);
+                    var fullPath = Examples.ExampleUtils.FindFile(dataFile);
                     if (fullPath == null)
                     {
                         dataFile = Path.Combine(Directory.GetCurrentDirectory(), dataFile);

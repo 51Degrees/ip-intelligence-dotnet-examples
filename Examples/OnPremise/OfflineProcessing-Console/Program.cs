@@ -203,7 +203,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
                 // Note that the Lite data file is only used for illustration, and has limited accuracy
                 // and capabilities. Find out about the Enterprise data file on our pricing page:
                 // https://51degrees.com/pricing
-                ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
+                Examples.ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
 
             File.WriteAllText("OfflineProcessing_DataFileName.txt", dataFile);
 
@@ -211,7 +211,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
             var evidenceFile = args.Length > 1 ? args[1] :
                 // This file contains the 20,000 most commonly seen combinations of header values 
                 // that are relevant to IP Intelligence. For example, User-Agent and UA-CH headers.
-                ExampleUtils.FindFile(Constants.YAML_EVIDENCE_FILE_NAME);
+                Examples.ExampleUtils.FindFile(Constants.YAML_EVIDENCE_FILE_NAME);
             // Finally, get the location for the output file. Use the same location as the
             // evidence if a path is not supplied on the command line.
             var outputFile = args.Length > 2 ? args[2] :

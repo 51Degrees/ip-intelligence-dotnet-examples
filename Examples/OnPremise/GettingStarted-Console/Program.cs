@@ -92,7 +92,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 {
                     // carry out some sample detections
                     // and collect IP addresses
-                    foreach (var evidence in ExampleUtils.EvidenceValues)
+                    foreach (var evidence in Examples.ExampleUtils.EvidenceValues)
                     {
                         AnalyseEvidence(evidence, pipeline, output);
                     }
@@ -237,7 +237,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 // and capabilities. Find out about the Enterprise data file on our pricing page:
                 // https://51degrees.com/pricing
 
-                ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
+                Examples.ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
 
             File.WriteAllText("GettigStarted_DataFileName.txt", dataFile);
 
