@@ -144,7 +144,7 @@ namespace GettingStarted_API
                 var keys = pipeline.FlowElements
                 .Select(x => x.EvidenceKeyFilter as EvidenceKeyFilterWhitelist)
                 .Where(x => x is not null)
-                .SelectMany(x => x.Whitelist.Keys)
+                .SelectMany(x => x?.Whitelist.Keys ?? [])
                 .Distinct()
                 .ToList();
                 return Results.Json(keys);

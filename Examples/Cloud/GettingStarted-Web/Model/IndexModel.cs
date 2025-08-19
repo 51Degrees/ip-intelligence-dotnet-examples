@@ -52,7 +52,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model
 
         public IFlowData FlowData { get; private set; }
 
-        public IpiOnPremiseEngine Engine { get; private set; }
+        public CloudRequestEngine Engine { get; private set; }
 
         public IAspectEngineDataFile DataFile { get; private set; }
 
@@ -65,11 +65,9 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model
             FlowData = flowData;
             ResponseHeaders = responseHeaders;
 
-            // Get the engine that performed the detection.
-            Engine = FlowData.Pipeline.GetElement<IpiOnPremiseEngine>();
-            // Get meta-data about the data file.
-            DataFile = Engine.DataFiles[0];
-            // Get the evidence that was used when performing IP Intelligence
+            // Get the cloud engine
+            Engine = FlowData.Pipeline.GetElement<CloudRequestEngine>();
+            // Get the evidence that was used when performing device detection.
             Evidence = FlowData.GetEvidence().AsDictionary()
                 .Select(e => new EvidenceModel()
                 {
