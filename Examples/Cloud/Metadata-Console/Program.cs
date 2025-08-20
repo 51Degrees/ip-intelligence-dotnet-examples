@@ -67,6 +67,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Metadata
             {
                 using (var pipeline = new IpiPipelineBuilder(loggerFactory)
                     .UseCloud(resourceKey)
+                    .SetEndPoint("http://localhost:5225/")
                     .Build())
                 {
                     OutputProperties(pipeline.GetElement<IpiCloudEngine>(), output);

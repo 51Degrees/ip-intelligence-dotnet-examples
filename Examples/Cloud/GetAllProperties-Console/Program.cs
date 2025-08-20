@@ -45,7 +45,8 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
             {
                 var builder = new IpiPipelineBuilder()
                     // Tell it that we want to use cloud and pass our resource key.
-                    .UseCloud(resourceKey);
+                    .UseCloud(resourceKey)
+                    .SetEndPoint("http://localhost:5225/");
 
                 // If a cloud endpoint has been provided then set the
                 // cloud pipeline endpoint. 
