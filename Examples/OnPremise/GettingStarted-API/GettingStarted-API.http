@@ -1,39 +1,33 @@
 @GettingStarted_API_HostAddress = http://localhost:5225
 
 ###
-GET {{GettingStarted_API_HostAddress}}/swagger
+GET {{GettingStarted_API_HostAddress}}/accessibleproperties
+Accept: application/json
 ###
-GET {{GettingStarted_API_HostAddress}}/accessibleproperties?resource=KEY
+GET {{GettingStarted_API_HostAddress}}/accessibleproperties/KEY-PROPS
 Accept: application/json
 ###
 GET {{GettingStarted_API_HostAddress}}/evidencekeys
 Accept: application/json
 ###
-POST {{GettingStarted_API_HostAddress}}/json
+GET {{GettingStarted_API_HostAddress}}/evidencekeys/KEY-KEYS
 Accept: application/json
-Cookie: query.client-ip=8.32.25.46
+###
+GET {{GettingStarted_API_HostAddress}}/json?client-ip=8.132.215.46
+Accept: application/json
 ###
 POST {{GettingStarted_API_HostAddress}}/json
 Accept: application/json
 Content-Type: application/x-www-form-urlencoded
 
-resource=KEY&client-ip=16.52.73.94
+resource=KEY2&client-ip=16.52.73.94
 ###
-GET {{GettingStarted_API_HostAddress}}/ipi/8.8.8.8
+GET {{GettingStarted_API_HostAddress}}/KEY3.json?client-ip=18.132.215.46
 Accept: application/json
 ###
-GET {{GettingStarted_API_HostAddress}}/ip-name/8.8.8.8
-Accept: text/plain
-###
-GET {{GettingStarted_API_HostAddress}}/ipi/8.40.5.6
+POST {{GettingStarted_API_HostAddress}}/KEY4.json
 Accept: application/json
-###
-GET {{GettingStarted_API_HostAddress}}/ip-name/8.40.5.6
-Accept: text/plain
-###
-GET {{GettingStarted_API_HostAddress}}/ipi/
-Accept: application/json
-###
-GET {{GettingStarted_API_HostAddress}}/ip-name/
-Accept: text/plain
+Content-Type: application/x-www-form-urlencoded
+
+client-ip=116.52.73.94
 ###

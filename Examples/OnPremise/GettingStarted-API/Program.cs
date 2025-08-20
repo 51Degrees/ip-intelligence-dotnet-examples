@@ -1,3 +1,24 @@
+/* *********************************************************************
+ * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
+ * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
+ * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
+ *
+ * This Original Work is licensed under the European Union Public Licence
+ * (EUPL) v.1.2 and is subject to its terms as set out below.
+ *
+ * If a copy of the EUPL was not distributed with this file, You can obtain
+ * one at https://opensource.org/licenses/EUPL-1.2.
+ *
+ * The 'Compatible Licences' set out in the Appendix to the EUPL (as may be
+ * amended by the European Commission) shall be deemed incompatible for
+ * the purposes of the Work and the provisions of the compatibility
+ * clause in Article 5 of the EUPL shall not apply.
+ *
+ * If using the Work as, or as part of, a network application, by
+ * including the attribution notice(s) required under Article 5 of the EUPL
+ * in the end user terms of the application under an appropriate heading,
+ * such notice(s) shall fulfill the requirements of that article.
+ * ********************************************************************* */
 
 using FiftyOne.IpIntelligence;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
@@ -8,14 +29,26 @@ using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines.FlowElements;
 using FiftyOne.Pipeline.JsonBuilder.Data;
-using FiftyOne.Pipeline.Web.Services;
 using FiftyOne.Pipeline.Web.Shared;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.Extensions.Configuration;
-using Stubble.Core.Contexts;
 
-namespace GettingStarted_API
+/// <summary>
+/// @example OnPremise/GettingStarted-API/Program.cs
+/// 
+/// @include{doc} example-getting-started-onpremise.txt
+/// 
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-API/Program.cs). 
+/// 
+/// @include{doc} example-require-datafile.txt
+/// 
+/// Required NuGet Dependencies:
+/// - FiftyOne.IpIntelligence
+/// </summary>
+namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
 {
+    /// <summary>
+    /// Local version of IPI API.
+    /// </summary>
+    /// <seealso cref="https://cloud.51degrees.com/api-docs/index.html"/>
     public class Program
     {
         public static void Main(string[] args)
@@ -27,8 +60,6 @@ namespace GettingStarted_API
             // Add services to the container.
             builder.Services.AddAuthorization();
 
-
-            // Add Swagger services
 
             // Add the hash engine builder to services so that the system can find the builder
             // when it needs to.
@@ -43,117 +74,78 @@ namespace GettingStarted_API
             app.UseHttpsRedirection();
             app.UseAuthorization();
 
-            var summaries = new[]
-            {
-                "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-            };
+            app.Map("/accessibleproperties", AccessibleProperties).WithName(nameof(AccessibleProperties));
+            app.Map("/accessibleproperties/{resource}", AccessibleProperties).WithName(nameof(AccessibleProperties) + "WithResource");
 
-            app.MapGet("/ipi/{ipAddress}", (string ipAddress, HttpContext httpContext, IPipeline pipeline) =>
-            {
-                var theIP = !string.IsNullOrWhiteSpace(ipAddress)
-                    ? ipAddress
-                    : httpContext.Connection.RemoteIpAddress?.ToString();
-                if (theIP is not null)
-                {
-                    using var flowData = pipeline.CreateFlowData();
-                    flowData.AddEvidence("query.client-ip", theIP);
-                    flowData.Process();
-                    if (flowData.Get<IJsonBuilderElementData>()?.Json is { } json)
-                    {
-                        return Results.Text(json, "application/json");
-                    }
-                }
-                return Results.NotFound("No IP");
-            })
-            .WithName("IpIntelligence");
+            app.Map("/evidencekeys", EvidenceKeys).WithName(nameof(EvidenceKeys));
+            app.Map("/evidencekeys/{resource}", EvidenceKeys).WithName(nameof(EvidenceKeys) + "WithResource");
 
-            app.MapGet("/ip-name/{ipAddress}", (string ipAddress, HttpContext httpContext, IPipeline pipeline) =>
-            {
-                var theIP = !string.IsNullOrWhiteSpace(ipAddress)
-                    ? ipAddress
-                    : httpContext.Connection.RemoteIpAddress?.ToString();
-                if (theIP is not null)
-                {
-                    using var flowData = pipeline.CreateFlowData();
-                    flowData.AddEvidence("query.client-ip", theIP);
-                    flowData.Process();
-                    var ipiData = flowData.Get<IIpIntelligenceData>();
-                    if (ipiData?.RegisteredName is { } name && name?.HasValue == true)
-                    {
-                        return Results.Text(string.Join(", ",
-                            name.Value.Select(
-                                weighted => $"(Weighting={weighted.Weighting()}, Value={weighted.Value})")),
-                            "text/plain");
-                    }
-                }
-                return Results.NotFound("No IP");
-            })
-            .WithName("IpRangeName");
+            app.Map("/json", ProcessEvidence).WithName(nameof(ProcessEvidence));
+            app.Map("/{resource}.json", ProcessEvidence).WithName(nameof(ProcessEvidence) + "WithResource");
 
-            app.MapPost("/json", (HttpContext context, IPipeline pipeline) =>
-            {
-                var aggregated = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            app.Run();
+        }
 
-                // Query Parameters
-                foreach (var kvp in context.Request.Query)
+        private static IResult AccessibleProperties(string? resource, HttpContext httpContext, IPipeline pipeline)
+        {
+            Dictionary<string, ProductMetaData> products = new(
+                pipeline.FlowElements
+                .SelectMany(x => x is IAspectEngine eng ? [eng] : (IEnumerable<IAspectEngine>)[])
+                .Select(eng => new KeyValuePair<string, ProductMetaData>(eng.ElementDataKey, new ProductMetaData
                 {
-                    aggregated["query." + kvp.Key] = kvp.Value.LastOrDefault() ?? string.Empty;
-                }
-                foreach (var kvp in context.Request.Headers)
-                {
-                    aggregated["header." + kvp.Key] = kvp.Value.LastOrDefault() ?? string.Empty;
-                }
-                foreach (var kvp in context.Request.Cookies)
-                {
-                    aggregated["cookie." + kvp.Key] = kvp.Value;
-                }
+                    Properties = eng!.Properties.Select(prop => new PropertyMetaData(prop)).ToList(),
+                })));
+
+            return Results.Json(new
+            {
+                Products = products,
+            });
+        }
+
+        private static IResult EvidenceKeys(string? resource, HttpContext httpContext, IPipeline pipeline)
+        {
+            var keys = pipeline.FlowElements
+            .Select(x => x.EvidenceKeyFilter as EvidenceKeyFilterWhitelist)
+            .Where(x => x is not null)
+            .SelectMany(x => x?.Whitelist.Keys ?? [])
+            .Distinct()
+            .ToList();
+            return Results.Json(keys);
+        }
+
+        private static IResult ProcessEvidence(string? resource, HttpContext context, IPipeline pipeline) 
+        {
+            var aggregated = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var kvp in context.Request.Query)
+            {
+                aggregated["query." + kvp.Key] = kvp.Value.LastOrDefault() ?? string.Empty;
+            }
+            foreach (var kvp in context.Request.Headers)
+            {
+                aggregated["header." + kvp.Key] = kvp.Value.LastOrDefault() ?? string.Empty;
+            }
+            foreach (var kvp in context.Request.Cookies)
+            {
+                aggregated["cookie." + kvp.Key] = kvp.Value;
+            }
+            if (context.Request.HasFormContentType)
+            {
                 foreach (var kvp in context.Request.Form)
                 {
                     aggregated["query." + kvp.Key] = kvp.Value.ToString();
                 }
+            }
 
-                using var flowData = pipeline.CreateFlowData();
-                flowData.AddEvidence(aggregated);
-                flowData.Process();
+            using var flowData = pipeline.CreateFlowData();
+            flowData.AddEvidence(aggregated);
+            flowData.Process();
 
-                if (flowData.Get<IJsonBuilderElementData>()?.Json is { } json)
-                {
-                    return Results.Text(json, "application/json");
-                }
-                return Results.NotFound("No results.");
-            })
-            .WithName("ProcessEvidence");
-
-            app.MapGet("/accessibleproperties", (string resource, HttpContext httpContext, IPipeline pipeline) =>
+            if (flowData.Get<IJsonBuilderElementData>()?.Json is { } json)
             {
-                Dictionary<string, ProductMetaData> products = new(
-                    pipeline.FlowElements
-                    .SelectMany(x => x is IAspectEngine eng ? [eng] : (IEnumerable<IAspectEngine>)[])
-                    .Select(eng => new KeyValuePair<string, ProductMetaData>(eng.ElementDataKey, new ProductMetaData
-                    {
-                        Properties = eng!.Properties.Select(prop => new PropertyMetaData(prop)).ToList(),
-                    })));
-
-                return Results.Json(new 
-                {
-                    Products = products,
-                });
-            })
-            .WithName("AccessibleProperties");
-
-            app.MapGet("/evidencekeys", (HttpContext httpContext, IPipeline pipeline) =>
-            {
-                var keys = pipeline.FlowElements
-                .Select(x => x.EvidenceKeyFilter as EvidenceKeyFilterWhitelist)
-                .Where(x => x is not null)
-                .SelectMany(x => x?.Whitelist.Keys ?? [])
-                .Distinct()
-                .ToList();
-                return Results.Json(keys);
-            })
-            .WithName("EvidenceKeys");
-
-            app.Run();
+                return Results.Text(json, "application/json");
+            }
+            return Results.NotFound("No results.");
         }
 
         /// <summary>
