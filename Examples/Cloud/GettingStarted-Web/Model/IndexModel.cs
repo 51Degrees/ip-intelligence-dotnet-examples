@@ -53,8 +53,6 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model
 
         public CloudRequestEngine Engine { get; private set; }
 
-        public IAspectEngineDataFile DataFile { get; private set; }
-
         public List<EvidenceModel> Evidence { get; private set; }
 
         public IHeaderDictionary ResponseHeaders { get; private set; }

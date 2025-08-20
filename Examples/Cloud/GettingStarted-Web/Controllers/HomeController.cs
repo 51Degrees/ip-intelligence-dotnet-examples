@@ -1,6 +1,6 @@
 /* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
- * Copyright 2023 51 Degrees Mobile Experts Limited, Davidson House,
+ * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
  * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
  * This Original Work is licensed under the European Union Public Licence
@@ -24,6 +24,9 @@ using Microsoft.AspNetCore.Mvc;
 using FiftyOne.Pipeline.Web.Services;
 using FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model;
 using Microsoft.Extensions.Logging;
+using FiftyOne.Pipeline.Core.FlowElements;
+using FiftyOne.Pipeline.Core.Data;
+using System.Net;
 
 namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Controllers
 {
@@ -31,20 +34,48 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Controllers
     {
         private IFlowDataProvider _provider;
         private ILogger<HomeController> _logger;
+        private IPipeline _pipeline;
 
         // The controller has a dependency on IFlowDataProvider. This is used to access the 
-        // IFlowData that contains the device detection results for the current HTTP request.
-        public HomeController(IFlowDataProvider provider, ILogger<HomeController> logger)
+        // IFlowData that contains the IP Intelligence results for the current HTTP request.
+        public HomeController(IFlowDataProvider provider, ILogger<HomeController> logger, IPipeline pipeline)
         {
             _provider = provider;
             _logger = logger;
+            _pipeline = pipeline;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(string ipAddress = null)
         {
-            // Use the provider to get the flow data. This contains the results of device
-            // detection that has been performed by the pipeline.
-            return View(new IndexModel(_provider.GetFlowData(), Response.Headers));
+            // Get the visitor's IP address from the request
+            var visitorIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            // If no custom IP provided, use the visitor's IP
+            var targetIp = !string.IsNullOrWhiteSpace(ipAddress) ? ipAddress : visitorIp;
+
+            IFlowData flowData;
+
+            if (!string.IsNullOrWhiteSpace(targetIp))
+            {
+                // Create new flow data with specified IP address (custom or visitor's)
+                using (flowData = _pipeline.CreateFlowData())
+                {
+                    flowData.AddEvidence("server.client-ip", targetIp);
+                    flowData.Process();
+
+                    var model = new IndexModel(flowData, Response.Headers);
+                    model.InputIpAddress = targetIp;
+                    return View(model);
+                }
+            }
+            else
+            {
+                // Fallback to default flow data if we can't determine IP
+                flowData = _provider.GetFlowData();
+                var model = new IndexModel(flowData, Response.Headers);
+                model.InputIpAddress = visitorIp;
+                return View(model);
+            }
         }
     }
 }
