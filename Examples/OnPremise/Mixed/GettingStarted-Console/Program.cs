@@ -47,11 +47,13 @@ using System.Text;
 /// engines in a single pipeline. The engines process evidence in parallel
 /// for optimal performance.
 /// 
-/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/Mixed/OnPremise/GettingStarted-Console/Program.cs). 
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/OnPremise/Mixed/GettingStarted-Console/Program.cs). 
 /// 
 /// Required data files:
-/// - Device Detection data file (TAC or Hash format)
+/// - Device Detection data file (.hash format)
 /// - IP Intelligence data file (.ipi format)
+///
+/// The paths to the data files should be provided as 2 consecutive command line parameters
 /// 
 /// Required NuGet Dependencies:
 /// - FiftyOne.DeviceDetection
@@ -71,7 +73,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedConsole
                     
                     // Create Device Detection engine directly from scratch
                     var deviceEngine = new DeviceDetectionHashEngineBuilder(loggerFactory, dataUpdateService)
-                        .SetPerformanceProfile(PerformanceProfiles.LowMemory)
+                        .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
                         .SetAutoUpdate(false)
                         .SetDataFileSystemWatcher(false)
                         .Build(deviceDataFile, false);
@@ -118,7 +120,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedConsole
                     new Dictionary<string, object>()
                     {
                         { "header.user-agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Mobile/15E148 Safari/604.1" },
-                        { "query.client-ip", "116.154.188.222" }
+                        { "query.client-ip", "62.61.32.31" }
                     },
                     // Desktop from Chile
                     new Dictionary<string, object>()
@@ -191,7 +193,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedConsole
                 OutputValue("Platform Version", device.PlatformVersion, message);
                 OutputValue("Browser Name", device.BrowserName, message);
                 OutputValue("Browser Version", device.BrowserVersion, message);
-                OutputValue("Hardware Name", device.HardwareName, message);
+                OutputListValue("Hardware Name", device.HardwareName, message);
                 OutputValue("Hardware Vendor", device.HardwareVendor, message);
                 OutputValue("Device Type", device.DeviceType, message);
                 OutputValue("Screen Width", device.ScreenPixelsWidth, message);
@@ -200,16 +202,16 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedConsole
 
             private void OutputIpData(IIpIntelligenceData ipData, StringBuilder message)
             {
-                OutputListProperty("Country", ipData.Country, message);
-                OutputListProperty("Country Code", ipData.CountryCode, message);
-                OutputListProperty("Region", ipData.Region, message);
-                OutputListProperty("State", ipData.State, message);
-                OutputListProperty("Town", ipData.Town, message);
+                OutputWeightedStringProperty("Country", ipData.Country, message);
+                OutputWeightedStringProperty("Country Code", ipData.CountryCode, message);
+                OutputWeightedStringProperty("Region", ipData.Region, message);
+                OutputWeightedStringProperty("State", ipData.State, message);
+                OutputWeightedStringProperty("Town", ipData.Town, message);
                 OutputWeightedFloatValues("Latitude", ipData.Latitude, message);
                 OutputWeightedFloatValues("Longitude", ipData.Longitude, message);
-                OutputListProperty("Registered Name", ipData.RegisteredName, message);
-                OutputListProperty("Registered Owner", ipData.RegisteredOwner, message);
-                OutputListProperty("Registered Country", ipData.RegisteredCountry, message);
+                OutputWeightedStringProperty("Registered Name", ipData.RegisteredName, message);
+                OutputWeightedStringProperty("Registered Owner", ipData.RegisteredOwner, message);
+                OutputWeightedStringProperty("Registered Country", ipData.RegisteredCountry, message);
                 OutputWeightedIPAddressValues("IP Range Start", ipData.IpRangeStart, message);
                 OutputWeightedIPAddressValues("IP Range End", ipData.IpRangeEnd, message);
                 OutputWeightedIntValues("Accuracy Radius", ipData.AccuracyRadius, message);
@@ -225,7 +227,22 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedConsole
                     $"\t{name}: {value.NoValueMessage}");
             }
 
-            private void OutputListProperty(string name, 
+            private void OutputListValue(string name,
+                IAspectPropertyValue<IReadOnlyList<string>> property,
+                StringBuilder message)
+            {
+                if (!property.HasValue)
+                {
+                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
+                }
+                else
+                {
+                    var values = string.Join(", ", property.Value.Select(v => $"'{v}'"));
+                    message.AppendLine($"\t{name}: {values}");
+                }
+            }
+
+            private void OutputWeightedStringProperty(string name, 
                 IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> property,
                 StringBuilder message)
             {

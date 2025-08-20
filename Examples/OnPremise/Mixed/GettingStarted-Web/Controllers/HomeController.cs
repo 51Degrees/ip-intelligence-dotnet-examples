@@ -55,7 +55,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Con
             _pipeline = pipeline;
         }
 
-        public IActionResult Index(string ipAddress = null)
+        public IActionResult Index()
         {
             // Log warnings if the data file is too old or the 'Lite' file is being used.
             if(_checkedDataFile == false)
@@ -66,44 +66,28 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Con
 
             // Get the flow data from the provider. This contains detection results
             // based on the evidence from the current request (User-Agent, client hints, etc.)
+            // The 51Degrees middleware automatically adds query parameters with "query." prefix
             var flowData = _provider.GetFlowData();
             
             // Create the model to pass to the view
             var model = new IndexModel();
             
-            // Get Device Detection results
+            // Get Device Detection results from the flow data
             model.Device = flowData.Get<IDeviceData>();
             
-            // Handle IP address lookup
-            if (!string.IsNullOrWhiteSpace(ipAddress))
+            // Get IP Intelligence results from the flow data
+            model.IpData = flowData.Get<IIpIntelligenceData>();
+            
+            // Check if a custom IP was provided via query parameter
+            var clientIp = Request.Query["client-ip"].FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(clientIp))
             {
-                // User provided a custom IP address to look up
-                using (var customFlowData = _pipeline.CreateFlowData())
-                {
-                    // Add the custom IP address as evidence
-                    customFlowData.AddEvidence("query.client-ip", ipAddress);
-                    
-                    // Also add the current request's evidence for device detection
-                    foreach (var evidence in flowData.GetEvidence().AsDictionary())
-                    {
-                        if (!evidence.Key.Contains("client-ip"))
-                        {
-                            customFlowData.AddEvidence(evidence.Key, evidence.Value);
-                        }
-                    }
-                    
-                    customFlowData.Process();
-                    
-                    // Get IP Intelligence results for the custom IP
-                    model.IpData = customFlowData.Get<IIpIntelligenceData>();
-                    model.UserInputIp = ipAddress;
-                    model.IpMessage = $"Showing location data for: {ipAddress}";
-                }
+                model.UserInputIp = clientIp;
+                model.IpMessage = $"Showing location data for: {clientIp}";
             }
             else
             {
                 // Use the visitor's own IP address
-                model.IpData = flowData.Get<IIpIntelligenceData>();
                 var visitorIp = HttpContext.Connection.RemoteIpAddress?.ToString();
                 model.UserInputIp = visitorIp;
                 model.IpMessage = "Showing location data for your IP address";
