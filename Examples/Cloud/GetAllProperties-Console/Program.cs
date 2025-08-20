@@ -45,7 +45,9 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
             {
                 var builder = new IpiPipelineBuilder()
                     // Tell it that we want to use cloud and pass our resource key.
-                    .UseCloud(resourceKey);
+                    .UseCloud(resourceKey)
+                    .SetEndPoint(cloudEndPoint)
+                    ;
 
                 // If a cloud endpoint has been provided then set the
                 // cloud pipeline endpoint. 
@@ -57,12 +59,12 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
                 // Create the pipeline
                 using (var pipeline = builder.Build())
                 {
-                    // Output details for a mobile User-Agent.
-                    AnalyseUserAgent(SomeIpAddress, pipeline);
+                    // Output details for the IP address
+                    AnalyseEvidence(SomeIpAddress, pipeline);
                 }
             }
 
-            static void AnalyseUserAgent(string ipAddress, IPipeline pipeline)
+            static void AnalyseEvidence(string ipAddress, IPipeline pipeline)
             {
                 // Create the FlowData instance.
                 using (var data = pipeline.CreateFlowData())
@@ -74,7 +76,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
                     // Get device data from the flow data.
                     var device = data.Get<IIpIntelligenceData>();
                     Console.WriteLine($"What property values are associated with " +
-                        $"the User-Agent '{ipAddress}'?");
+                        $"the IP '{ipAddress}'?");
 
                     // Iterate through device data results, displaying all values.
                     foreach (var property in device.AsDictionary()
@@ -150,7 +152,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
         static void Main(string[] args)
         {
             // Obtain a resource key for free at https://configure.51degrees.com
-            string resourceKey = "3yfhdgh";
+            string resourceKey = "testResourceKey";
 
             if (resourceKey.StartsWith("!!"))
             {
@@ -163,7 +165,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
             }
             else
             {
-                new Example().Run(resourceKey);
+                new Example().Run(resourceKey, "http://localhost:5225");
             }
 #if (DEBUG)
             Console.WriteLine("Done. Press any key to exit.");

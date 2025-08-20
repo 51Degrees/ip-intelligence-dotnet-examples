@@ -67,6 +67,8 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Metadata
             {
                 using (var pipeline = new IpiPipelineBuilder(loggerFactory)
                     .UseCloud(resourceKey)
+                    // Custom endpoint for self-hosted cloud
+                    .SetEndPoint("http://localhost:5225")
                     .Build())
                 {
                     OutputProperties(pipeline.GetElement<IpiCloudEngine>(), output);
@@ -138,6 +140,12 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Metadata
             string resourceKey = args.Length > 0 ? args[0] :
                 Environment.GetEnvironmentVariable(
                     ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR);
+            
+            // Obtain a resource key for free at https://configure.51degrees.com
+            if (String.IsNullOrEmpty(resourceKey))
+            {
+                resourceKey = "testResourceKey";    
+            }
 
             // Configure a logger to output to the console.
             var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
