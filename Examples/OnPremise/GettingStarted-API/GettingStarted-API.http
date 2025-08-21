@@ -1,6 +1,8 @@
 @GettingStarted_API_HostAddress = http://localhost:5225
 
 ###
+GET {{GettingStarted_API_HostAddress}}/download-ipi-gz
+###
 GET {{GettingStarted_API_HostAddress}}/accessibleproperties
 Accept: application/json
 ###

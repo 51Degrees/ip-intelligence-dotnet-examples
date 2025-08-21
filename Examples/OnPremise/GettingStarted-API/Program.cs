@@ -20,10 +20,9 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-using FiftyOne.IpIntelligence;
+using System.IO.Compression;
+using System.Security.Cryptography;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
-using FiftyOne.IpIntelligence.Examples;
-using FiftyOne.IpIntelligence.Examples.OnPremise;
 using FiftyOne.Pipeline.Core.Configuration;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
@@ -82,8 +81,70 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
 
             app.Map("/json", ProcessEvidence).WithName(nameof(ProcessEvidence));
             app.Map("/{resource}.json", ProcessEvidence).WithName(nameof(ProcessEvidence) + "WithResource");
+            
+            app.MapGet("/download-ipi-gz", GetDataFile).WithName(nameof(GetDataFile));
 
             app.Run();
+        }
+
+        private static async Task GetDataFile(
+            HttpContext context,
+            IPipeline pipeline,
+            ILogger<Program> logger)
+        {
+            var token = context.RequestAborted;
+            var sourcePath = pipeline.GetElement<IpiOnPremiseEngine>().DataFiles[0].DataFilePath;
+
+            try
+            {
+                // Buffer the compressed content
+                logger.LogInformation("({TS:O}) [{FUNC}] compressing the file...",
+                    DateTime.Now, nameof(GetDataFile));
+
+                await using var sourceStream = File.OpenRead(sourcePath);
+                await using var memoryStream = new MemoryStream();
+                await using (var gzipStream = new GZipStream(memoryStream, CompressionLevel.Fastest, leaveOpen: true))
+                {
+                    await sourceStream.CopyToAsync(gzipStream, token);
+                }
+
+                logger.LogInformation("({TS:O}) [{FUNC}] calculating MD5...",
+                    DateTime.Now, nameof(GetDataFile));
+
+                // Reset position to read from beginning
+                memoryStream.Position = 0;
+
+                // Compute MD5 of compressed content
+                using var md5 = MD5.Create();
+                var hashBytes = await md5.ComputeHashAsync(memoryStream, token);
+                // var hashBase64 = Convert.ToBase64String(hashBytes);
+                var hashHex = Convert.ToHexStringLower(hashBytes);
+                string md5Hash = hashHex;
+
+                logger.LogInformation("({TS:O}) [{FUNC}] MD5 = {MD5}",
+                    DateTime.Now, nameof(GetDataFile), md5Hash);
+
+                // Reset again for streaming
+                memoryStream.Position = 0;
+
+                // Set headers
+                context.Response.ContentType = "application/gzip";
+                context.Response.Headers.ContentDisposition =
+                    $"attachment; filename=\"{Path.GetFileName(sourcePath)}.gz\"";
+                context.Response.Headers["Content-MD5"] = md5Hash;
+
+                // Stream the buffered content
+                await memoryStream.CopyToAsync(context.Response.Body, token);
+            }
+            catch (OperationCanceledException)
+            {
+                logger.LogInformation("({TS:O}) [{FUNC}] delivery finished ({Outcome}).",
+                    DateTime.Now, nameof(GetDataFile), "cancelled");
+                throw;
+            }
+
+            logger.LogInformation("({TS:O}) [{FUNC}] delivery finished ({Outcome}).",
+                DateTime.Now, nameof(GetDataFile), "done");
         }
 
         private static IResult AccessibleProperties(string? resource, HttpContext httpContext, IPipeline pipeline)
