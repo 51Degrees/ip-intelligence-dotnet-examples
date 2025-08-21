@@ -72,9 +72,6 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
         {
             app.UseDeveloperExceptionPage();
 
-            // This is only needed when running under an ASP.NET test server.
-            app.UseMiddleware<UserAgentCorrectionMiddleware>();
-
             // Add the 51Degrees middleware component.
             // This will pass any incoming requests through the pipeline API, performing both
             // Device Detection and IP Intelligence in parallel.
@@ -96,33 +93,6 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
-        }
-
-        /// <summary>
-        /// The ASP.NET TestServer infrastructure causes the User-Agent header to be split into 
-        /// multiple values using spaces as a delimiter. These are then re-combined using commas 
-        /// as a delimiter. Essentially, replacing spaces with commas in the User-Agent.
-        /// See https://github.com/dotnet/aspnetcore/issues/18198
-        /// This causes the Device Detection to fail, so we need to deal with it via a custom 
-        /// middleware.
-        /// </summary>
-        private class UserAgentCorrectionMiddleware
-        {
-            private readonly RequestDelegate next;
-
-            public UserAgentCorrectionMiddleware(RequestDelegate next)
-            {
-                this.next = next;
-            }
-
-            public async Task Invoke(HttpContext httpContext)
-            {
-                var val = httpContext.Request.Headers["User-Agent"];
-                httpContext.Request.Headers.Remove("User-Agent");
-                httpContext.Request.Headers["User-Agent"] =
-                    new Microsoft.Extensions.Primitives.StringValues(string.Join(" ", val));
-                await this.next(httpContext);
-            }
         }
     }
 }
