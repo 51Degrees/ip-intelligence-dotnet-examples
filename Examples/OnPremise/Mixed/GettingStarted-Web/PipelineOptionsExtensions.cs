@@ -20,10 +20,10 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
+using FiftyOne.DeviceDetection.Hash.Engine.OnPremise.FlowElements;
 using FiftyOne.Pipeline.Core.Configuration;
 
-namespace FiftyOne.IpIntelligence.Examples.OnPremise
+namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise
 {
     public static class PipelineOptionsExtensions
     {
@@ -37,9 +37,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static string GetIpiDataFile(this PipelineOptions options)
+        public static string GetHashDataFile(this PipelineOptions options)
         {
-            var hashConfig = options.GetElementConfig(nameof(IpiOnPremiseEngine));
+            var hashConfig = options.GetElementConfig(nameof(DeviceDetectionHashEngine));
             hashConfig.BuildParameters.TryGetValue(DATA_FILE_SETTING_NAME,
                 out var dataFileObj);
             return dataFileObj?.ToString();
@@ -51,9 +51,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise
         /// <param name="options"></param>
         /// <param name="dataFile"></param>
         /// <returns></returns>
-        public static void SetIpiDataFile(this PipelineOptions options, string dataFile)
+        public static void SetHashDataFile(this PipelineOptions options, string dataFile)
         {
-            var hashConfig = options.GetElementConfig(nameof(IpiOnPremiseEngine));
+            var hashConfig = options.GetElementConfig(nameof(DeviceDetectionHashEngine));
             hashConfig.BuildParameters[DATA_FILE_SETTING_NAME] = dataFile;
         }
     }

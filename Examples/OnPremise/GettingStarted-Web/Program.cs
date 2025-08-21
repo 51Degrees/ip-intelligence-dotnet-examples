@@ -110,7 +110,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
             var dataFileConfigKey = $"PipelineOptions:Elements:{ipiEngineIndex}" +
                 $":BuildParameters:DataFile";
 
-            var dataFile = options.GetHashDataFile();
+            var dataFile = options.GetIpiDataFile();
             var foundDataFile = false;
             if (string.IsNullOrEmpty(dataFile))
             {
