@@ -20,15 +20,17 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-using System.IO.Compression;
-using System.Security.Cryptography;
+using FiftyOne.DeviceDetection.Hash.Engine.OnPremise.FlowElements;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
+using FiftyOne.IpIntelligence.Examples.Mixed.OnPremise;
 using FiftyOne.Pipeline.Core.Configuration;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines.FlowElements;
 using FiftyOne.Pipeline.JsonBuilder.Data;
 using FiftyOne.Pipeline.Web.Shared;
+using System.IO.Compression;
+using System.Security.Cryptography;
 
 /// <summary>
 /// @example OnPremise/GettingStarted-API/Program.cs
@@ -63,6 +65,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             // Add the hash engine builder to services so that the system can find the builder
             // when it needs to.
             builder.Services.AddSingleton<IpiOnPremiseEngineBuilder>();
+            builder.Services.AddSingleton<DeviceDetectionHashEngineBuilder>();
+
             // Configure the services needed by IP Intelligence and create the 51Degrees Pipeline
             // instance that will be used to process requests.
             builder.Services.AddFiftyOne(builder.Configuration);
@@ -118,7 +122,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
                 using var md5 = MD5.Create();
                 var hashBytes = await md5.ComputeHashAsync(memoryStream, token);
                 // var hashBase64 = Convert.ToBase64String(hashBytes);
-                var hashHex = Convert.ToHexStringLower(hashBytes);
+                // var hashHex = Convert.ToHexStringLower(hashBytes);
+                var hashHex = Convert.ToHexString(hashBytes).ToLowerInvariant();
                 string md5Hash = hashHex;
 
                 logger.LogInformation("({TS:O}) [{FUNC}] MD5 = {MD5}",
@@ -233,12 +238,20 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             // misnamed configuration keys.
             section.Bind(options, (o) => { o.ErrorOnUnknownConfiguration = true; });
 
+            AddOverrides_IPI(options, overrides);
+            AddOverrides_DD(options, overrides);
+
+            configurationManager.AddInMemoryCollection(overrides);
+        }
+
+        private static void AddOverrides_IPI(PipelineOptions options, Dictionary<string, string?> overrides)
+        {
             // Get the index of the IP Intelligence engine element in the config file so that
             // we can create an override key for it.
             var ipiEngineOptions = options.GetElementConfig(nameof(IpiOnPremiseEngine));
             var ipiEngineIndex = options.Elements.IndexOf(ipiEngineOptions);
             var dataFileConfigKey = $"PipelineOptions:Elements:{ipiEngineIndex}" +
-                $":BuildParameters:DataFile";
+                                    $":BuildParameters:DataFile";
 
             var dataFile = options.GetIpiDataFile();
             var foundDataFile = false;
@@ -249,9 +262,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             // The data file location provided in the configuration may be using an absolute or
             // relative path. If it is relative then search for a matching file using the 
             // ExampleUtils.FindFile function.
-            else if (Path.IsPathRooted(dataFile) == false)
+            if (Path.IsPathRooted(dataFile) == false)
             {
-                var newPath = FiftyOne.IpIntelligence.Examples.ExampleUtils.FindFile(dataFile);
+                var newPath = Examples.ExampleUtils.FindFile(dataFile);
                 if (newPath != null)
                 {
                     // Add an override for the absolute path to the data file.
@@ -267,13 +280,54 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             if (foundDataFile == false)
             {
                 throw new Exception($"Failed to find a IP Intelligence data file matching " +
-                    $"'{dataFile}'. If using the lite file, then make sure the " +
-                    $"ip-intelligence-data submodule has been updated by running " +
-                    "`git submodule update --recursive`. Otherwise, ensure that the filename " +
-                    "is correct in appsettings.json.");
+                                    $"'{dataFile}'. If using the lite file, then make sure the " +
+                                    $"ip-intelligence-data submodule has been updated by running " +
+                                    "`git submodule update --recursive`. Otherwise, ensure that the filename " +
+                                    "is correct in appsettings.json.");
+            }
+        }
+
+        private static void AddOverrides_DD(PipelineOptions options, Dictionary<string, string?> overrides)
+        {
+            // Get the index of the device detection engine element in the config file so that
+            // we can create an override key for it.
+            var hashEngineOptions = options.GetElementConfig(nameof(DeviceDetectionHashEngine));
+            var hashEngineIndex = options.Elements.IndexOf(hashEngineOptions);
+            var dataFileConfigKey = $"PipelineOptions:Elements:{hashEngineIndex}" +
+                                    $":BuildParameters:DataFile";
+
+            var dataFile = options.GetHashDataFile();
+            var foundDataFile = false;
+            if (string.IsNullOrEmpty(dataFile))
+            {
+                throw new Exception($"A data file must be specified in the appsettings.json file.");
+            }
+            // The data file location provided in the configuration may be using an absolute or
+            // relative path. If it is relative then search for a matching file using the 
+            // ExampleUtils.FindFile function.
+            if (Path.IsPathRooted(dataFile) == false)
+            {
+                var newPath = Examples.ExampleUtils.FindFile(dataFile);
+                if (newPath != null)
+                {
+                    // Add an override for the absolute path to the data file.
+                    overrides.Add(dataFileConfigKey, newPath);
+                    foundDataFile = true;
+                }
+            }
+            else
+            {
+                foundDataFile = File.Exists(dataFile);
             }
 
-            configurationManager.AddInMemoryCollection(overrides);
+            if (foundDataFile == false)
+            {
+                throw new Exception($"Failed to find a device detection data file matching " +
+                                    $"'{dataFile}'. If using the lite file, then make sure the " +
+                                    $"device-detection-data submodule has been updated by running " +
+                                    "`git submodule update --recursive`. Otherwise, ensure that the filename " +
+                                    "is correct in appsettings.json.");
+            }
         }
     }
 }

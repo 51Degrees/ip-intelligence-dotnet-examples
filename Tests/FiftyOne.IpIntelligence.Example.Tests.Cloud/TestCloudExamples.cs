@@ -97,7 +97,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             var apiProjectPath = Path.Combine(
                 Path.GetDirectoryName(typeof(TestCloudExamples).Assembly.Location),
                 "..", "..", "..", "..", "..",
-                "Examples", "OnPremise", "GettingStarted-API");
+                "Examples", "OnPremise", "Mixed", "GettingStarted-API");
             
             apiProjectPath = Path.GetFullPath(apiProjectPath);
             var apiExePath = Path.Combine(apiProjectPath, "bin", "Debug", "net8.0", 
