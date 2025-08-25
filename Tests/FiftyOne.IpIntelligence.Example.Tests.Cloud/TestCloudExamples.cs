@@ -91,30 +91,34 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             StopApiServer();
         }
 
+        private static readonly string RepoRootPath =
+            Path.GetFullPath(
+                Path.GetDirectoryName(
+                    ExampleUtils.FindFile("FiftyOne.IpIntelligence.Examples.sln")));
+
+        private static readonly string ApiProjectPath =
+            Path.Combine(RepoRootPath, "Examples", "OnPremise", "Mixed", "GettingStarted-API");
+        private static readonly string ApiExePath =
+            Path.Combine(ApiProjectPath, "bin", "Debug", "net8.0", "GettingStarted-API");
+
+        private static readonly string CloudExamplePath =
+            Path.Combine(RepoRootPath, "Examples", "Cloud", "GettingStarted-Console");
+
         private async Task StartApiServer()
         {
-            // Build path to the API project
-            var apiProjectPath = Path.Combine(
-                Path.GetDirectoryName(typeof(TestCloudExamples).Assembly.Location),
-                "..", "..", "..", "..", "..",
-                "Examples", "OnPremise", "Mixed", "GettingStarted-API");
-            
-            apiProjectPath = Path.GetFullPath(apiProjectPath);
-            var apiExePath = Path.Combine(apiProjectPath, "bin", "Debug", "net8.0", 
-                "GettingStarted-API");
 
             // Check if the executable exists, if not, build it first
-            if (!File.Exists(apiExePath) && !File.Exists(apiExePath + ".exe"))
+            if (!File.Exists(ApiExePath) && !File.Exists(ApiExePath + ".exe"))
             {
                 Console.WriteLine("Building GettingStarted-API project...");
                 var buildProcess = Process.Start(new ProcessStartInfo
                 {
                     FileName = "dotnet",
-                    Arguments = $"build \"{Path.Combine(apiProjectPath, "GettingStarted-API.csproj")}\" -c Debug",
+                    Arguments = $"build \"{Path.Combine(ApiProjectPath, "GettingStarted-API.csproj")}\" -c Debug",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    WorkingDirectory = apiProjectPath
+                    WorkingDirectory = ApiProjectPath
                 });
                 
                 await buildProcess.WaitForExitAsync();
@@ -128,11 +132,11 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             var startInfo = new ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = $"run --project \"{Path.Combine(apiProjectPath, "GettingStarted-API.csproj")}\" --no-build",
+                Arguments = $"run --project \"{Path.Combine(ApiProjectPath, "GettingStarted-API.csproj")}\" --no-build",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                WorkingDirectory = apiProjectPath,
+                WorkingDirectory = ApiProjectPath,
                 CreateNoWindow = true
             };
 
@@ -229,15 +233,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
         /// </remarks>
         [TestMethod]
         public void Example_Cloud_GettingStarted_WithLocalAPI()
-        {
-            // Get path to the Cloud example project
-            var cloudExamplePath = Path.Combine(
-                Path.GetDirectoryName(typeof(TestCloudExamples).Assembly.Location),
-                "..", "..", "..", "..", "..",
-                "Examples", "Cloud", "GettingStarted-Console");
-            
-            cloudExamplePath = Path.GetFullPath(cloudExamplePath);
-            
+        {   
             // Run the actual example using dotnet run, just like a user would
             var startInfo = new ProcessStartInfo
             {
@@ -246,7 +242,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                WorkingDirectory = cloudExamplePath,
+                WorkingDirectory = CloudExamplePath,
                 CreateNoWindow = true
             };
 
