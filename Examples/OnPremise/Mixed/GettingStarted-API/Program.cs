@@ -90,6 +90,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             
             app.MapGet("/download-ipi-gz", GetDataFile).WithName(nameof(GetDataFile));
 
+            // Force pipeline initialization before accepting first request.
+            app.Services.GetRequiredService<IPipeline>();
+            
             app.Run();
         }
 
