@@ -65,7 +65,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
 
             // Add the hash engine builder to services so that the system can find the builder
             // when it needs to.
-            builder.Services.AddTransient<IDataUpdateService, DataUpdateService>();
+            // builder.Services.AddTransient<IDataUpdateService, DataUpdateService>();
+            builder.Services.AddHttpClient<IDataUpdateService, DataUpdateService>(client =>
+            {
+                client.Timeout = TimeSpan.FromMinutes(20);
+            });
             builder.Services.AddSingleton<IpiOnPremiseEngineBuilder>();
             builder.Services.AddSingleton<DeviceDetectionHashEngineBuilder>();
 
@@ -89,9 +93,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             app.Map("/{resource}.json", ProcessEvidence).WithName(nameof(ProcessEvidence) + "WithResource");
             
             app.MapGet("/download-ipi-gz", GetDataFile).WithName(nameof(GetDataFile));
-
+            
             // Force pipeline initialization before accepting first request.
-            app.Services.GetRequiredService<IPipeline>();
+            app.Services.GetService<IPipeline>();
             
             app.Run();
         }
