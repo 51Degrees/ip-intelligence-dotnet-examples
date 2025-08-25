@@ -293,6 +293,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                     if (dataUpdateUrl is not null)
                     {
                         builder.SetDataUpdateUrl(dataUpdateUrl);
+                        builder.SetDataUpdateVerifyMd5(false);
                     }
                     
                     // Build the pipeline.
@@ -511,6 +512,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                 .AddSingleton<CompletionListener>()
                 .BuildServiceProvider();
 
+            serviceProvider.GetRequiredService<HttpClient>().Timeout = TimeSpan.FromMinutes(20);
             var example = serviceProvider.GetRequiredService<Example>();
             example.Run(dataFile, licenseKey, dataUpdateUrl, interactive);
         }
