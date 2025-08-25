@@ -27,6 +27,7 @@ using FiftyOne.Pipeline.Core.Configuration;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines.FlowElements;
+using FiftyOne.Pipeline.Engines.Services;
 using FiftyOne.Pipeline.JsonBuilder.Data;
 using FiftyOne.Pipeline.Web.Shared;
 using System.IO.Compression;
@@ -64,6 +65,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
 
             // Add the hash engine builder to services so that the system can find the builder
             // when it needs to.
+            builder.Services.AddTransient<IDataUpdateService, DataUpdateService>();
             builder.Services.AddSingleton<IpiOnPremiseEngineBuilder>();
             builder.Services.AddSingleton<DeviceDetectionHashEngineBuilder>();
 
