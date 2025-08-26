@@ -38,15 +38,24 @@ $env:IPINTELLIGENCELICENSEKEY_DOTNET = $Keys.DeviceDetection # TBD
 
 Write-Debug "env:IPINTELLIGENCEDATAFILE = <$($env:IPINTELLIGENCEDATAFILE)>"
 
-# DD leftovers?
-# $env:ACCEPTCH_BROWSER_KEY = $Keys.AcceptCHBrowserKey
-# $env:ACCEPTCH_HARDWARE_KEY = $Keys.AcceptCHHardwareKey
-# $env:ACCEPTCH_PLATFORM_KEY = $Keys.AcceptCHPlatformKey
-# $env:ACCEPTCH_NONE_KEY = $Keys.AcceptCHNoneKey
-
 ./dotnet/add-nuget-source.ps1 `
     -Source "https://nuget.pkg.github.com/$OrgName/index.json" `
     -UserName $GitHubUser `
     -Key $env:GITHUB_TOKEN
+
+
+$MixedApiProjPath = [IO.Path]::Combine($RepoPath, "Examples", "OnPremise", "Mixed", "GettingStarted-API")
+Push-Location $MixedApiProjPath
+try {
+    Write-Information "Entered $MixedApiProjPath"
+    & inject-secrets.ps1 `
+        -DDLicenseKey $Keys.DeviceDetection `
+        -IPIFileURL $Keys.DeviceDetectionUrl `
+        -Clean
+} finally {
+    Write-Information "Leaving $MixedApiProjPath"
+    Pop-Location
+}
+
 
 exit $LASTEXITCODE
