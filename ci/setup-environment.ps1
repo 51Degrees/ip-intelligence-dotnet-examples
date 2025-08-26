@@ -48,7 +48,7 @@ $MixedApiProjPath = [IO.Path]::Combine($RepoPath, "Examples", "OnPremise", "Mixe
 Push-Location $MixedApiProjPath
 try {
     Write-Information "Entered $MixedApiProjPath"
-    & inject-secrets.ps1 `
+    & ./inject-secrets.ps1 `
         -DDLicenseKey $Keys.DeviceDetection `
         -IPIFileURL $Keys.DeviceDetectionUrl `
         -Clean
