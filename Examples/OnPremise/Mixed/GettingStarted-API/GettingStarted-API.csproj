@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="FiftyOne.DeviceDetection" Version="4.5.0-alpha.170" />
-    <PackageReference Include="FiftyOne.Pipeline.Web" Version="4.5.0-alpha.28" />
+    <PackageReference Include="FiftyOne.Pipeline.Web" Version="4.5.0-alpha.29" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.19" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
