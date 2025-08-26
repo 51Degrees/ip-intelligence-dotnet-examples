@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="C:\Users\maxim\.nuget\packages\fiftyone.pipeline.core\4.5.0-alpha.28\contentFiles\any\netstandard2.0\Configuration\Validation\pipelineOptionsSchema.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="FiftyOne.IpIntelligence.Engine.OnPremise" Version="4.5.0-alpha.127" />
     <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.30" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
@@ -19,9 +15,4 @@
   <ItemGroup>
     <ProjectReference Include="..\FiftyOne.IpIntelligence.Examples\FiftyOne.IpIntelligence.Examples.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Content Remove="C:\Users\maxim\.nuget\packages\fiftyone.ipintelligence.engine.onpremise\4.5.0-alpha.120\build\..\runtimes\win-x64\native\FiftyOne.IpIntelligence.Engine.OnPremise.Native.dll" />
-  </ItemGroup>
-
 </Project>
