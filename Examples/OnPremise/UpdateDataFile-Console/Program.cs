@@ -25,8 +25,17 @@ using FiftyOne.Pipeline.Engines.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.CommandLine;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+
+#nullable enable
+
+// set license key into env-var
+// `IPINTELLIGENCELICENSEKEY_DOTNET=my-key`
+// to test locally set cmd args to
+// `--data-update-url "http://localhost:5225/download-ipi-gz"`
 
 /// <summary>
 /// @example OnPremise/UpdateDataFile-Console/Program.cs
@@ -153,12 +162,12 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
             /// <summary>
             /// Timeout to use when waiting for updates to complete.
             /// </summary>
-            private TimeSpan _updateTimeout = new TimeSpan(0, 0, 20);
+            private readonly TimeSpan _updateTimeout = new TimeSpan(0, 0, 20);
 
             /// <summary>
             /// Helper that is used to wait for updates to complete.
             /// </summary>
-            private CompletionListener CompletionListener;
+            private readonly CompletionListener _completionListener;
 
             /// <summary>
             /// Constructor
@@ -184,7 +193,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
             {
                 PipelineBuilder = pipelineBuilder;
                 EngineBuilder = engineBuilder;
-                CompletionListener = completionListener;
+                _completionListener = completionListener;
                 Logger = logger;
             }
 
@@ -199,10 +208,13 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
             /// <param name="licenseKey">
             /// The license key to use when requesting a data file update.
             /// </param>
+            /// <param name="dataUpdateUrl">
+            /// Custom URL for data file updates.
+            /// </param>
             /// <param name="interactive">
             /// If this example is being run in an interactive session, set this to true.
             /// </param>
-            public void Run(string dataFile, string licenseKey, bool interactive)
+            public void Run(string dataFile, string licenseKey, string? dataUpdateUrl, bool interactive)
             {
                 Logger.LogInformation("Starting example");
 
@@ -215,7 +227,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                     // Let's check this file out
                     var metadata = ExampleUtils.GetDataFileInfo(dataFile, EngineBuilder);
                     // and output the results
-                    ExampleUtils.LogDataFileInfo(metadata, Logger);
+                    Examples.ExampleUtils.LogDataFileInfo(metadata, Logger);
                     if (metadata.Tier.Equals("Lite"))
                     {
                         Logger.LogError("Will not download an 'Enterprise' data file over the top of " +
@@ -253,7 +265,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                 // automatic updates.
                 try
                 {
-                    using (var pipeline = PipelineBuilder
+                    var builder = PipelineBuilder
                         // specify the filename for the data file. When using update on start-up
                         // the file need not exist, but the directory it is in must exist.
                         // Any file that is present is overwritten. Because the file will be
@@ -275,57 +287,63 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                         .SetDataFileSystemWatcher(true)
                         // For the purposes of this example we are setting the time
                         // between checks to see if the file has changed to 1 second.
-                        // By default this is 30 mins.
-                        .SetUpdatePollingInterval(1)
-                        // Build the pipeline.
-                        .Build())
+                        // By default, this is 30 mins.
+                        .SetUpdatePollingInterval(1);
+                    
+                    if (dataUpdateUrl is not null)
                     {
-                        // thread blocks till update checking is complete - or if there is an
-                        // exception we don't get this far
-                        Logger.LogInformation("Update on start-up complete - status - " +
-                            CompletionListener.Result.Status);
-
-                        if (CompletionListener.Result.Status == AutoUpdateStatus.AUTO_UPDATE_SUCCESS ||
-                            CompletionListener.Result.Status == AutoUpdateStatus.AUTO_UPDATE_NOT_NEEDED)
-                        {
-                            Logger.LogInformation("Modifying downloaded file to trigger reload ... " +
-                                                  "please wait for that to complete");
-                            // wait for the dataUpdateService to notify us that it has updated
-                            CompletionListener.Reset();
-
-                            // it's the same file but changing the file metadata will trigger reload,
-                            // demonstrating that if you download a new file and replace the
-                            // existing one, then it will be loaded
-                            try
-                            {
-                                new FileInfo(dataFile).LastWriteTimeUtc = DateTime.UtcNow;
-                            }
-                            catch (IOException)
-                            {
-                                throw new InvalidOperationException("Could not modify file time, " +
-                                                                    "abandoning example");
-                            }
-
-                            try
-                            {
-                                CompletionListener.WaitForComplete(_updateTimeout);
-                                Logger.LogInformation($"Update on file modification complete, " +
-                                                      $"status: {CompletionListener.Result.Status}");
-                            }
-                            catch (TimeoutException)
-                            {
-                                Logger.LogError("Timeout waiting for engine to refresh data.");
-                            }
-                        }
-                        else
-                        {
-                            Logger.LogError("Auto update was not successful, abandoning example");
-                            throw new InvalidOperationException("Auto update failed: " +
-                                                                CompletionListener.Result.Status);
-                        }
-
-                        Logger.LogInformation("Finished Example");
+                        builder.SetDataUpdateUrl(dataUpdateUrl);
+                        builder.SetDataUpdateVerifyMd5(false);
                     }
+                    
+                    // Build the pipeline.
+                    using var pipeline = builder.Build();
+                    
+                    // thread blocks till update checking is complete - or if there is an
+                    // exception we don't get this far
+                    Logger.LogInformation("Update on start-up complete - status - " +
+                                          _completionListener.Result.Status);
+
+                    if (_completionListener.Result.Status == AutoUpdateStatus.AUTO_UPDATE_SUCCESS ||
+                        _completionListener.Result.Status == AutoUpdateStatus.AUTO_UPDATE_NOT_NEEDED)
+                    {
+                        Logger.LogInformation("Modifying downloaded file to trigger reload ... " +
+                                              "please wait for that to complete");
+                        // wait for the dataUpdateService to notify us that it has updated
+                        _completionListener.Reset();
+
+                        // it's the same file but changing the file metadata will trigger reload,
+                        // demonstrating that if you download a new file and replace the
+                        // existing one, then it will be loaded
+                        try
+                        {
+                            new FileInfo(dataFile).LastWriteTimeUtc = DateTime.UtcNow;
+                        }
+                        catch (IOException)
+                        {
+                            throw new InvalidOperationException("Could not modify file time, " +
+                                                                "abandoning example");
+                        }
+
+                        try
+                        {
+                            _completionListener.WaitForComplete(_updateTimeout);
+                            Logger.LogInformation($"Update on file modification complete, " +
+                                                  $"status: {_completionListener.Result.Status}");
+                        }
+                        catch (TimeoutException)
+                        {
+                            Logger.LogError("Timeout waiting for engine to refresh data.");
+                        }
+                    }
+                    else
+                    {
+                        Logger.LogError("Auto update was not successful, abandoning example");
+                        throw new InvalidOperationException("Auto update failed: " +
+                                                            _completionListener.Result.Status);
+                    }
+
+                    Logger.LogInformation("Finished Example");
                 }
                 catch (Pipeline.Engines.Exceptions.DataUpdateException ex)
                 {
@@ -338,47 +356,37 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                 }
             }
 
-            private string CheckLicenseKey(string licenseKey, ILogger logger)
+            private string CheckLicenseKey(string? licenseKey, ILogger logger)
             {
                 if (licenseKey == null)
                 {
                     licenseKey = Environment.GetEnvironmentVariable(Constants.LICENSE_KEY_ENV_VAR);
                 }
-                const string keySubmissionPaths = "as the second command line argument to this program, or as " +
-                        $"an environment variable named '{Constants.LICENSE_KEY_ENV_VAR}'";
                 if (licenseKey == null)
                 {
                     logger.LogError("In order to test this example you will need a 51Degrees " +
-                        "Enterprise license which can be obtained on a trial basis or purchased " +
-                        "from our pricing page https://51degrees.com/pricing. You must supply the " +
-                        "license key " + keySubmissionPaths);
+                                    "Enterprise license which can be obtained on a trial basis or purchased " +
+                                    "from our pricing page https://51degrees.com/pricing. You must supply the " +
+                                    "license key " + KEY_SUBMISSION_PATHS);
                     throw new ArgumentException("No license key available", nameof(licenseKey));
                 }
-                if (ExampleUtils.IsInvalidKey(licenseKey))
+                if (Examples.ExampleUtils.IsInvalidKey(licenseKey))
                 {
-                    logger.LogWarning("The license key supplied (" + keySubmissionPaths + ") is probably invalid.");
+                    logger.LogWarning("The license key supplied (" + KEY_SUBMISSION_PATHS + ") is probably invalid.");
                 }
-
                 return licenseKey;
             }
 
-            private string CheckDataFile(string dataFile, ILogger logger)
+            private static string CheckDataFile(string dataFile, ILogger logger)
             {
-                // No filename specified use the default
-                if (dataFile == null)
-                {
-                    dataFile = Constants.ENTERPRISE_IPI_DATA_FILE_NAME;
-                    logger.LogWarning($"No filename specified. Using default '{dataFile}'");
-                }
                 // Work out where the data file is if we don't have an absolute path.
-                if (dataFile != null && Path.IsPathRooted(dataFile) == false)
+                if (!Path.IsPathRooted(dataFile))
                 {
-                    var fullPath = ExampleUtils.FindFile(dataFile);
+                    var fullPath = Examples.ExampleUtils.FindFile(dataFile);
                     if (fullPath == null)
                     {
                         dataFile = Path.Combine(Directory.GetCurrentDirectory(), dataFile);
-                        logger.LogWarning($"File '{dataFile}' not found, a file will be " +
-                            $"downloaded to that location on start-up");
+                        logger.LogWarning("File '{DataFile}' not found, a file will be downloaded to that location on start-up", dataFile);
                     }
                     else
                     {
@@ -386,54 +394,111 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                     }
                 }
                 // If we do have an absolute path but the file does not exist, then log a warning.
-                else if (dataFile != null && File.Exists(dataFile) == false)
+                else if (!File.Exists(dataFile))
                 {
-                    if (new FileInfo(dataFile).Directory.Exists == false)
+                    if (new FileInfo(dataFile).Directory?.Exists != true)
                     {
-                        logger.LogError("The directory must exist when specifying a " +
-                            "location for a new file to be downloaded. Path specified was " +
-                            $"'{dataFile}'");
+                        logger.LogError("The directory must exist when specifying a location for a new file to be downloaded. Path specified was '{DataFile}'", dataFile);
                         throw new ArgumentException("Directory for new file must exist",
                             nameof(dataFile));
                     }
-                    else
-                    {
-                        logger.LogWarning($"File '{dataFile}' not found, a file will be " +
-                            $"downloaded to that location on start-up");
-                    }
+
+                    logger.LogWarning("File '{DataFile}' not found, a file will be downloaded to that location on start-up", dataFile);
+
                 }
                 return dataFile;
             }
         }
+        
+        private const string KEY_SUBMISSION_ALT_PATH = $"as an environment variable named '{Constants.LICENSE_KEY_ENV_VAR}'";
+        private const string KEY_SUBMISSION_PATHS = "as the second command line argument to this program, or " + KEY_SUBMISSION_ALT_PATH;
 
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
-            // Use the supplied path for the data file or find the lite file that is included
-            // in the repository.
-            var dataFile = args.Length > 0 ? args[0] : null;
-            var licenseKey = args.Length > 1 ? args[1] : null;
+            Argument<string> dataFile = new(nameof(dataFile))
+            {
+                Description = "Path to IPI data file.",
+                Arity = ArgumentArity.ZeroOrOne,
+                DefaultValueFactory = _ => Constants.ENTERPRISE_IPI_DATA_FILE_NAME,
+            };
+            Argument<string?> licenseKey = new(nameof(licenseKey))
+            {
+                Description = "License key for the 51degrees distributor service."
+                              + " Can also be supplied " + KEY_SUBMISSION_ALT_PATH,
+                Arity = ArgumentArity.ZeroOrOne,
+                DefaultValueFactory = _ => null,
+            };
+            licenseKey.Validators.Add(key =>
+            {
+                string? keyString = key.Tokens.FirstOrDefault()?.Value;
+                keyString ??= Environment.GetEnvironmentVariable(Constants.LICENSE_KEY_ENV_VAR);
+                if (string.IsNullOrWhiteSpace(keyString))
+                {
+                    key.AddError("In order to test this example you will need a 51Degrees " +
+                                 "Enterprise license which can be obtained on a trial basis or purchased " +
+                                 "from our pricing page https://51degrees.com/pricing. You must supply the " +
+                                 "license key " + KEY_SUBMISSION_PATHS);
+                }
+            });
+            Option<string?> dataUpdateUrl = new("--data-update-url")
+            {
+                Description = "Custom data file distribution endpoint.",
+            };
+            dataUpdateUrl.Validators.Add(url =>
+            {
+                if(url.Tokens.FirstOrDefault()?.Value is { } urlString 
+                   && !Uri.IsWellFormedUriString(urlString, UriKind.Absolute))
+                {
+                    url.AddError($"Value provided for '{dataUpdateUrl.Name}' is not a valid absolute URL.");
+                }
+            });
+            
+            var rootCommand = new RootCommand("Data file update sample.");
 
-            Initialize(dataFile, licenseKey, true);
+            rootCommand.Arguments.Add(dataFile);
+            rootCommand.Arguments.Add(licenseKey);
+            rootCommand.Options.Add(dataUpdateUrl);
+
+            rootCommand.SetAction(parseResult =>
+            {
+                string dataFilePath = parseResult.GetValue(dataFile)!;
+                
+                // Work out where the data file is if we don't have an absolute path.
+                if (!string.IsNullOrWhiteSpace(dataFilePath) && !Path.IsPathRooted(dataFilePath))
+                {
+                    var fullPath = Examples.ExampleUtils.FindFile(dataFilePath);
+                    dataFilePath = fullPath ?? Path.Combine(Directory.GetCurrentDirectory(), dataFilePath);
+                }
+                
+                Initialize(
+                    dataFilePath,
+                    parseResult.GetValue(licenseKey)!,
+                    parseResult.GetValue(dataUpdateUrl),
+                    true);
+                return 0;
+            });
+
+            return rootCommand.Parse(args).Invoke();
         }
 
         public static void Initialize(
-            string dataFile, string licenseKey, bool interactive)
+            string dataFile, string licenseKey, string? dataUpdateUrl, bool interactive)
         {
             // Initialize a service collection, which will be used to create the services
             // required by the Pipeline and manage their lifetimes.
-            using (var serviceProvider = new ServiceCollection()
+            using var serviceProvider = new ServiceCollection()
                 // Make sure we're logging to the console.
-                .AddLogging(l => l
+                .AddLogging(loggingBuilder => loggingBuilder
                     .AddConsole()
                     // Only display messages @ warning or above.
                     // Or info and above if the come from this example.
                     // This filters out some messages from the Pipeline that would otherwise 
                     // make this example harder to follow.
-                    .AddFilter((c, l) => 
-                    {
-                        return l >= LogLevel.Warning ||
-                            (c.StartsWith(typeof(Program).FullName) && l >= LogLevel.Information);
-                    }))
+                    .AddFilter((c, l) =>
+                        (l >= LogLevel.Warning
+                         || (typeof(Program).FullName is { } progName
+                             && (c?.StartsWith(progName) == true && l >= LogLevel.Information))))
+                )
                 // Add an HttpClient instance. This is used for making requests to the
                 // data update end point.
                 .AddSingleton<HttpClient>()
@@ -445,11 +510,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                 // Add example classes.
                 .AddSingleton<Example>()
                 .AddSingleton<CompletionListener>()
-                .BuildServiceProvider())
-            {
-                var example = serviceProvider.GetRequiredService<Example>();
-                example.Run(dataFile, licenseKey, interactive);
-            }
+                .BuildServiceProvider();
+
+            serviceProvider.GetRequiredService<HttpClient>().Timeout = TimeSpan.FromMinutes(20);
+            var example = serviceProvider.GetRequiredService<Example>();
+            example.Run(dataFile, licenseKey, dataUpdateUrl, interactive);
         }
     }
 }

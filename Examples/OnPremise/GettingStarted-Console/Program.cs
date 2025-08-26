@@ -92,7 +92,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 {
                     // carry out some sample detections
                     // and collect IP addresses
-                    foreach (var evidence in ExampleUtils.EvidenceValues)
+                    foreach (var evidence in Examples.ExampleUtils.EvidenceValues)
                     {
                         AnalyseEvidence(evidence, pipeline, output);
                     }
@@ -176,26 +176,6 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 }
             }
 
-
-            private void OutputValue(string name, 
-                IAspectPropertyValue value,
-                StringBuilder message)
-            {
-                // Individual result values have a wrapper called `AspectPropertyValue`.
-                // This functions similarly to a null-able type.
-                // If the value has not been set then trying to access the `Value` property will
-                // throw an exception. `AspectPropertyValue` also includes the `NoValueMessage`
-                // property, which describes why the value has not been set.
-                if (!value.HasValue)
-                {
-                    message.AppendLine($"\t{name}: {value.NoValueMessage}");
-                }
-                else
-                {
-                    message.AppendLine($"\t{name}: {value.Value}");
-                }
-            }
-
             private void OutputWeightedIntValues(string name, 
                 IAspectPropertyValue<IReadOnlyList<IWeightedValue<int>>> property,
                 StringBuilder message)
@@ -257,7 +237,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 // and capabilities. Find out about the Enterprise data file on our pricing page:
                 // https://51degrees.com/pricing
 
-                ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
+                Examples.ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
 
             File.WriteAllText("GettigStarted_DataFileName.txt", dataFile);
 

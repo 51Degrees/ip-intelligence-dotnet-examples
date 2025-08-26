@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>Examples.Cloud.Metadata</AssemblyName>
+    <RootNamespace>Examples.Cloud.Metadata</RootNamespace>
+    <Platforms>AnyCPU;x64;x86;ARM64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.122" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" />
+    <PackageReference Include="System.Text.Json" Version="8.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\FiftyOne.IpIntelligence.Examples.Cloud\FiftyOne.IpIntelligence.Examples.Cloud.csproj" />
+  </ItemGroup>
+
+</Project>

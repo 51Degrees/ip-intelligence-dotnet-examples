@@ -60,7 +60,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Con
             // Log warnings if the data file is too old or the 'Lite' file is being used.
             if(_checkedDataFile == false)
             {
-                IpIntelligence.Examples.ExampleUtils.CheckDataFile(_provider.GetFlowData().Pipeline, _logger);
+                Examples.OnPremise.ExampleUtils.CheckDataFile(_provider.GetFlowData().Pipeline, _logger);
                 _checkedDataFile = true;
             }
 

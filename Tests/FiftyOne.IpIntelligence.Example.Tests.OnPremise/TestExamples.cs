@@ -123,7 +123,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise
         {
             VerifyLicenseKeyAvailable();
             Examples.OnPremise.UpdateDataFile.Program.Initialize(
-                DataFile, LicenseKey, false);
+                DataFile, LicenseKey, null, false);
         }
 
         private void VerifyLicenseKeyAvailable()

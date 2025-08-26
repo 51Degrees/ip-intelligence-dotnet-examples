@@ -328,7 +328,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedConsole
                 var ipEngine = pipeline.GetElement<IpiOnPremiseEngine>();
                 if (ipEngine != null)
                 {
-                    IpIntelligence.Examples.ExampleUtils.CheckDataFile(ipEngine, logger);
+                    Examples.OnPremise.ExampleUtils.CheckDataFile(ipEngine, logger);
                 }
             }
         }

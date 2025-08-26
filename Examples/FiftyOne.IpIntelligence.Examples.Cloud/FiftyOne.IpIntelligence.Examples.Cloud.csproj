@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>FiftyOne.IpIntelligence.Examples.Cloud</AssemblyName>
+    <Platforms>AnyCPU;x64;ARM64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="C:\Users\maxim\.nuget\packages\fiftyone.pipeline.core\4.5.0-alpha.28\contentFiles\any\netstandard2.0\Configuration\Validation\pipelineOptionsSchema.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FiftyOne.IpIntelligence.Cloud" Version="4.5.0-alpha.122" />
+    <PackageReference Include="FiftyOne.IpIntelligence.Shared" Version="4.5.0-alpha.122" />
+    <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.29" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FiftyOne.IpIntelligence.Examples\FiftyOne.IpIntelligence.Examples.csproj" />
+  </ItemGroup>
+
+</Project>

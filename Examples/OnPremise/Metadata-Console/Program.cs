@@ -236,7 +236,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
                 // Note that the Lite data file is only used for illustration, and has limited accuracy
                 // and capabilities. Find out about the Enterprise data file on our pricing page:
                 // https://51degrees.com/pricing
-                ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
+                Examples.ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
 
             File.WriteAllText("Metadata_DataFileName.txt", dataFile);
 

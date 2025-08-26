@@ -20,8 +20,6 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
-using FiftyOne.Pipeline.Core.FlowElements;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -197,69 +195,6 @@ namespace FiftyOne.IpIntelligence.Examples
             catch { result = null; }
 
             return result;
-        }
-
-        /// <summary>
-        /// Get information about the specified data file
-        /// </summary>
-        /// <param name="dataFile"></param>
-        /// <param name="engineBuilder"></param>
-        public static DataFileInfo GetDataFileInfo(string dataFile, 
-            IpiOnPremiseEngineBuilder engineBuilder)
-        {
-            DataFileInfo result = new DataFileInfo();
-
-            using (var engine = engineBuilder
-                .Build(dataFile, false))
-            {
-                result = GetDataFileInfo(engine);
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Get information about the data file used by the specified engine
-        /// </summary>
-        /// <param name="engine"></param>
-        public static DataFileInfo GetDataFileInfo(IpiOnPremiseEngine engine)
-        {
-            DataFileInfo result = new DataFileInfo();
-            result.PublishDate = engine.DataFiles[0].DataPublishedDateTime;
-            result.Tier = engine.DataSourceTier;
-            result.Filepath = engine.DataFiles[0].DataFilePath;
-            return result;
-        }
-
-        /// <summary>
-        /// Display information about the data file and log warnings if specific requirements
-        /// are not met.
-        /// </summary>
-        /// <param name="pipeline"></param>
-        /// <param name="logger"></param>
-        public static void CheckDataFile(IPipeline pipeline, ILogger logger)
-        {
-            // Get the 'engine' element within the pipeline that performs IP Intelligence.
-            // We can use this to get details about the data file as well as meta-data describing
-            // things such as the available properties.
-            var engine = pipeline.GetElement<IpiOnPremiseEngine>();
-            CheckDataFile(engine, logger);
-        }
-
-        /// <summary>
-        /// Display information about the data file and log warnings if specific requirements
-        /// are not met.
-        /// </summary>
-        /// <param name="engine"></param>
-        /// <param name="logger"></param>
-        public static void CheckDataFile(IpiOnPremiseEngine engine, ILogger logger)
-        {
-            if (engine != null)
-            {
-                var info = GetDataFileInfo(engine);
-                LogDataFileInfo(info, logger);
-                LogDataFileStandardWarnings(info, logger);
-            }
         }
 
         /// <summary>

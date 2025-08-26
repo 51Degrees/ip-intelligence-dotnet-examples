@@ -29,7 +29,7 @@ namespace FiftyOne.IpIntelligence.Examples
         /// <summary>
         /// The default name of the paid-for enterprise IP Intelligence data file.
         /// </summary>
-        public const string ENTERPRISE_IPI_DATA_FILE_NAME = "Enterprise-IpiV41.ipi";
+        public const string ENTERPRISE_IPI_DATA_FILE_NAME = "51Degrees-EnterpriseIpiV41.ipi";
 
         /// <summary>
         /// The default name of the free 'lite' IP Intelligence data file.

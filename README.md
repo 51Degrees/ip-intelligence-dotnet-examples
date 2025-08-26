@@ -38,23 +38,41 @@ dotnet add package FiftyOne.IpIntelligence --prerelease
 
 ## On-Premise
 
-|Example|Target|Use case|
-|---|---|---|
-|Framework-Web|.NET Framework 4.6.2|ASP.NET Framework project.|
-|GettingStarted-Console|.NET 8.0|Simple console app.|
-|GettingStarted-Web|.NET 8.0|ASP.NET Core project.|
-|Metadata-Console|.NET 8.0|Accessing data file's metadata (e.g. listing properties).|
-|OfflineProcessing-Console|.NET 8.0|Batch-processing of IP addresses from a YAML file.|
-|Performance-Console|.NET 8.0|"Clock-time" benchmark for assessing detection speed.|
-|UpdateDataFile-Console|.NET 8.0|Auto-update features: Daily / on Start-Up / Filesystem Watcher|
-|**Mixed/GettingStarted-Console**|**.NET 8.0**|**Combined Device Detection and IP Intelligence console app.**|
-|**Mixed/GettingStarted-Web**|**.NET 8.0**|**Combined Device Detection and IP Intelligence ASP.NET Core project.**|
+| Example                          | Target               | Use case                                                                |
+| -------------------------------- | -------------------- | ----------------------------------------------------------------------- |
+| Framework-Web                    | .NET Framework 4.6.2 | ASP.NET Framework project.                                              |
+| GettingStarted-Console           | .NET 8.0             | Simple console app.                                                     |
+| GettingStarted-Web               | .NET 8.0             | ASP.NET Core project.                                                   |
+| Metadata-Console                 | .NET 8.0             | Accessing data file's metadata (e.g. listing properties).               |
+| OfflineProcessing-Console        | .NET 8.0             | Batch-processing of IP addresses from a YAML file.                      |
+| Performance-Console              | .NET 8.0             | "Clock-time" benchmark for assessing detection speed.                   |
+| UpdateDataFile-Console           | .NET 8.0             | Auto-update features: Daily / on Start-Up / Filesystem Watcher          |
+| **Mixed/GettingStarted-Console** | **.NET 8.0**         | **Combined Device Detection and IP Intelligence console app.**          |
+| **Mixed/GettingStarted-Web**     | **.NET 8.0**         | **Combined Device Detection and IP Intelligence ASP.NET Core project.** |
+
+
+## Cloud
+
+* In order to test cloud examples against a custom endpoint - you need to launch `OnPremise/Mixed/GettingStarted-API` example 
+and keep it running while launching other examples.  Depending on the IDE you use this can be either done conveniently from the IDE, or 
+just using `dotnet run` in the `OnPremise/Mixed/GettingStarted-API` directory from the command line.  
+
+| Example                          | Target               | Use case                                                                  |
+| -------------------------------- | -------------------- | ------------------------------------------------------------------------- |
+| Framework-Web                    | .NET Framework 4.6.2 | ASP.NET Framework project.                                                |
+| GettingStarted-Console           | .NET 8.0             | Simple console app.                                                       |
+| GettingStarted-Web               | .NET 8.0             | ASP.NET Core project.                                                     |
+| Metadata-Console                 | .NET 8.0             | Get the available properties and evidence keys information from the cloud |
+| GetAllProperties                 | .NET 8.0             | Get all the available properties for an IP address from the cloud         |
+| **Mixed/GettingStarted-Console** | **.NET 8.0**         | **Combined Device Detection and IP Intelligence console app.**            |
+| **Mixed/GettingStarted-Web**     | **.NET 8.0**         | **Combined Device Detection and IP Intelligence ASP.NET Core project.**   |
+
 
 ### Mixed Examples
 
 The **Mixed examples** demonstrate how to combine Device Detection and IP Intelligence engines within a single application:
 
-- **Mixed/GettingStarted-Console**: A console application that processes both device detection (from User-Agent) and IP intelligence (from IP address) in parallel using the 51Degrees Pipeline API.
+- **Mixed/GettingStarted-Console**: A console application that processes both device detection (from User-Agent / User-Agent Client Hints) and IP intelligence (from IP address) in parallel using the 51Degrees Pipeline API.
 
 - **Mixed/GettingStarted-Web**: An ASP.NET Core web application featuring:
   - Combined device detection and IP intelligence results in a two-column layout

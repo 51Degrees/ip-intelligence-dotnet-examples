@@ -110,7 +110,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
             var dataFileConfigKey = $"PipelineOptions:Elements:{ipiEngineIndex}" +
                 $":BuildParameters:DataFile";
 
-            var dataFile = options.GetHashDataFile();
+            var dataFile = options.GetIpiDataFile();
             var foundDataFile = false;
             if (string.IsNullOrEmpty(dataFile))
             {
@@ -121,7 +121,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
             // ExampleUtils.FindFile function.
             else if (Path.IsPathRooted(dataFile) == false)
             {
-                var newPath = ExampleUtils.FindFile(dataFile);
+                var newPath = Examples.ExampleUtils.FindFile(dataFile);
                 if(newPath != null)
                 {
                     // Add an override for the absolute path to the data file.
