@@ -15,15 +15,15 @@ $DataFileDir = [IO.Path]::Combine($pwd, $RepoName, "ip-intelligence-data")
 ./steps/fetch-hash-assets.ps1 -RepoName $RepoName -LicenseKey $DeviceDetection -Url $DeviceDetectionUrl
 
 # Move the data file to the correct location
-$DataFileName = "51Degrees-EnterpriseV41.hash"
-$DataFileSource = [IO.Path]::Combine($pwd, $RepoName, $DataFileName)
-$DataFileDestination = [IO.Path]::Combine($DataFileDir, $DataFileName)
+$DataFileSource = [IO.Path]::Combine($pwd, $RepoName, "TAC-HashV41.hash")
+$DataFileDestination = [IO.Path]::Combine($DataFileDir, "51Degrees-EnterpriseV41.hash")
 Move-Item $DataFileSource $DataFileDestination
 
 
 # Use IP Intelligence naming internally
 $IpIntelligence = $DeviceDetection
 $IpIntelligenceUrl = $DeviceDetectionUrl
+
 
 # Fetch the enterprise IPI data file for testing with
 $DataFileName = "51Degrees-EnterpriseIpiV41.ipi"
