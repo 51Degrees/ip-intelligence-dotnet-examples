@@ -25,7 +25,7 @@ using System.Web.UI;
 
 /// @example OnPremise/Framework-Web/Default.aspx.cs
 /// 
-/// This example demonstrates how to use the cloud-based IP Intelligence API in a .NET Framework 
+/// This example demonstrates how to use the On-premise IP Intelligence API in a .NET Framework 
 /// website.
 /// 
 /// The source code for this example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/tree/master/Examples/OnPremise/Framework-Web).

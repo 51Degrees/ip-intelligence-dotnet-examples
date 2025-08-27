@@ -299,7 +299,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
                     // Make sure we're logging to the console.
                     .AddLogging(l => l.AddConsole())
                     // Add an HttpClient instance. This is used for making requests to the
-                    // cloud service.
+                    // Cloud service.
                     .AddSingleton<HttpClient>()
                     // Add the builders that will be needed to create the engines specified in the 
                     // configuration file.

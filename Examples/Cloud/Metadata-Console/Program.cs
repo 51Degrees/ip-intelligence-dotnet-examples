@@ -33,13 +33,13 @@ using FiftyOne.Pipeline.Engines.Data;
 /// <summary>
 /// @example Cloud/Metadata-Console/Program.cs
 ///
-/// The cloud service exposes meta data that can provide additional information about the various 
+/// The Cloud service exposes meta data that can provide additional information about the various 
 /// properties that might be returned.
 /// This example shows how to access this data and display the values available.
 /// 
 /// A list of the properties will be displayed, along with some additional information about each
 /// property. Note that this is the list of properties used by the supplied resource key, rather
-/// than all properties that can be returned by the cloud service.
+/// than all properties that can be returned by the Cloud service.
 /// 
 /// In addition, the evidence keys that are accepted by the service are listed. These are the 
 /// keys that, when added to the evidence collection in flow data, could have some impact on the
@@ -76,7 +76,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Metadata
                     // IpiCloudEngine.
                     // This is because the IpiCloudEngine doesn't actually make use
                     // of any evidence values. It simply processes the JSON that is returned
-                    // by the call to the cloud service that is made by the CloudRequestEngine.
+                    // by the call to the Cloud service that is made by the CloudRequestEngine.
                     // The CloudRequestEngine is actually taking the evidence values and passing
                     // them to the cloud, so that's the engine we want the keys from.
                     OutputEvidenceKeyDetails(pipeline.GetElement<CloudRequestEngine>(), output);
@@ -155,7 +155,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Metadata
             {
                 logger.LogError($"No resource key specified in the configuration file " +
                     $"'appsettings.json' or the environment variable " +
-                    $"'{ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR}'. The 51Degrees cloud service is " +
+                    $"'{ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR}'. The 51Degrees Cloud service is " +
                     $"accessed using a 'ResourceKey'. For more information see " +
                     $"https://51degrees.com/documentation/_info__resource_keys.html. " +
                     $"A resource key with the properties required by this example can be " +

@@ -25,7 +25,7 @@ using System.Web.UI;
 
 /// @example Cloud/Framework-Web/Default.aspx.cs
 /// 
-/// This example demonstrates how to use the cloud-based device detection API in a .NET Framework 
+/// This example demonstrates how to use the Cloud-based IP Intelligence API in a .NET Framework 
 /// website.
 /// 
 /// The source code for this example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/tree/main/Examples/Cloud/Framework-Web).

@@ -35,7 +35,7 @@ using System.Threading;
 /// @example Cloud/GettingStarted-Web/Program.cs
 /// 
 /// This example demonstrates how to use IP Intelligence with the 51Degrees 
-/// cloud service in a web application. The cloud service provides up-to-date 
+/// Cloud service in a web application. The Cloud service provides up-to-date 
 /// IP intelligence data without requiring local data files.
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/GettingStarted-Web/Program.cs). 
@@ -43,7 +43,7 @@ using System.Threading;
 /// Required setup:
 /// - Cloud resource key (get your free key at https://configure.51degrees.com)
 /// - Configure the resource key in appsettings.json or via environment variables
-/// - Optionally, configure a custom endpoint URL for private cloud services
+/// - Optionally, configure a custom endpoint URL for private Cloud services
 /// 
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
