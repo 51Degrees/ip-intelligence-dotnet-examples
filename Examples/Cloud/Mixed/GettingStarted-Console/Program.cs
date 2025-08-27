@@ -40,13 +40,13 @@ using FiftyOne.DeviceDetection;
 using FiftyOne.DeviceDetection.Cloud.FlowElements;
 
 /// <summary>
-/// @example Cloud/GettingStarted-Console/Program.cs
+/// @example Cloud/Mixed/GettingStarted-Console/Program.cs
 ///
 /// @include{doc} example-getting-started-cloud.txt
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/Mixed/GettingStarted-Console/Program.cs). 
 /// 
-/// @include{doc} example-require-resourcekey.txt
+/// To run this example, you will eventually need to create a Resource Key, but for now you should use the GettingStarted-API example - just run it and point this example to its custom endpoint to simulate a custom hosted Cloud service. Resource Key is used as shorthand to store the particular set of properties you are interested in as well as any associated License Keys that entitle you to increased request limits and/or paid-for properties, but it is not yet available for IP Intelligence.
 ///
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
