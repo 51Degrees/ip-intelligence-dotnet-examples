@@ -41,7 +41,7 @@ using System.Net.Http;
 using System.Text;
 
 /// <summary>
-/// @example Mixed/OnPremise/GettingStarted-Console/Program.cs
+/// @example OnPremise/Mixed/GettingStarted-Console/Program.cs
 /// 
 /// This example demonstrates using both Device Detection and IP Intelligence 
 /// engines in a single pipeline. The engines process evidence in parallel

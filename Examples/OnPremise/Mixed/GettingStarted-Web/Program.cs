@@ -34,6 +34,26 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
+/// <summary>
+/// @example OnPremise/Mixed/GettingStarted-Web/Program.cs
+/// 
+/// This example demonstrates using both Device Detection and IP Intelligence 
+/// engines in a single web application pipeline. The engines process evidence 
+/// in parallel for optimal performance.
+/// 
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/OnPremise/Mixed/GettingStarted-Web/Program.cs). 
+/// 
+/// Required data files:
+/// - Device Detection data file (.hash format)
+/// - IP Intelligence data file (.ipi format)
+/// 
+/// The paths to the data files should be provided as command line parameters
+/// 
+/// Required NuGet Dependencies:
+/// - FiftyOne.DeviceDetection
+/// - FiftyOne.IpIntelligence
+/// - Microsoft.AspNetCore.App
+/// </summary>
 namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
 {
     public class Program
