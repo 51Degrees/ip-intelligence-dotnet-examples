@@ -46,6 +46,8 @@ using System.Text;
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Metadata-Console/Program.cs). 
 /// 
+/// This example requires an enterprise IP Intelligence data file (.ipi). 
+/// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
 /// 
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
@@ -219,12 +221,10 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
             // Use the supplied path for the data file or find the lite file that is included
             // in the repository.
             var dataFile = args.Length > 0 ? args[0] :
-                // In this example, by default, the 51degrees "Lite" file needs to be somewhere in the
+                // In this example, by default, the 51degrees IP Intelligence data file needs to be somewhere in the
                 // project space, or you may specify another file as a command line parameter.
                 //
-                // Note that the Lite data file is only used for illustration, and has limited accuracy
-                // and capabilities. Find out about the Enterprise data file on our pricing page:
-                // https://51degrees.com/pricing
+                // For testing, contact us to obtain an enterprise data file: https://51degrees.com/contact-us
                 Examples.ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
 
             File.WriteAllText("Metadata_DataFileName.txt", dataFile);

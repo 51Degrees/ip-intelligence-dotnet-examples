@@ -60,6 +60,8 @@ using YamlDotNet.Serialization;
 /// performance and predictive power using Performance Profile, Graph and Difference and Drift 
 /// settings.
 /// 
+/// Evidence files can be obtained from the [ip-intelligence-data repository](https://github.com/51Degrees/ip-intelligence-data).
+/// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/OfflineProcessing-Console/Program.cs). 
 /// 
 /// This example requires an enterprise IP Intelligence data file (.ipi). 
