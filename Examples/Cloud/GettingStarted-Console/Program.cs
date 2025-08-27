@@ -42,15 +42,15 @@ using System.Text;
 ///
 /// @include{doc} example-getting-started-cloud.txt
 /// 
-/// This example is available in full on [GitHub](https://github.com/51Degrees/device-detection-dotnet-examples/blob/main/Examples/Cloud/GettingStarted-Console/Program.cs). 
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/GettingStarted-Console/Program.cs). 
 /// 
 /// @include{doc} example-require-resourcekey.txt
 ///
 /// Required NuGet Dependencies:
-/// - FiftyOne.IpIntelligence
-/// - Microsoft.Extensions.Configuration.Json
-/// - Microsoft.Extensions.DependencyInjection
-/// - Microsoft.Extensions.Logging.Console
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
+/// - [Microsoft.Extensions.Configuration.Json](https://www.nuget.org/packages/Microsoft.Extensions.Configuration.Json/)
+/// - [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection/)
+/// - [Microsoft.Extensions.Logging.Console](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Console/)
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedConsole
 {

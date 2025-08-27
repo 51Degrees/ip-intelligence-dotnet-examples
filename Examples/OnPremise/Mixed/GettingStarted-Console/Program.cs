@@ -56,8 +56,8 @@ using System.Text;
 /// The paths to the data files should be provided as 2 consecutive command line parameters
 /// 
 /// Required NuGet Dependencies:
-/// - FiftyOne.DeviceDetection
-/// - FiftyOne.IpIntelligence
+/// - [FiftyOne.DeviceDetection](https://www.nuget.org/packages/FiftyOne.DeviceDetection/)
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedConsole
 {

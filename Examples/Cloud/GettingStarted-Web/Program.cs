@@ -46,8 +46,8 @@ using System.Threading;
 /// - Optionally, configure a custom endpoint URL for private cloud services
 /// 
 /// Required NuGet Dependencies:
-/// - FiftyOne.IpIntelligence
-/// - Microsoft.AspNetCore.App
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
+/// - [Microsoft.AspNetCore.App](https://www.nuget.org/packages/Microsoft.AspNetCore.App/)
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb
 {

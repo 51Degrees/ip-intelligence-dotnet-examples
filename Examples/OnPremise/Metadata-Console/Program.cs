@@ -58,8 +58,8 @@ using System.Text;
 /// @include{doc} example-require-datafile.txt
 /// 
 /// Required NuGet Dependencies:
-/// - FiftyOne.IpIntelligence
-/// - Microsoft.Extensions.Logging.Console
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
+/// - [Microsoft.Extensions.Logging.Console](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Console/)
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
 {

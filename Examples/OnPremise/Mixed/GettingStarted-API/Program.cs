@@ -43,7 +43,7 @@ using System.Security.Cryptography;
 /// @include{doc} example-require-datafile.txt
 /// 
 /// Required NuGet Dependencies:
-/// - FiftyOne.IpIntelligence
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
 {

@@ -50,9 +50,9 @@ using Microsoft.Extensions.Hosting;
 /// The paths to the data files should be provided as command line parameters
 /// 
 /// Required NuGet Dependencies:
-/// - FiftyOne.DeviceDetection
-/// - FiftyOne.IpIntelligence
-/// - Microsoft.AspNetCore.App
+/// - [FiftyOne.DeviceDetection](https://www.nuget.org/packages/FiftyOne.DeviceDetection/)
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
+/// - [Microsoft.AspNetCore.App](https://www.nuget.org/packages/Microsoft.AspNetCore.App/)
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
 {
