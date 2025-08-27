@@ -31,7 +31,13 @@ using System.Threading.Tasks;
 
 /// @example Cloud/GettingStarted-Web/Startup.cs
 /// 
-/// @include{doc} example-getting-started-web.txt
+/// This example shows how to configure and use 51Degrees Cloud IP Intelligence in a web application.
+/// 
+/// You will learn:
+/// 
+/// 1. How to configure a Pipeline that uses 51Degrees Cloud IP Intelligence in a web application
+/// 2. How the PipelineFilter automatically processes requests and makes results available
+/// 3. How to retrieve IP Intelligence results in your web application
 /// 
 /// The source code for this example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/tree/main/Examples/Cloud/GettingStarted-Web). 
 /// 

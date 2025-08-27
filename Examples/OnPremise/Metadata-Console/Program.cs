@@ -34,20 +34,11 @@ using System.Text;
 /// <summary>
 /// @example OnPremise/Metadata-Console/Program.cs
 ///
-/// The IP Intelligence data file contains meta data that can provide additional information
-/// about the various records in the data model.
-/// This example shows how to access this data and display the values available.
-/// 
-/// To help navigate the data, it's useful to have an understanding of the types of records that
-/// are present:
-/// - Component - A record relating to a major aspect of the entity making a web request. There are currently 4 components: Hardware, Software Platform (OS), Browser and Crawler.
-/// - Profile - A record containing the details for a specific instance of a component. An example of a hardware profile would be the profile for the iPhone 13. An example of a platform profile would be Android 12.1.0.
-/// - Property - Each property will have a specific value (or values) for each profile. An example of a hardware property is 'IsMobile'. An example of a browser property is 'BrowserName'.
-/// 
-/// The example will output each component in turn, with a list of the properties associated with
-/// each component. Some of the possible values for each property are also displayed.
-/// There are too many profiles to display, so we just list the number of profiles for each 
-/// component.
+/// This example shows how to access meta data about the IP Intelligence properties that are available 
+/// in the data file. This can be useful for understanding what information is available and how to access it.
+///
+/// The example will output the available properties along with details about their data types and descriptions.
+/// This helps you understand what IP Intelligence data you can access for your use case.
 /// 
 /// Finally, the evidence keys that are accepted by IP Intelligence are listed. These are the 
 /// keys that, when added to the evidence collection in flow data, could have some impact on the
@@ -55,7 +46,6 @@ using System.Text;
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Metadata-Console/Program.cs). 
 /// 
-/// @include{doc} example-require-datafile-ipi.txt
 /// 
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)

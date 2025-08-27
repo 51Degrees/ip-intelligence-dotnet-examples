@@ -40,7 +40,13 @@ using System.Text;
 /// <summary>
 /// @example Cloud/GettingStarted-Console/Program.cs
 ///
-/// @include{doc} example-getting-started-cloud.txt
+/// This example shows how to use 51Degrees Cloud IP Intelligence to determine location and network details from IP addresses.
+/// 
+/// You will learn:
+/// 
+/// 1. How to create a Pipeline that uses 51Degrees Cloud IP Intelligence
+/// 2. How to pass input data (evidence) to the Pipeline
+/// 3. How to retrieve the results
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/GettingStarted-Console/Program.cs). 
 /// 

@@ -35,11 +35,18 @@ using System.Text;
 /// <summary>
 /// @example OnPremise/GettingStarted-Console/Program.cs
 /// 
-/// @include{doc} example-getting-started-onpremise-ipi.txt
+/// This example shows how to use 51Degrees On-premise IP Intelligence to determine location and network details from IP addresses.
+/// 
+/// You will learn:
+/// 
+/// 1. How to create a Pipeline that uses 51Degrees On-premise IP Intelligence
+/// 2. How to pass input data (evidence) to the Pipeline
+/// 3. How to retrieve the results
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-Console/Program.cs). 
 /// 
-/// @include{doc} example-require-datafile-ipi.txt
+/// This example requires an enterprise IP Intelligence data file (.ipi). 
+/// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
 /// 
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)

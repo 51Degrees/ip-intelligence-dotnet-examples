@@ -25,8 +25,13 @@ using System.Web.UI;
 
 /// @example Cloud/Framework-Web/Default.aspx.cs
 /// 
-/// This example demonstrates how to use the Cloud-based IP Intelligence API in a .NET Framework 
-/// website.
+/// This example shows how to use 51Degrees Cloud IP Intelligence to determine location and network details from IP addresses in a .NET Framework web application.
+/// 
+/// You will learn:
+/// 
+/// 1. How to configure a Pipeline that uses 51Degrees Cloud IP Intelligence in a .NET Framework website
+/// 2. How the PipelineModule automatically processes requests and makes results available  
+/// 3. How to retrieve IP Intelligence results in your web pages
 /// 
 /// The source code for this example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/tree/main/Examples/Cloud/Framework-Web).
 /// 
@@ -40,7 +45,7 @@ using System.Web.UI;
 /// 
 /// The FiftyOne.Pipeline.Web package includes an IHttpModule implementation called 
 /// 'PipelineModule'. This is inserted into the start of the ASP.NET processing pipeline so
-/// that it can intercept the request and perform device detection.
+/// that it can intercept the request and perform IP Intelligence.
 /// 
 /// The module replaces the default `HttpCapabilitiesBase.BrowserCapabilitiesProvider` with a 
 /// 51Degrees version.

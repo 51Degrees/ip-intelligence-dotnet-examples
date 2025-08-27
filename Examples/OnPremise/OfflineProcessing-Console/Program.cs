@@ -32,6 +32,14 @@ using YamlDotNet.Serialization;
 /// <summary>
 /// @example OnPremise/OfflineProcessing-Console/Program.cs
 /// 
+/// This example shows how to process a YAML file containing IP address evidence for IP Intelligence analysis.
+/// 
+/// You will learn:
+/// 
+/// 1. How to create a Pipeline that uses 51Degrees On-premise IP Intelligence
+/// 2. How to process evidence from YAML files in batch
+/// 3. How to output IP Intelligence results to YAML format
+/// 
 /// Provides an example of processing a YAML file containing evidence for IP Intelligence. 
 /// There are 20,000 examples in the supplied file of evidence representing HTTP Headers.
 /// For example:
@@ -54,7 +62,8 @@ using YamlDotNet.Serialization;
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/OfflineProcessing-Console/Program.cs). 
 /// 
-/// @include{doc} example-require-datafile-ipi.txt
+/// This example requires an enterprise IP Intelligence data file (.ipi). 
+/// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
 /// 
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)

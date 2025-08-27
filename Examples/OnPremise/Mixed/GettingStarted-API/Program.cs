@@ -36,11 +36,9 @@ using System.Security.Cryptography;
 /// <summary>
 /// @example OnPremise/GettingStarted-API/Program.cs
 /// 
-/// @include{doc} example-getting-started-onpremise-ipi.txt
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-API/Program.cs). 
 /// 
-/// @include{doc} example-require-datafile-ipi.txt
 /// 
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)

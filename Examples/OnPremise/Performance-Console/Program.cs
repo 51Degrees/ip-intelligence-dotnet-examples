@@ -37,6 +37,14 @@ using System.Threading.Tasks;
 /// <summary>
 /// @example Performance-Console/Program.cs
 ///
+/// This example shows how to benchmark the performance of 51Degrees On-premise IP Intelligence.
+/// 
+/// You will learn:
+/// 
+/// 1. How to create a Pipeline that uses 51Degrees On-premise IP Intelligence with different performance configurations
+/// 2. How to run benchmarks to measure detection speed and throughput
+/// 3. How to analyze performance trade-offs between speed, memory usage, and accuracy
+///
 /// The example illustrates a "clock-time" benchmark for assessing detection speed.
 ///
 /// Using a YAML formatted evidence file - "20000 Evidence Records.yml" - supplied with the
@@ -56,7 +64,8 @@ using System.Threading.Tasks;
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Performance-Console/Program.cs).
 /// 
-/// @include{doc} example-require-datafile-ipi.txt
+/// This example requires an enterprise IP Intelligence data file (.ipi). 
+/// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
 /// 
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)

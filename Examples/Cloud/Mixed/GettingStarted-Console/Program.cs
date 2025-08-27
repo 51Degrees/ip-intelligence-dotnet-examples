@@ -42,7 +42,13 @@ using FiftyOne.DeviceDetection.Cloud.FlowElements;
 /// <summary>
 /// @example Cloud/Mixed/GettingStarted-Console/Program.cs
 ///
-/// @include{doc} example-getting-started-cloud.txt
+/// This example demonstrates using both Device Detection and IP Intelligence from the 51Degrees Cloud service.
+/// 
+/// You will learn:
+/// 
+/// 1. How to create a Pipeline that uses both 51Degrees Cloud Device Detection and IP Intelligence
+/// 2. How to pass input data (User-Agent and IP address) to the Pipeline
+/// 3. How to retrieve device and IP intelligence results from a single pipeline
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/Mixed/GettingStarted-Console/Program.cs). 
 /// 

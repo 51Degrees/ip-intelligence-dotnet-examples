@@ -30,11 +30,18 @@ using System.Threading.Tasks;
 
 /// @example OnPremise/GettingStarted-Web/Startup.cs
 /// 
-/// @include{doc} example-getting-started-web.txt
+/// This example shows how to use 51Degrees On-premise IP Intelligence in a web application to determine location and network details from IP addresses.
+/// 
+/// You will learn:
+/// 
+/// 1. How to configure a Pipeline in a web application that uses 51Degrees On-premise IP Intelligence
+/// 2. How evidence from the web request is automatically passed to the Pipeline
+/// 3. How to retrieve the results in your web application
 /// 
 /// The source code for this example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/tree/master/Examples/OnPremise/GettingStarted-Web). 
 /// 
-/// @include{doc} example-require-datafile-ipi.txt
+/// This example requires an enterprise IP Intelligence data file (.ipi). 
+/// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
 /// 
 /// Required NuGet Dependencies:
 /// - [Microsoft.AspNetCore.App](https://www.nuget.org/packages/Microsoft.AspNetCore.App/)
