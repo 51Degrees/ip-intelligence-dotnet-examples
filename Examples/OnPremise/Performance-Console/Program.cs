@@ -58,9 +58,6 @@ using System.Threading.Tasks;
 /// properties from multiple components. If you don't specify any properties to detect, then all 
 /// properties are detected.
 ///
-/// Please review [performance options](https://51degrees.com/documentation/_ip_intelligence__features__performance_options.html)
-/// and [IPI dataset options](https://51degrees.com/documentation/_ip_intelligence__on_premise.html#IpIntelligence_OnPremise_DataSetProduction_Performance)
-/// for more information about adjusting performance.
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Performance-Console/Program.cs).
 /// 

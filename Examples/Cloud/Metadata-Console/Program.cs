@@ -33,7 +33,7 @@ using FiftyOne.Pipeline.Engines.Data;
 /// <summary>
 /// @example Cloud/Metadata-Console/Program.cs
 ///
-/// The Cloud service exposes meta data that can provide additional information about the various 
+/// The Cloud service exposes metadata that can provide additional information about the various 
 /// properties that might be returned.
 /// This example shows how to access this data and display the values available.
 /// 

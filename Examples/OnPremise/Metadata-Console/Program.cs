@@ -34,7 +34,7 @@ using System.Text;
 /// <summary>
 /// @example OnPremise/Metadata-Console/Program.cs
 ///
-/// This example shows how to access meta data about the IP Intelligence properties that are available 
+/// This example shows how to access metadata about the IP Intelligence properties that are available 
 /// in the data file. This can be useful for understanding what information is available and how to access it.
 ///
 /// The example will output the available properties along with details about their data types and descriptions.
@@ -65,10 +65,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
                 // If you already have a pipeline and just want to get a reference to the engine 
                 // then you can use `var engine = pipeline.GetElement<IpiOnPremiseEngine>();`
                 using (var ddEngine = new IpiOnPremiseEngineBuilder(loggerFactory)
-                    // We use the low memory profile as its performance is sufficient for this
+                    // We use the max performance profile for optimal detection speed in this
                     // example. See the documentation for more detail on this and other
-                    // configuration options:
-                    // https://51degrees.com/documentation/_ip_intelligence__features__performance_options.html
+                    // configuration options.
                     // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
                     .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
                     // inhibit auto-update of the data file for this test
