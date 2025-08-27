@@ -35,7 +35,7 @@ using System.Text;
 /// <summary>
 /// @example OnPremise/GettingStarted-Console/Program.cs
 /// 
-/// @include{doc} example-getting-started-onpremise.txt
+/// @include{doc} example-getting-started-onpremise-ipi.txt
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-Console/Program.cs). 
 /// 
