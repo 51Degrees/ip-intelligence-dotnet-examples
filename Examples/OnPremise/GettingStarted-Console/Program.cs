@@ -39,7 +39,7 @@ using System.Text;
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-Console/Program.cs). 
 /// 
-/// @include{doc} example-require-datafile.txt
+/// @include{doc} example-require-datafile-ipi.txt
 /// 
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)

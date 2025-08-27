@@ -30,7 +30,7 @@ using System.Web.UI;
 /// 
 /// The source code for this example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/tree/master/Examples/OnPremise/Framework-Web).
 /// 
-/// @include{doc} example-require-datafile.txt
+/// @include{doc} example-require-datafile-ipi.txt
 /// 
 /// Required NuGet Dependencies: 
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)

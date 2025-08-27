@@ -34,7 +34,7 @@ using System.Threading.Tasks;
 /// 
 /// The source code for this example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/tree/master/Examples/OnPremise/GettingStarted-Web). 
 /// 
-/// @include{doc} example-require-datafile.txt
+/// @include{doc} example-require-datafile-ipi.txt
 /// 
 /// Required NuGet Dependencies:
 /// - [Microsoft.AspNetCore.App](https://www.nuget.org/packages/Microsoft.AspNetCore.App/)
