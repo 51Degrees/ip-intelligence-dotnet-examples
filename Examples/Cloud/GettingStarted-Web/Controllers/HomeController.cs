@@ -28,6 +28,20 @@ using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
 using System.Net;
 
+/// @example Cloud/GettingStarted-Web/Controllers/HomeController.cs
+/// 
+/// This example shows how to integrate 51Degrees Cloud IP Intelligence service
+/// into an ASP.NET Core web application. The controller demonstrates processing 
+/// visitor IP addresses to retrieve location and ISP information.
+/// 
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/GettingStarted-Web/Controllers/HomeController.cs). 
+/// 
+/// @include{doc} example-require-resourcekey.txt
+///
+/// Required NuGet Dependencies:
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
+/// - [FiftyOne.Pipeline.Web](https://www.nuget.org/packages/FiftyOne.Pipeline.Web/)
+/// - [Microsoft.AspNetCore.App](https://www.nuget.org/packages/Microsoft.AspNetCore.App/)
 namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Controllers
 {
     public class HomeController : Controller

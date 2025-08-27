@@ -35,6 +35,23 @@ using FiftyOne.Pipeline.JavaScriptBuilder.Data;
 using Microsoft.AspNetCore.Http;
 using System.Text;
 
+/// @example OnPremise/Mixed/GettingStarted-Web/Controllers/HomeController.cs
+/// 
+/// This example demonstrates combining Device Detection and IP Intelligence engines 
+/// in an ASP.NET Core web application. The controller processes both User-Agent and 
+/// IP address evidence to provide comprehensive device and location information.
+/// 
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/OnPremise/Mixed/GettingStarted-Web/Controllers/HomeController.cs). 
+/// 
+/// Required data files:
+/// - Device Detection data file (.hash format)
+/// - IP Intelligence data file (.ipi format)
+/// 
+/// Required NuGet Dependencies:
+/// - [FiftyOne.DeviceDetection](https://www.nuget.org/packages/FiftyOne.DeviceDetection/)
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
+/// - [FiftyOne.Pipeline.Web](https://www.nuget.org/packages/FiftyOne.Pipeline.Web/)
+/// - [Microsoft.AspNetCore.App](https://www.nuget.org/packages/Microsoft.AspNetCore.App/)
 namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Controllers
 {
     public class HomeController : Controller
