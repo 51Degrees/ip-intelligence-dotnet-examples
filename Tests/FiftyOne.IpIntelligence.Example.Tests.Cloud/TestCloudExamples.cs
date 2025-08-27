@@ -21,18 +21,15 @@
  * ********************************************************************* */
 
 using FiftyOne.IpIntelligence.Examples;
-using FiftyOne.Pipeline.Core.Configuration;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
@@ -49,11 +46,11 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
     [TestClass]
     public class TestCloudExamples
     {
-        private string DataFile;
-        private Process apiProcess;
+        private string _dataFile;
+        private Process _apiProcess;
         private const int API_PORT = 5225;
-        private const string API_URL = "http://localhost:5225";
-        private HttpClient httpClient;
+        private static readonly string ApiUrl = $"http://localhost:{API_PORT}";
+        private HttpClient _httpClient;
 
         /// <summary>
         /// Init method - starts the GettingStarted-API in the background
@@ -63,22 +60,22 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
         public async Task Init()
         {
             // Set IP Intelligence Data file
-            DataFile = Environment.GetEnvironmentVariable(
+            _dataFile = Environment.GetEnvironmentVariable(
                 Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
-            if (string.IsNullOrWhiteSpace(DataFile))
+            if (string.IsNullOrWhiteSpace(_dataFile))
             {
-                DataFile = ExampleUtils.FindFile(
+                _dataFile = ExampleUtils.FindFile(
                     Constants.LITE_IPI_DATA_FILE_NAME);
             }
 
             // Write data file path for debugging
-            File.WriteAllText($"{nameof(TestCloudExamples)}_DataFileName.txt", DataFile);
+            File.WriteAllText($"{nameof(TestCloudExamples)}_DataFileName.txt", _dataFile);
 
             // Start the API server
             await StartApiServer();
             
             // Create HTTP client for health checks
-            httpClient = new HttpClient();
+            _httpClient = new HttpClient();
         }
 
         /// <summary>
@@ -87,14 +84,14 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
         [TestCleanup]
         public void Cleanup()
         {
-            httpClient?.Dispose();
+            _httpClient?.Dispose();
             StopApiServer();
         }
 
         private static readonly string RepoRootPath =
             Path.GetFullPath(
                 Path.GetDirectoryName(
-                    ExampleUtils.FindFile("FiftyOne.IpIntelligence.Examples.sln")));
+                    ExampleUtils.FindFile("FiftyOne.IpIntelligence.Examples.sln"))!);
 
         private static readonly string ApiProjectPath =
             Path.Combine(RepoRootPath, "Examples", "OnPremise", "Mixed", "GettingStarted-API");
@@ -103,6 +100,8 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
 
         private static readonly string CloudExamplePath =
             Path.Combine(RepoRootPath, "Examples", "Cloud", "GettingStarted-Console");
+        private static readonly string MixedCloudExamplePath =
+            Path.Combine(RepoRootPath, "Examples", "Cloud", "Mixed", "GettingStarted-Console");
 
         private async Task StartApiServer()
         {
@@ -141,15 +140,15 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             };
 
             // Set environment variables for the API process
-            startInfo.Environment["ASPNETCORE_URLS"] = API_URL;
+            startInfo.Environment["ASPNETCORE_URLS"] = ApiUrl;
             startInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
-            startInfo.Environment[Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR] = DataFile;
+            startInfo.Environment[Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR] = _dataFile;
 
             // Start the process
-            apiProcess = new Process { StartInfo = startInfo };
+            _apiProcess = new Process { StartInfo = startInfo };
             
             // Capture output for debugging
-            apiProcess.OutputDataReceived += (sender, e) =>
+            _apiProcess.OutputDataReceived += (sender, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
@@ -157,7 +156,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 }
             };
             
-            apiProcess.ErrorDataReceived += (sender, e) =>
+            _apiProcess.ErrorDataReceived += (sender, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
@@ -165,9 +164,9 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 }
             };
 
-            apiProcess.Start();
-            apiProcess.BeginOutputReadLine();
-            apiProcess.BeginErrorReadLine();
+            _apiProcess.Start();
+            _apiProcess.BeginOutputReadLine();
+            _apiProcess.BeginErrorReadLine();
 
             // Wait for the API to be ready (with timeout)
             await WaitForApiToBeReady();
@@ -184,7 +183,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 try
                 {
                     // Try to access the evidencekeys endpoint as a health check
-                    var response = await client.GetAsync($"{API_URL}/evidencekeys");
+                    var response = await client.GetAsync($"{ApiUrl}/evidencekeys");
                     if (response.IsSuccessStatusCode)
                     {
                         Console.WriteLine("API server is ready");
@@ -204,12 +203,12 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
 
         private void StopApiServer()
         {
-            if (apiProcess != null && !apiProcess.HasExited)
+            if (_apiProcess != null && !_apiProcess.HasExited)
             {
                 try
                 {
-                    apiProcess.Kill(true);
-                    apiProcess.WaitForExit(5000);
+                    _apiProcess.Kill(true);
+                    _apiProcess.WaitForExit(5000);
                 }
                 catch (Exception ex)
                 {
@@ -217,10 +216,53 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 }
                 finally
                 {
-                    apiProcess?.Dispose();
+                    _apiProcess?.Dispose();
                 }
             }
         }
+
+        public static IEnumerable<object[]> CloudExamplesToTest =>
+        [
+            [
+                CloudExamplePath,
+                new string[]
+                {
+                    "UNICOM",
+                    "unicom",
+                },
+                new string[]
+                {
+                    "China",
+                    "CN",
+                    "cn",
+                },
+                new string[]
+                {
+                    "116.128.0.0",
+                    "116.191.255.255",
+                },
+                "starting with 116.x",
+            ],
+            [
+                MixedCloudExamplePath,
+                new string[]
+                {
+                    "GOGL",
+                },
+                new string[]
+                {
+                    "Brazil",
+                    "BR",
+                    "br",
+                },
+                new string[]
+                {
+                    "45.236.48.0",
+                    "45.236.49.215",
+                },
+                "starting with 45.236.x",
+            ],
+        ];
 
         /// <summary>
         /// Test the Cloud GettingStarted Example using the local API
@@ -232,7 +274,13 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
         /// API server instead of relying on external cloud services.
         /// </remarks>
         [TestMethod]
-        public void Example_Cloud_GettingStarted_WithLocalAPI()
+        [DynamicData(nameof(CloudExamplesToTest))]
+        public void Example_Cloud_GettingStarted_WithLocalAPI(
+            string examplePath,
+            string[] networkNames,
+            string[] countryNames,
+            string[] ipRanges,
+            string rangeDescriptor)
         {   
             // Run the actual example using dotnet run, just like a user would
             var startInfo = new ProcessStartInfo
@@ -242,7 +290,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                WorkingDirectory = CloudExamplePath,
+                WorkingDirectory = examplePath,
                 CreateNoWindow = true
             };
 
@@ -291,12 +339,12 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 
                 // Check for actual IP intelligence data values (not just field names)
                 // Based on the actual output, verify we get real IP intelligence data
-                Assert.IsTrue(result.Contains("UNICOM") || result.Contains("unicom"), 
-                    "Output should contain UNICOM as registered name");
-                Assert.IsTrue(result.Contains("China") || result.Contains("CN") || result.Contains("cn"), 
-                    "Output should contain China or CN as country");
-                Assert.IsTrue(result.Contains("116.128.0.0") || result.Contains("116.191.255.255"), 
-                    "Output should contain IP range values starting with 116.x");
+                Assert.IsTrue(networkNames.Any(x => result.Contains(x)), 
+                    $"Output should contain {networkNames[0]} as registered name");
+                Assert.IsTrue(countryNames.Any(x => result.Contains(x)),  
+                    $"Output should contain {countryNames[0]} as country or code");
+                Assert.IsTrue(ipRanges.Any(x => result.Contains(x)), 
+                    $"Output should contain IP range values {rangeDescriptor}");
                 
                 // Verify we have actual IP address data in the range information
                 Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(result, @"\d+\.\d+\.\d+\.\d+"), 
@@ -324,7 +372,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
         public async Task Example_API_HealthCheck()
         {
             // Test the evidencekeys endpoint as a basic health check
-            var response = await httpClient.GetAsync($"{API_URL}/evidencekeys");
+            var response = await _httpClient.GetAsync($"{ApiUrl}/evidencekeys");
             Assert.IsTrue(response.IsSuccessStatusCode, "API evidencekeys endpoint should respond successfully");
             
             var content = await response.Content.ReadAsStringAsync();
