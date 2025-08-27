@@ -18,10 +18,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.126" />
-    <PackageReference Include="FiftyOne.Pipeline.CloudRequestEngine" Version="4.5.0-alpha.29" />
-    <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.29" />
-    <PackageReference Include="FiftyOne.Pipeline.JsonBuilder" Version="4.5.0-alpha.29" />
+    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.127" />
+    <PackageReference Include="FiftyOne.Pipeline.CloudRequestEngine" Version="4.5.0-alpha.30" />
+    <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.30" />
+    <PackageReference Include="FiftyOne.Pipeline.JsonBuilder" Version="4.5.0-alpha.30" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
