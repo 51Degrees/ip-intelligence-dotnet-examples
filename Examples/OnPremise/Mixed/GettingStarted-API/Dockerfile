@@ -2,7 +2,6 @@
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-RUN apt-get update && apt-get install -y --no-install-recommends libatomic1 && rm -rf /var/lib/apt/lists/*
 USER $APP_UID
 WORKDIR /app
 EXPOSE 5225
@@ -32,6 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends libatomic1 && r
 USER $APP_UID
 WORKDIR /app
 COPY --from=publish /app/publish .
-COPY ip-intelligence-dotnet-examples/ip-intelligence-data/51Degrees-EnterpriseIpiV41.ipi .
-COPY ip-intelligence-dotnet-examples/ip-intelligence-data/51Degrees-EnterpriseV41.hash .
+COPY ip-intelligence-data/51Degrees-EnterpriseIpiV41.ipi .
+COPY ip-intelligence-data/51Degrees-EnterpriseV41.hash .
+RUN ls .
 ENTRYPOINT ["dotnet", "GettingStarted-API.dll"]
