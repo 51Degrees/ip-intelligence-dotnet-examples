@@ -23,6 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\device-detection-dotnet\FiftyOne.DeviceDetection.Cloud\FiftyOne.DeviceDetection.Cloud.csproj" />
+    <ProjectReference Include="..\..\..\..\..\device-detection-dotnet\FiftyOne.DeviceDetection\FiftyOne.DeviceDetection.csproj" />
     <ProjectReference Include="..\..\..\FiftyOne.IpIntelligence.Examples.Cloud\FiftyOne.IpIntelligence.Examples.Cloud.csproj" />
   </ItemGroup>
 
