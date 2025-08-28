@@ -6,7 +6,7 @@ Projects can be found in the `Examples/` folder. Currently, only on-premise exam
 
 ## Cloud (coming soon)
 
-Cloud examples will be added once the cloud service for IP Intelligence becomes available.
+Cloud examples will be added once the Cloud service for IP Intelligence becomes available.
 
 ## ⚠️ Required files
 
@@ -62,8 +62,8 @@ just using `dotnet run` in the `OnPremise/Mixed/GettingStarted-API` directory fr
 | Framework-Web                    | .NET Framework 4.6.2 | ASP.NET Framework project.                                                |
 | GettingStarted-Console           | .NET 8.0             | Simple console app.                                                       |
 | GettingStarted-Web               | .NET 8.0             | ASP.NET Core project.                                                     |
-| Metadata-Console                 | .NET 8.0             | Get the available properties and evidence keys information from the cloud |
-| GetAllProperties                 | .NET 8.0             | Get all the available properties for an IP address from the cloud         |
+| Metadata-Console                 | .NET 8.0             | Get the available properties and evidence keys information from the Cloud |
+| GetAllProperties                 | .NET 8.0             | Get all the available properties for an IP address from the Cloud         |
 | **Mixed/GettingStarted-Console** | **.NET 8.0**         | **Combined Device Detection and IP Intelligence console app.**            |
 | **Mixed/GettingStarted-Web**     | **.NET 8.0**         | **Combined Device Detection and IP Intelligence ASP.NET Core project.**   |
 

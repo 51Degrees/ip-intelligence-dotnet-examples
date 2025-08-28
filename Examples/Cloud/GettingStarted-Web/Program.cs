@@ -145,7 +145,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb
                 {
                     throw new Exception($"No resource key specified in the configuration file " +
                         $"'appsettings.json' or the environment variable " +
-                        $"'{ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR}'. The 51Degrees cloud " +
+                        $"'{ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR}'. The 51Degrees Cloud " +
                         $"service is accessed using a 'ResourceKey'. For more information " +
                         $"see https://51degrees.com/documentation/_info__resource_keys.html. " +
                         $"A resource key with the properties required by this example can be " +
