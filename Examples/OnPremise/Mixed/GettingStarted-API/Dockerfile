@@ -34,4 +34,5 @@ COPY --from=publish /app/publish .
 COPY ip-intelligence-data/51Degrees-EnterpriseIpiV41.ipi .
 COPY ip-intelligence-data/51Degrees-EnterpriseV41.hash .
 RUN ls .
+ENV LD_DEBUG=libs
 ENTRYPOINT ["dotnet", "GettingStarted-API.dll"]
