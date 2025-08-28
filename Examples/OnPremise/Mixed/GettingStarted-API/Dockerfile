@@ -4,8 +4,6 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 RUN apt-get update && apt-get install -y --no-install-recommends libatomic1 && rm -rf /var/lib/apt/lists/*
 USER $APP_UID
-COPY ip-intelligence-data/51Degrees-EnterpriseIpiV41.ipi .
-COPY ip-intelligence-data/51Degrees-EnterpriseV41.hash .
 WORKDIR /app
 EXPOSE 5225
 
@@ -20,15 +18,20 @@ COPY ["Examples/FiftyOne.IpIntelligence.Examples/FiftyOne.IpIntelligence.Example
 RUN dotnet restore "./Examples/OnPremise/Mixed/GettingStarted-API/GettingStarted-API.csproj"
 COPY . .
 WORKDIR "/src/Examples/OnPremise/Mixed/GettingStarted-API"
-RUN dotnet build "./GettingStarted-API.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "./GettingStarted-API.csproj" -c $BUILD_CONFIGURATION -o /app/build -r linux-x64 /p:Platform=x64
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./GettingStarted-API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./GettingStarted-API.csproj" -c $BUILD_CONFIGURATION -o /app/publish -r linux-x64 /p:Platform=x64 /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends libatomic1 && rm -rf /var/lib/apt/lists/*
+USER $APP_UID
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY ip-intelligence-dotnet-examples/ip-intelligence-data/51Degrees-EnterpriseIpiV41.ipi .
+COPY ip-intelligence-dotnet-examples/ip-intelligence-data/51Degrees-EnterpriseV41.hash .
 ENTRYPOINT ["dotnet", "GettingStarted-API.dll"]
