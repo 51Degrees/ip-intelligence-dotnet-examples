@@ -30,6 +30,7 @@ using FiftyOne.Pipeline.Engines.FlowElements;
 using FiftyOne.Pipeline.Engines.Services;
 using FiftyOne.Pipeline.JsonBuilder.Data;
 using FiftyOne.Pipeline.Web.Shared;
+using Microsoft.Extensions.Logging;
 using System.IO.Compression;
 using System.Security.Cryptography;
 
@@ -55,7 +56,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.WebHost.UseUrls("http://localhost:5225");
-            AppendConfigOverrides(builder.Configuration);
+
+            // override DataFile path in PipelineOptions with full names
+            var loggerFactory = LoggerFactory.Create(logging => logging.AddConsole().SetMinimumLevel(LogLevel.Debug));
+            var logger = loggerFactory.CreateLogger(nameof(AppendConfigOverrides));
+            AppendConfigOverrides(builder.Configuration, logger);
 
             // Add services to the container.
             builder.Services.AddAuthorization();
@@ -234,7 +239,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         /// In a real-world scenario, you can just put the data file in your working directory
         /// or use an absolute path in the configuration file.
         /// </summary>
-        private static void AppendConfigOverrides(ConfigurationManager configurationManager)
+        private static void AppendConfigOverrides(ConfigurationManager configurationManager, ILogger logger)
         {
             var overrides = new Dictionary<string, string?>();
 
@@ -245,13 +250,13 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             // misnamed configuration keys.
             section.Bind(options, (o) => { o.ErrorOnUnknownConfiguration = true; });
 
-            AddOverrides_IPI(options, overrides);
-            AddOverrides_DD(options, overrides);
+            AddOverrides_IPI(options, overrides, logger);
+            AddOverrides_DD(options, overrides, logger);
 
             configurationManager.AddInMemoryCollection(overrides);
         }
 
-        private static void AddOverrides_IPI(PipelineOptions options, Dictionary<string, string?> overrides)
+        private static void AddOverrides_IPI(PipelineOptions options, Dictionary<string, string?> overrides, ILogger logger)
         {
             // Get the index of the IP Intelligence engine element in the config file so that
             // we can create an override key for it.
@@ -271,7 +276,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             // ExampleUtils.FindFile function.
             if (Path.IsPathRooted(dataFile) == false)
             {
-                var newPath = Examples.ExampleUtils.FindFile(dataFile);
+                var newPath = Examples.ExampleUtils.FindFile(dataFile, logger: logger);
                 if (newPath != null)
                 {
                     // Add an override for the absolute path to the data file.
@@ -294,7 +299,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             }
         }
 
-        private static void AddOverrides_DD(PipelineOptions options, Dictionary<string, string?> overrides)
+        private static void AddOverrides_DD(PipelineOptions options, Dictionary<string, string?> overrides, ILogger logger)
         {
             // Get the index of the device detection engine element in the config file so that
             // we can create an override key for it.
@@ -314,7 +319,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             // ExampleUtils.FindFile function.
             if (Path.IsPathRooted(dataFile) == false)
             {
-                var newPath = Examples.ExampleUtils.FindFile(dataFile);
+                var newPath = Examples.ExampleUtils.FindFile(dataFile, logger: logger);
                 if (newPath != null)
                 {
                     // Add an override for the absolute path to the data file.

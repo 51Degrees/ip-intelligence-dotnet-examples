@@ -24,6 +24,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,7 +49,7 @@ namespace FiftyOne.IpIntelligence.Examples
         /// <summary>
         /// Timeout used when searching for files.
         /// </summary>
-        private const int FindFileTimeoutMs = 10000;
+        private const int FindFileTimeoutMs = 30000;
 
         /// <summary>
         /// If data file is older than this number of days then a warning will be displayed.
@@ -153,11 +154,12 @@ namespace FiftyOne.IpIntelligence.Examples
         /// <returns></returns>
         public static string FindFile(
             string filename,
-            DirectoryInfo dir = null)
+            DirectoryInfo dir = null,
+            ILogger logger = null)
         {
             var cancel = new CancellationTokenSource();
             // Start the file system search as a separate task.
-            var searchTask = Task.Run(() => FindFile(filename, dir, cancel.Token));
+            var searchTask = Task.Run(() => FindFile(filename, dir, cancel.Token, logger));
             // Wait for either the search or a timeout task to complete.
             Task.WaitAny(searchTask, Task.Delay(FindFileTimeoutMs));
             cancel.Cancel();
@@ -168,12 +170,14 @@ namespace FiftyOne.IpIntelligence.Examples
         private static string FindFile(
             string filename,
             DirectoryInfo dir,
-            CancellationToken cancel)
+            CancellationToken cancel,
+            ILogger logger)
         {
             if (dir == null)
             {
                 dir = new DirectoryInfo(Directory.GetCurrentDirectory());
             }
+            logger?.LogDebug("Looking for {filename} in {dir}", filename, dir.FullName);
             string result = null;
 
             try
@@ -183,16 +187,26 @@ namespace FiftyOne.IpIntelligence.Examples
                     dir.Parent != null &&
                     cancel.IsCancellationRequested == false)
                 {
-                    result = FindFile(filename, dir.Parent, cancel);
+                    result = FindFile(filename, dir.Parent, cancel, logger);
                 }
                 else if (files.Length > 0)
                 {
+                    logger?.LogDebug("Located {filename} -- [{result}]",
+                        filename, string.Join(", ", files.Select(x => x.FullName)));
                     result = files[0].FullName;
+                }
+                else
+                {
+                    logger?.LogDebug("Stopping search for {filename}, CancellationRequested = {cancellationRequested}", 
+                        filename, cancel.IsCancellationRequested);
                 }
             }
             // No matter what goes wrong here, we just want to indicate that we
             // couldn't find the file by returning null.
-            catch { result = null; }
+            catch (Exception ex) {
+                logger?.LogDebug(ex, "Failed to find {filename} in {dir}", filename, dir.FullName);
+                result = null;
+            }
 
             return result;
         }
