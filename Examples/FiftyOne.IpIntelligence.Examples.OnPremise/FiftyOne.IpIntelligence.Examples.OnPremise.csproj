@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FiftyOne.IpIntelligence.Engine.OnPremise" Version="4.5.0-alpha.127" />
+    <PackageReference Include="FiftyOne.IpIntelligence.Engine.OnPremise" Version="4.5.0-alpha.129" />
     <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.30" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
