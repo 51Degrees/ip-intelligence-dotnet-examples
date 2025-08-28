@@ -70,7 +70,7 @@ using YamlDotNet.Serialization;
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
 /// - [Microsoft.Extensions.Logging.Console](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Console/)
-/// - YamlDotNet
+/// - [YamlDotNet](https://www.nuget.org/packages/YamlDotNet/)
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
 {
