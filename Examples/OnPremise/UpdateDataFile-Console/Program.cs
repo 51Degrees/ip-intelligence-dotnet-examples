@@ -69,11 +69,6 @@ using System.Net.Http;
 /// https://distributor.51degrees.com/api/v2/download?LicenseKeys=<your_license_key>&Type=27&Download=True&Product=22
 /// ```
 /// 
-/// ## Lite Data File
-/// Lite data files (free-to-use, limited capabilities, no license key required) are created roughly
-/// once a month and cannot be updated using auto-update, they may be downloaded from
-/// [Github](https://github.com/51Degrees/ip-intelligence-data) and are included with
-/// source distributions of this software.
 /// 
 /// # Update on Start-Up
 /// You can configure the pipeline builder to download an Enterprise data file on start-up.
@@ -82,7 +77,7 @@ using System.Net.Http;
 /// - a license key
 /// - a file location for the download
 ///      - this may be an existing file - which will be overwritten
-///      - or if it does not exist must end in ".hash" and must be in an existing directory
+///      - or if it does not exist must end in ".ipi" and must be in an existing directory
 ///      
 /// ## Configuration
 /// - the pipeline must be configured to use a temp file
