@@ -12,8 +12,6 @@
       "..\\ip-intelligence-dotnet\\FiftyOne.IpIntelligence\\FiftyOne.IpIntelligence.csproj",
       "..\\pipeline-dotnet\\FiftyOne.Pipeline.CloudRequestEngine\\FiftyOne.Pipeline.CloudRequestEngine.csproj",
       "..\\pipeline-dotnet\\FiftyOne.Pipeline.Core\\FiftyOne.Pipeline.Core.csproj",
-      "..\\pipeline-dotnet\\FiftyOne.Pipeline.Elements\\FiftyOne.Pipeline.JavaScriptBuilderElement\\FiftyOne.Pipeline.JavaScriptBuilder.csproj",
-      "..\\pipeline-dotnet\\FiftyOne.Pipeline.Elements\\FiftyOne.Pipeline.JsonBuilderElement\\FiftyOne.Pipeline.JsonBuilder.csproj",
       "..\\pipeline-dotnet\\FiftyOne.Pipeline.Engines.FiftyOne\\FiftyOne.Pipeline.Engines.FiftyOne.csproj",
       "..\\pipeline-dotnet\\FiftyOne.Pipeline.Engines\\FiftyOne.Pipeline.Engines.csproj",
       "..\\pipeline-dotnet\\FiftyOne.Pipeline.Web.Shared\\FiftyOne.Pipeline.Web.Shared.csproj",
