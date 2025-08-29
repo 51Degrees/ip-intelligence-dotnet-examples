@@ -51,7 +51,7 @@ using System.Net.Http;
 /// 3. No license key is required when using a custom URL
 /// 
 /// For local testing, you can use the GettingStarted-API example which exposes a local URL
-/// for downloading the gzipped data file (e.g., http://localhost:5225/download-ipi-gz).
+/// for downloading the gzipped data file (e.g., `http://localhost:5225/download-ipi-gz`).
 /// 
 /// For production use, you will eventually need to use a Distributor service and license key
 /// to keep your data file updated.
