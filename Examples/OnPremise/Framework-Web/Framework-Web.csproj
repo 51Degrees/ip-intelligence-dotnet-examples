@@ -127,6 +127,22 @@
     <PackageReference Include="System.Text.Json" Version="9.0.8" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\ip-intelligence-dotnet\FiftyOne.IpIntelligence.Cloud\FiftyOne.IpIntelligence.Cloud.csproj">
+      <Project>{4e22df47-c8ba-5aad-96f4-07ab582cd80d}</Project>
+      <Name>FiftyOne.IpIntelligence.Cloud</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\ip-intelligence-dotnet\FiftyOne.IpIntelligence.Engine.OnPremise\FiftyOne.IpIntelligence.Engine.OnPremise.csproj">
+      <Project>{3ee98d99-61dd-0d5a-ec89-3dd95e9e3eea}</Project>
+      <Name>FiftyOne.IpIntelligence.Engine.OnPremise</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\pipeline-dotnet\FiftyOne.Pipeline.CloudRequestEngine\FiftyOne.Pipeline.CloudRequestEngine.csproj">
+      <Project>{cea7f311-c266-67fc-90c2-cf5fbebeed5d}</Project>
+      <Name>FiftyOne.Pipeline.CloudRequestEngine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\pipeline-dotnet\FiftyOne.Pipeline.Engines.FiftyOne\FiftyOne.Pipeline.Engines.FiftyOne.csproj">
+      <Project>{68725802-a596-92d2-a3a1-164e75552171}</Project>
+      <Name>FiftyOne.Pipeline.Engines.FiftyOne</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\FiftyOne.IpIntelligence.Examples.OnPremise\FiftyOne.IpIntelligence.Examples.OnPremise.csproj">
       <Project>{ed6b5c33-946e-2d4c-a7c2-0f606f1f9887}</Project>
       <Name>FiftyOne.IpIntelligence.Examples.OnPremise</Name>
