@@ -58,6 +58,26 @@ using System.Net.Http;
 /// 
 /// To obtain access to enterprise data files for hosting, please contact us at https://51degrees.com/contact-us
 /// 
+/// # Command Line Usage
+/// The data file path is provided via the first command line argument. Here's how it works:
+/// 
+/// 1. First argument: Data file path (optional - defaults to Constants.ENTERPRISE_IPI_DATA_FILE_NAME)
+/// 2. Second argument: License key (optional when using --data-update-url)
+/// 3. Option: --data-update-url for custom URL
+/// 
+/// So to run the example, you would use:
+/// 
+/// ```
+/// # With data file path and custom URL (no license key needed)
+/// ./UpdateDataFile /path/to/datafile.ipi --data-update-url http://localhost:5225/download-ipi-gz
+/// 
+/// # With just custom URL (uses default data file name)  
+/// ./UpdateDataFile --data-update-url http://localhost:5225/download-ipi-gz
+/// 
+/// # With license key (no custom URL)
+/// ./UpdateDataFile /path/to/datafile.ipi your-license-key
+/// ```
+/// 
 /// # Update on Start-Up
 /// You can configure the pipeline builder to download an Enterprise data file on start-up.
 /// 
@@ -201,7 +221,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
             {
                 Logger.LogInformation("Starting example");
 
-                licenseKey = CheckLicenseKey(licenseKey, Logger);
+                // Only check license key if no custom data update URL is provided
+                if (string.IsNullOrEmpty(dataUpdateUrl))
+                {
+                    licenseKey = CheckLicenseKey(licenseKey, Logger);
+                }
                 dataFile = CheckDataFile(dataFile, Logger);
 
                 string copyDataFile = dataFile + ".bak";
@@ -224,8 +248,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                 // do we really want to do this
                 if (interactive)
                 {
-                    Logger.LogWarning("Please note - this example will use available downloads " +
-                            "in your licensed allocation.");
+                    if (string.IsNullOrEmpty(dataUpdateUrl))
+                    {
+                        Logger.LogWarning("Please note - this example will use available downloads " +
+                                "in your licensed allocation.");
+                    }
                     Logger.LogWarning("Do you wish to continue with this example (y)? ");
                     var key = Console.ReadKey();
                     if (key.Key != ConsoleKey.Y)
@@ -258,7 +285,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                         // For automatic updates from the distributor service you will need to provide a license key.
                         // A license key can be obtained with a subscription from https://51degrees.com/pricing
                         // For testing with a custom URL, no license key is required.
-                        .UseOnPremise(dataFile, licenseKey, true)
+                        .UseOnPremise(dataFile, licenseKey ?? string.Empty, true)
                         // Enable update on startup, the auto update system
                         // will be used to check for an update before the
                         // IP Intelligence engine is created. This will block
@@ -305,7 +332,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                         }
                         catch (IOException)
                         {
-                            throw new InvalidOperationException("Could not modify file time, " +
+                            throw new InvalidOperationException("Could not modify yfile time, " +
                                                                 "abandoning example");
                         }
 
@@ -412,18 +439,6 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                 Arity = ArgumentArity.ZeroOrOne,
                 DefaultValueFactory = _ => null,
             };
-            licenseKey.Validators.Add(key =>
-            {
-                string? keyString = key.Tokens.FirstOrDefault()?.Value;
-                keyString ??= Environment.GetEnvironmentVariable(Constants.LICENSE_KEY_ENV_VAR);
-                if (string.IsNullOrWhiteSpace(keyString))
-                {
-                    key.AddError("In order to test this example you will need a 51Degrees " +
-                                 "Enterprise license which can be obtained on a trial basis or purchased " +
-                                 "from our pricing page https://51degrees.com/pricing. You must supply the " +
-                                 "license key " + KEY_SUBMISSION_PATHS);
-                }
-            });
             Option<string?> dataUpdateUrl = new("--data-update-url")
             {
                 Description = "Custom data file distribution endpoint.",
@@ -446,6 +461,24 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
             rootCommand.SetAction(parseResult =>
             {
                 string dataFilePath = parseResult.GetValue(dataFile)!;
+                string? licenseKeyValue = parseResult.GetValue(licenseKey);
+                string? dataUpdateUrlValue = parseResult.GetValue(dataUpdateUrl);
+                
+                // Validate license key only if no custom data update URL is provided
+                if (string.IsNullOrWhiteSpace(licenseKeyValue))
+                {
+                    licenseKeyValue = Environment.GetEnvironmentVariable(Constants.LICENSE_KEY_ENV_VAR);
+                }
+                
+                if (string.IsNullOrWhiteSpace(licenseKeyValue) && string.IsNullOrWhiteSpace(dataUpdateUrlValue))
+                {
+                    Console.Error.WriteLine("In order to test this example you will need a 51Degrees " +
+                                          "Enterprise license which can be obtained on a trial basis or purchased " +
+                                          "from our pricing page https://51degrees.com/pricing. You must supply the " +
+                                          "license key " + KEY_SUBMISSION_PATHS + 
+                                          ", or provide a custom data update URL using --data-update-url");
+                    return 1;
+                }
                 
                 // Work out where the data file is if we don't have an absolute path.
                 if (!string.IsNullOrWhiteSpace(dataFilePath) && !Path.IsPathRooted(dataFilePath))
@@ -456,8 +489,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                 
                 Initialize(
                     dataFilePath,
-                    parseResult.GetValue(licenseKey)!,
-                    parseResult.GetValue(dataUpdateUrl),
+                    licenseKeyValue!,
+                    dataUpdateUrlValue,
                     true);
                 return 0;
             });
