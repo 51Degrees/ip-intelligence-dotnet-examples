@@ -32,11 +32,6 @@ using System.Net.Http;
 
 #nullable enable
 
-// set license key into env-var
-// `IPINTELLIGENCELICENSEKEY_DOTNET=my-key`
-// to test locally set cmd args to
-// `--data-update-url "http://localhost:5225/download-ipi-gz"`
-
 /// <summary>
 /// @example OnPremise/UpdateDataFile-Console/Program.cs
 /// 
@@ -49,26 +44,19 @@ using System.Net.Http;
 /// - Filesystem Watcher
 /// - Daily auto-update
 /// 
-/// # License Key
-/// In order to test this example you will need a 51Degrees Enterprise license which can be
-/// purchased from our
-/// <a href="https://51degrees.com/pricing">pricing page</a>.
+/// # Testing Requirements
+/// To test this example, you need to:
+/// 1. Host an IP Intelligence data file (.ipi) at a custom URL accessible to this application
+/// 2. Provide that custom URL using the --data-update-url parameter
+/// 3. No license key is required when using a custom URL
 /// 
-/// # Data Files
-/// You can find out more about data files, licenses etc. at our [FAQ page](https://51degrees.com/resources/faqs)
+/// For local testing, you can use the GettingStarted-API example which exposes a local URL
+/// for downloading the gzipped data file (e.g., http://localhost:5225/download-ipi-gz).
 /// 
-/// ## Enterprise Data File
-/// Enterprise (fully-featured) data files are typically released by 51Degrees five days a week
-/// (Mon-Fri) and on-premise deployments can fetch and download those files automatically. Equally,
-/// customers may choose to download the files themselves and move them into place to be detected
-/// by the 51Degrees filesystem watcher.
+/// For production use, you will eventually need to use a Distributor service and license key
+/// to keep your data file updated.
 /// 
-/// ### Manual Download
-/// If you prefer to download files yourself, you may do so here:
-/// ```
-/// https://distributor.51degrees.com/api/v2/download?LicenseKeys=<your_license_key>&Type=27&Download=True&Product=22
-/// ```
-/// 
+/// To obtain access to enterprise data files for hosting, please contact us at https://51degrees.com/contact-us
 /// 
 /// # Update on Start-Up
 /// You can configure the pipeline builder to download an Enterprise data file on start-up.
@@ -267,8 +255,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                         // overwritten, the pipeline must be configured to copy the supplied
                         // file to a temporary file (createTempDataCopy parameter == true).
                         //
-                        // For automatic updates to work you will also need to provide a license key.
+                        // For automatic updates from the distributor service you will need to provide a license key.
                         // A license key can be obtained with a subscription from https://51degrees.com/pricing
+                        // For testing with a custom URL, no license key is required.
                         .UseOnPremise(dataFile, licenseKey, true)
                         // Enable update on startup, the auto update system
                         // will be used to check for an update before the
