@@ -7,9 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.129" />
-    <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.30" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\ip-intelligence-dotnet\FiftyOne.IpIntelligence\FiftyOne.IpIntelligence.csproj" />
+    <ProjectReference Include="..\..\..\pipeline-dotnet\FiftyOne.Pipeline.Core\FiftyOne.Pipeline.Core.csproj" />
   </ItemGroup>
 
 </Project>
