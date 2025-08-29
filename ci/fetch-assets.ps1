@@ -1,69 +1,26 @@
-
 param (
-    [string]$RepoName,
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)][string]$RepoName,
     [string]$DeviceDetection,
     [string]$DeviceDetectionUrl
 )
 $ErrorActionPreference = "Stop"
-$PSNativeCommandUseErrorActionPreference = $true
 
-$DataFileDir = [IO.Path]::Combine($pwd, $RepoName, "ip-intelligence-data")
+$ipIntelligenceData = "$PWD/$RepoName/ip-intelligence-data"
 
+# TODO: fix DeviceDetectionUrl containing IpIntelligenceUrl
+./steps/fetch-assets.ps1 -DeviceDetection $DeviceDetection -IpIntelligenceUrl $DeviceDetectionUrl `
+    -Assets "TAC-HashV41.hash", "51Degrees-EnterpriseIpiV41.ipi"
 
-# Fetch the TAC data file for testing mixed examples with
-./steps/fetch-hash-assets.ps1 -RepoName $RepoName -LicenseKey $DeviceDetection -Url $DeviceDetectionUrl
+Write-Host "Assets hashes:"
+Get-FileHash -Algorithm MD5 -Path assets/*
 
-# Move the data file to the correct location
-$DataFileSource = [IO.Path]::Combine($pwd, $RepoName, "TAC-HashV41.hash")
-$DataFileDestination = [IO.Path]::Combine($DataFileDir, "51Degrees-EnterpriseV41.hash")
-Move-Item $DataFileSource $DataFileDestination
+Copy-Item "assets/TAC-HashV41.hash" "$ipIntelligenceData/51Degrees-EnterpriseV41.hash"
+Copy-Item "assets/51Degrees-EnterpriseIpiV41.ipi" $ipIntelligenceData
+Copy-Item "assets/51Degrees-EnterpriseIpiV41.ipi" "$ipIntelligenceData/51Degrees-LiteV41.ipi" # use Enterprise as Lite
 
-
-# Use IP Intelligence naming internally
-$IpIntelligence = $DeviceDetection
-$IpIntelligenceUrl = $DeviceDetectionUrl
-
-
-# Fetch the enterprise IPI data file for testing with
-$DataFileName = "51Degrees-EnterpriseIpiV41.ipi"
-
-# TODO: Use `fetch-hash-assets.ps1`
-# ./steps/fetch-hash-assets.ps1 -RepoName $RepoName -LicenseKey $IpIntelligence -Url $IpIntelligenceUrl -DataType "IpIntelligenceV41" -ArchiveName $DataFileName
-$ArchivedName = "51Degrees-EnterpriseIpiV41.ipi"
-$ArchiveName = "$ArchivedName.gz"
-Invoke-WebRequest -Uri $IpIntelligenceUrl -OutFile $RepoName/$ArchiveName
-$ArchiveHash = (Get-FileHash -Algorithm MD5 -Path $RepoName/$ArchiveName).Hash
-Write-Output "MD5 (fetched $ArchiveName) = $ArchiveHash"
-Write-Output "Extracting $ArchiveName"
-./steps/gunzip-file.ps1 $RepoName/$ArchiveName
-Move-Item -Path $RepoName/$ArchivedName -Destination $RepoName/$DataFileName
-
-$DataFileHash = (Get-FileHash -Algorithm MD5 -Path $RepoName/$DataFileName).Hash
-Write-Output "MD5 (fetched $DataFileName) = $DataFileHash"
-
-# Move the data file to the correct location
-$DataFileSource = [IO.Path]::Combine($pwd, $RepoName, $DataFileName)
-$DataFileDestination = [IO.Path]::Combine($DataFileDir, $DataFileName)
-Move-Item $DataFileSource $DataFileDestination
-
-# Get the evidence files for testing. These are in the device-detection-data submodule,
-# But are not pulled by default.
-Push-Location $DataFileDir
+Push-Location $ipIntelligenceData
 try {
-    # Write-Output "Pulling evidence files"
-    # git lfs pull
-
-    # Use Enterprise as Lite
-    Copy-Item $DataFileName 51Degrees-LiteV41.ipi
-
-    foreach ($NextDataFile in (("*.ipi", "*.hash") | Get-ChildItem | ForEach-Object { $_.Name })) {
-        $DataFileHash = (Get-FileHash -Algorithm MD5 -Path $NextDataFile).Hash
-        Write-Output "MD5 ($NextDataFile) = $DataFileHash"
-    }
-
     ./evidence-gen.ps1 -v4 10000 -v6 10000
-}
-finally {
+} finally {
     Pop-Location
 }
