@@ -1,13 +1,10 @@
-[CmdletBinding()]
 param(
-    [Parameter(Mandatory=$true)]
-    [string]$DDLicenseKey,
-    [Parameter(Mandatory=$true)]
-    [string]$IPIFileURL,
+    [Parameter(Mandatory)][string]$DDLicenseKey,
+    [Parameter(Mandatory)][string]$IPIFileURL,
     [switch]$Clean
 )
 
-$JsonFileName = "appsettings.json"
+$JsonFileName = "$PSScriptRoot/appsettings.json"
 
 if ($Clean) {
     git checkout HEAD -- $JsonFileName
@@ -17,12 +14,10 @@ $ConfigData = Get-Content $JsonFileName | ConvertFrom-Json
 
 foreach ($element in $ConfigData.PipelineOptions.Elements) {
     if ($element.PSObject.Properties.Name -contains "BuildParameters") {
-        if ($element.BuilderName.StartsWith("DeviceDetectionHashEngine"))
-        {
+        if ($element.BuilderName.StartsWith("DeviceDetectionHashEngine")) {
             $element.BuildParameters.DataUpdateLicenseKey = $DDLicenseKey
         }
-        if ($element.BuilderName.StartsWith("IpiOnPremiseEngine"))
-        {
+        if ($element.BuilderName.StartsWith("IpiOnPremiseEngine")) {
             $element.BuildParameters.DataUpdateURL = $IPIFileURL
         }
     }
