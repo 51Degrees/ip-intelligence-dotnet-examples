@@ -1,11 +1,10 @@
 param (
-    [Parameter(Mandatory)][string]$RepoName,
     [string]$DeviceDetection,
     [string]$DeviceDetectionUrl
 )
 $ErrorActionPreference = "Stop"
 
-$ipIntelligenceData = "$PWD/$RepoName/ip-intelligence-data"
+$ipIntelligenceData = "$PSScriptRoot/../ip-intelligence-data"
 
 # TODO: fix DeviceDetectionUrl containing IpIntelligenceUrl
 ./steps/fetch-assets.ps1 -DeviceDetection $DeviceDetection -IpIntelligenceUrl $DeviceDetectionUrl `

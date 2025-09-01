@@ -1,0 +1,41 @@
+name: Publish Mincloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      dryrun:
+        type: boolean
+        default: false
+
+env:
+  BASE_VERSION: '1.0'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.ACCESS_TOKEN }}
+          submodules: true
+      - name: Checkout common-ci
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.event.repository.owner.login }}/common-ci
+          path: common-ci
+      - name: Fetch assets
+        working-directory: common-ci # required due to how common-ci scripts are historically being called
+        run: pwsh ../ci/fetch-assets.ps1 -DeviceDetection '${{ secrets.DEVICE_DETECTION_KEY }}' -DeviceDetectionUrl '${{ secrets.IPI_DATA_FILE_URL }}'
+      - name: Inject secrets
+        run: pwsh Examples/OnPremise/Mixed/GettingStarted-API/inject-secrets.ps1 -DDLicenseKey '${{ secrets.DEVICE_DETECTION_KEY }}' -IPIFileURL '${{ secrets.IPI_DATA_FILE_URL }}'
+      - name: Build
+        run: |
+          printf -v tag '%s-%(%y%m%dT%H%M)T' "$BASE_VERSION" -1
+          docker build --tag=51degrees/minicloud:{latest,"$tag"} -f Examples/OnPremise/Mixed/GettingStarted-API/Dockerfile .
+      - name: Publish
+        if: ${{ !inputs.dryrun }}
+        env:
+          USER: ${{ secrets.DOCKER_USERNAME }}
+          PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u "$USER" --password-stdin <<<"$PASSWORD" && docker push -a 51degrees/minicloud
+
