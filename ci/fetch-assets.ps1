@@ -1,25 +1,30 @@
 param (
     [string]$DeviceDetection,
-    [string]$DeviceDetectionUrl
+    [string]$DeviceDetectionUrl,
+    [string[]]$Assets = @("TAC-HashV41.hash", "51Degrees-EnterpriseIpiV41.ipi", "evidence.yml")
 )
 $ErrorActionPreference = "Stop"
 
 $ipIntelligenceData = "$PSScriptRoot/../ip-intelligence-data"
 
 # TODO: fix DeviceDetectionUrl containing IpIntelligenceUrl
-./steps/fetch-assets.ps1 -DeviceDetection $DeviceDetection -IpIntelligenceUrl $DeviceDetectionUrl `
-    -Assets "TAC-HashV41.hash", "51Degrees-EnterpriseIpiV41.ipi"
+./steps/fetch-assets.ps1 -DeviceDetection $DeviceDetection -IpIntelligenceUrl $DeviceDetectionUrl -Assets $Assets
 
 Write-Host "Assets hashes:"
 Get-FileHash -Algorithm MD5 -Path assets/*
 
-Copy-Item "assets/TAC-HashV41.hash" "$ipIntelligenceData/51Degrees-EnterpriseV41.hash"
-Copy-Item "assets/51Degrees-EnterpriseIpiV41.ipi" $ipIntelligenceData
-Copy-Item "assets/51Degrees-EnterpriseIpiV41.ipi" "$ipIntelligenceData/51Degrees-LiteV41.ipi" # use Enterprise as Lite
-
-Push-Location $ipIntelligenceData
-try {
-    ./evidence-gen.ps1 -v4 10000 -v6 10000
-} finally {
-    Pop-Location
+if ("TAC-HashV41.hash" -in $Assets) {
+    Copy-Item "assets/TAC-HashV41.hash" "$ipIntelligenceData/51Degrees-EnterpriseV41.hash"
+}
+if ("51Degrees-EnterpriseIpiV41.ipi" -in $Assets) {
+    Copy-Item "assets/51Degrees-EnterpriseIpiV41.ipi" $ipIntelligenceData
+    Copy-Item "assets/51Degrees-EnterpriseIpiV41.ipi" "$ipIntelligenceData/51Degrees-LiteV41.ipi" # use Enterprise as Lite
+}
+if ("evidence.yml" -in $Assets) {
+    Push-Location $ipIntelligenceData
+    try {
+        ./evidence-gen.ps1 -v4 10000 -v6 10000
+    } finally {
+        Pop-Location
+    }
 }
