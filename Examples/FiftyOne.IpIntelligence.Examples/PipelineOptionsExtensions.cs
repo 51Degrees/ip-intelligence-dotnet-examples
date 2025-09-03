@@ -31,11 +31,16 @@ namespace FiftyOne.IpIntelligence.Examples
     {
         public static ElementOptions GetElementConfig(
             this PipelineOptions options, 
-            string elementName)
+            string elementName,
+            bool noThrow = false)
         {
             var query = options.Elements
                 .Where(e => e.BuilderName.IndexOf(elementName,
                     StringComparison.OrdinalIgnoreCase) >= 0);
+            if (noThrow)
+            {
+                return query.FirstOrDefault();
+            }
             if (query.Count() == 1)
             {
                 return query.Single();

@@ -255,7 +255,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         {
             // Get the index of the IP Intelligence engine element in the config file so that
             // we can create an override key for it.
-            var ipiEngineOptions = options.GetElementConfig(nameof(IpiOnPremiseEngine));
+            var ipiEngineOptions = options.GetElementConfig(nameof(IpiOnPremiseEngine), noThrow: true);
+            if (ipiEngineOptions is null)
+            {
+                return;
+            }
             var ipiEngineIndex = options.Elements.IndexOf(ipiEngineOptions);
             var dataFileConfigKey = $"PipelineOptions:Elements:{ipiEngineIndex}" +
                                     $":BuildParameters:DataFile";
@@ -298,7 +302,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         {
             // Get the index of the device detection engine element in the config file so that
             // we can create an override key for it.
-            var hashEngineOptions = options.GetElementConfig(nameof(DeviceDetectionHashEngine));
+            var hashEngineOptions = options.GetElementConfig(nameof(DeviceDetectionHashEngine), noThrow: true);
+            if (hashEngineOptions is null)
+            {
+                return;
+            }
             var hashEngineIndex = options.Elements.IndexOf(hashEngineOptions);
             var dataFileConfigKey = $"PipelineOptions:Elements:{hashEngineIndex}" +
                                     $":BuildParameters:DataFile";
