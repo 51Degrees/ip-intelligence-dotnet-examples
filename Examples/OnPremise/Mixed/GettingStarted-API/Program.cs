@@ -54,7 +54,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            builder.WebHost.UseUrls("http://localhost:5225");
+            builder.WebHost.UseUrls("http://0.0.0.0:5225");
             AppendConfigOverrides(builder.Configuration);
 
             // Add services to the container.
