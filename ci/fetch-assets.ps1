@@ -1,7 +1,8 @@
 param (
     [string]$DeviceDetection,
     [string]$DeviceDetectionUrl,
-    [string[]]$Assets = @("TAC-HashV41.hash", "51Degrees-EnterpriseIpiV41.ipi", "evidence.yml")
+    [switch]$SkipEvidence,
+    [string[]]$Assets = @("TAC-HashV41.hash", "51Degrees-EnterpriseIpiV41.ipi")
 )
 $ErrorActionPreference = "Stop"
 
@@ -20,7 +21,7 @@ if ("51Degrees-EnterpriseIpiV41.ipi" -in $Assets) {
     Copy-Item "assets/51Degrees-EnterpriseIpiV41.ipi" $ipIntelligenceData
     Copy-Item "assets/51Degrees-EnterpriseIpiV41.ipi" "$ipIntelligenceData/51Degrees-LiteV41.ipi" # use Enterprise as Lite
 }
-if ("evidence.yml" -in $Assets) {
+if (!$SkipEvidence) {
     Push-Location $ipIntelligenceData
     try {
         ./evidence-gen.ps1 -v4 10000 -v6 10000
