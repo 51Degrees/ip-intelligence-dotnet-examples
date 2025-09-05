@@ -21,6 +21,9 @@ if ("51Degrees-EnterpriseIpiV41.ipi" -in $Assets) {
     Copy-Item "assets/51Degrees-EnterpriseIpiV41.ipi" $ipIntelligenceData
     Copy-Item "assets/51Degrees-EnterpriseIpiV41.ipi" "$ipIntelligenceData/51Degrees-LiteV41.ipi" # use Enterprise as Lite
 }
+if ("51Degrees-EnterpriseIpiV41-AllProperties.ipi" -in $Assets) {
+    Copy-Item "assets/51Degrees-EnterpriseIpiV41-AllProperties.ipi" $ipIntelligenceData
+}
 if (!$SkipEvidence) {
     Push-Location $ipIntelligenceData
     try {
