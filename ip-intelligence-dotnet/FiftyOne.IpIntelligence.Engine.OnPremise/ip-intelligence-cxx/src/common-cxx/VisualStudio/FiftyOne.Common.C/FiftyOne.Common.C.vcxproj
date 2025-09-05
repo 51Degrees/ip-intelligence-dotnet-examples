@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(ProjectDir)..\Library.Build.props" />
+  <ItemGroup>
+    <ClInclude Include="..\..\array.h" />
+    <ClInclude Include="..\..\cache.h" />
+    <ClInclude Include="..\..\collection.h" />
+    <ClInclude Include="..\..\collectionKey.h" />
+    <ClInclude Include="..\..\collectionKeyTypes.h" />
+    <ClInclude Include="..\..\common.h" />
+    <ClInclude Include="..\..\component.h" />
+    <ClInclude Include="..\..\config.h" />
+    <ClInclude Include="..\..\constants.h" />
+    <ClInclude Include="..\..\coordinate.h" />
+    <ClInclude Include="..\..\data.h" />
+    <ClInclude Include="..\..\dataset.h" />
+    <ClInclude Include="..\..\date.h" />
+    <ClInclude Include="..\..\evidence.h" />
+    <ClInclude Include="..\..\exceptions.h" />
+    <ClInclude Include="..\..\fiftyone.h" />
+    <ClInclude Include="..\..\file.h" />
+    <ClInclude Include="..\..\fileOffset.h" />
+    <ClInclude Include="..\..\float.h" />
+    <ClInclude Include="..\..\headers.h" />
+    <ClInclude Include="..\..\ip.h" />
+    <ClInclude Include="..\..\json.h" />
+    <ClInclude Include="..\..\list.h" />
+    <ClInclude Include="..\..\indices.h" />
+    <ClInclude Include="..\..\memory.h" />
+    <ClInclude Include="..\..\overrides.h" />
+    <ClInclude Include="..\..\pair.h" />
+    <ClInclude Include="..\..\pool.h" />
+    <ClInclude Include="..\..\process.h" />
+    <ClInclude Include="..\..\profile.h" />
+    <ClInclude Include="..\..\properties.h" />
+    <ClInclude Include="..\..\property.h" />
+    <ClInclude Include="..\..\propertyValueType.h" />
+    <ClInclude Include="..\..\resource.h" />
+    <ClInclude Include="..\..\results.h" />
+    <ClInclude Include="..\..\snprintf.h" />
+    <ClInclude Include="..\..\status.h" />
+    <ClInclude Include="..\..\storedBinaryValue.h" />
+    <ClInclude Include="..\..\string.h" />
+    <ClInclude Include="..\..\stringBuilder.h" />
+    <ClInclude Include="..\..\textfile.h" />
+    <ClInclude Include="..\..\threading.h" />
+    <ClInclude Include="..\..\tree.h" />
+    <ClInclude Include="..\..\value.h" />
+    <ClInclude Include="..\..\wkbtot.h" />
+    <ClInclude Include="..\..\yamlfile.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\cache.c" />
+    <ClCompile Include="..\..\collection.c" />
+    <ClCompile Include="..\..\collectionKeyTypes.c" />
+    <ClCompile Include="..\..\component.c" />
+    <ClCompile Include="..\..\data.c" />
+    <ClCompile Include="..\..\dataset.c" />
+    <ClCompile Include="..\..\evidence.c" />
+    <ClCompile Include="..\..\exceptionsc.c" />
+    <ClCompile Include="..\..\file.c" />
+    <ClCompile Include="..\..\float.c" />
+    <ClCompile Include="..\..\headers.c" />
+    <ClCompile Include="..\..\ip.c" />
+    <ClCompile Include="..\..\json.c" />
+    <ClCompile Include="..\..\list.c" />
+    <ClCompile Include="..\..\indices.c" />
+    <ClCompile Include="..\..\memory.c" />
+    <ClCompile Include="..\..\overrides.c" />
+    <ClCompile Include="..\..\pool.c" />
+    <ClCompile Include="..\..\process.c" />
+    <ClCompile Include="..\..\profile.c" />
+    <ClCompile Include="..\..\properties.c" />
+    <ClCompile Include="..\..\property.c" />
+    <ClCompile Include="..\..\resource.c" />
+    <ClCompile Include="..\..\results.c" />
+    <ClCompile Include="..\..\status.c" />
+    <ClCompile Include="..\..\storedBinaryValue.c" />
+    <ClCompile Include="..\..\string.c" />
+    <ClCompile Include="..\..\stringBuilder.c" />
+    <ClCompile Include="..\..\textfile.c" />
+    <ClCompile Include="..\..\threading.c" />
+    <ClCompile Include="..\..\tree.c" />
+    <ClCompile Include="..\..\value.c" />
+    <ClCompile Include="..\..\wkbtot.c" />
+    <ClCompile Include="..\..\yamlfile.c" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8E1B0B4C-8220-4E7B-A838-B4B3DDB4CF15}</ProjectGuid>
+    <RootNamespace>FiftyOneCommonC</RootNamespace>
+  </PropertyGroup>
+</Project>

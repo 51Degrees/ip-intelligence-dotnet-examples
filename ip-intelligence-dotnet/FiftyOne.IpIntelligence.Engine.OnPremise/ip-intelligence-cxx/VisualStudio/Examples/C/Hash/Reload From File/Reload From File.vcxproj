@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(SolutionDir)..\src\common-cxx\VisualStudio\Application.Build.props" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{174B912F-4CB9-4EE9-A6E5-65BB94948B6E}</ProjectGuid>
+    <RootNamespace>ReloadFromFileTrie</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\examples\C\Hash\ReloadFromFile.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ExampleBase\ExampleBaseC.vcxproj">
+      <Project>{66f0aa5b-6e82-40d4-8165-c2328561cab0}</Project>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

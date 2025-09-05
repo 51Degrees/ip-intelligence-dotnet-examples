@@ -1,0 +1,13 @@
+*.dat*
+*Release*
+*Debug*
+*.user
+.vs
+CMakeFiles
+*.a
+*.org
+CMakeCache.txt
+bin/
+lib/
+build/
+googletest*/
