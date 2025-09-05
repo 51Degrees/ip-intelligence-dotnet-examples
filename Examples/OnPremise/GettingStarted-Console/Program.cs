@@ -72,22 +72,47 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     .SetAutoUpdate(false)
                     .SetDataUpdateOnStartUp(false)
                     .SetDataFileSystemWatcher(false)
-                    .SetProperty("RegisteredCountry")
-                    .SetProperty("RegisteredOwner")
-                    .SetProperty("RegisteredName")
-                    .SetProperty("IpRangeStart")
-                    .SetProperty("IpRangeEnd")
+                    // Set all available properties
+                    .SetProperty("AccuracyRadiusMax")
+                    .SetProperty("AccuracyRadiusMin")
+                    .SetProperty("Areas")
+                    .SetProperty("AsnName")
+                    .SetProperty("AsnNumber")
+                    .SetProperty("ConnectionType")
+                    .SetProperty("ContinentCode2")
+                    .SetProperty("ContinentName")
                     .SetProperty("Country")
                     .SetProperty("CountryCode")
                     .SetProperty("CountryCode3")
-                    .SetProperty("Region")
-                    .SetProperty("State")
-                    .SetProperty("Town")
+                    .SetProperty("County")
+                    .SetProperty("CurrencyCode")
+                    .SetProperty("DialCode")
+                    .SetProperty("HumanProbability")
+                    .SetProperty("IpRangeEnd")
+                    .SetProperty("IpRangeStart")
+                    .SetProperty("IsBroadband")
+                    .SetProperty("IsCellular")
+                    .SetProperty("IsEu")
+                    .SetProperty("IsHosted")
+                    .SetProperty("IsProxy")
+                    .SetProperty("IsPublicRouter")
+                    .SetProperty("IsTor")
+                    .SetProperty("IsVPN")
+                    .SetProperty("LanguageCode")
                     .SetProperty("Latitude")
+                    .SetProperty("LocationConfidence")
                     .SetProperty("Longitude")
-                    .SetProperty("Areas")
-                    .SetProperty("AccuracyRadius")
+                    .SetProperty("Mcc")
+                    .SetProperty("Region")
+                    .SetProperty("RegisteredCountry")
+                    .SetProperty("RegisteredName")
+                    .SetProperty("RegisteredOwner")
+                    .SetProperty("State")
+                    .SetProperty("Suburb")
+                    .SetProperty("TimeZoneIana")
                     .SetProperty("TimeZoneOffset")
+                    .SetProperty("Town")
+                    .SetProperty("ZipCode")
                     .Build())
                 {
                     // carry out some sample detections
@@ -139,23 +164,62 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     // can get by asking for a result matching the `IIpIntelligenceData` interface.
                     var ipData = data.Get<IIpIntelligenceData>();
 
-                    // Output all the properties
+                    // Output all available properties
+                    message.AppendLine("\t--- Accuracy & Location Confidence ---");
+                    OutputWeightedIntValues(nameof(ipData.AccuracyRadiusMax), ipData.AccuracyRadiusMax, message);
+                    OutputWeightedIntValues(nameof(ipData.AccuracyRadiusMin), ipData.AccuracyRadiusMin, message);
+                    OutputListProperty(nameof(ipData.LocationConfidence), ipData.LocationConfidence, message);
+                    
+                    message.AppendLine("\t--- Geographic Location ---");
+                    OutputListProperty(nameof(ipData.Country), ipData.Country, message);
+                    OutputListProperty(nameof(ipData.CountryCode), ipData.CountryCode, message);
+                    OutputListProperty(nameof(ipData.CountryCode3), ipData.CountryCode3, message);
+                    OutputListProperty(nameof(ipData.ContinentName), ipData.ContinentName, message);
+                    OutputListProperty(nameof(ipData.ContinentCode2), ipData.ContinentCode2, message);
+                    OutputListProperty(nameof(ipData.Region), ipData.Region, message);
+                    OutputListProperty(nameof(ipData.State), ipData.State, message);
+                    OutputListProperty(nameof(ipData.County), ipData.County, message);
+                    OutputListProperty(nameof(ipData.Town), ipData.Town, message);
+                    OutputListProperty(nameof(ipData.Suburb), ipData.Suburb, message);
+                    OutputListProperty(nameof(ipData.ZipCode), ipData.ZipCode, message);
+                    OutputWeightedFloatValues(nameof(ipData.Latitude), ipData.Latitude, message);
+                    OutputWeightedFloatValues(nameof(ipData.Longitude), ipData.Longitude, message);
+                    OutputListProperty(nameof(ipData.Areas), ipData.Areas, message);
+                    
+                    message.AppendLine("\t--- Regional Information ---");
+                    OutputWeightedBoolValues(nameof(ipData.IsEu), ipData.IsEu, message);
+                    OutputListProperty(nameof(ipData.CurrencyCode), ipData.CurrencyCode, message);
+                    OutputWeightedIntValues(nameof(ipData.DialCode), ipData.DialCode, message);
+                    OutputListProperty(nameof(ipData.LanguageCode), ipData.LanguageCode, message);
+                    
+                    message.AppendLine("\t--- Time Zone ---");
+                    OutputListProperty(nameof(ipData.TimeZoneIana), ipData.TimeZoneIana, message);
+                    OutputWeightedIntValues(nameof(ipData.TimeZoneOffset), ipData.TimeZoneOffset, message);
+                    
+                    message.AppendLine("\t--- Network Registration ---");
                     OutputListProperty(nameof(ipData.RegisteredName), ipData.RegisteredName, message);
                     OutputListProperty(nameof(ipData.RegisteredOwner), ipData.RegisteredOwner, message);
                     OutputListProperty(nameof(ipData.RegisteredCountry), ipData.RegisteredCountry, message);
                     OutputWeightedIPAddressValues(nameof(ipData.IpRangeStart), ipData.IpRangeStart, message);
                     OutputWeightedIPAddressValues(nameof(ipData.IpRangeEnd), ipData.IpRangeEnd, message);
-                    OutputListProperty(nameof(ipData.Country), ipData.Country, message);
-                    OutputListProperty(nameof(ipData.CountryCode), ipData.CountryCode, message);
-                    OutputListProperty(nameof(ipData.CountryCode3), ipData.CountryCode3, message);
-                    OutputListProperty(nameof(ipData.Region), ipData.Region, message);
-                    OutputListProperty(nameof(ipData.State), ipData.State, message);
-                    OutputListProperty(nameof(ipData.Town), ipData.Town, message);
-                    OutputWeightedFloatValues(nameof(ipData.Latitude), ipData.Latitude, message);
-                    OutputWeightedFloatValues(nameof(ipData.Longitude), ipData.Longitude, message);
-                    OutputListProperty(nameof(ipData.Areas), ipData.Areas, message);
-                    OutputWeightedIntValues(nameof(ipData.AccuracyRadius), ipData.AccuracyRadius, message);
-                    OutputWeightedIntValues(nameof(ipData.TimeZoneOffset), ipData.TimeZoneOffset, message);
+                    
+                    message.AppendLine("\t--- ASN Information ---");
+                    OutputListProperty(nameof(ipData.AsnName), ipData.AsnName, message);
+                    OutputListProperty(nameof(ipData.AsnNumber), ipData.AsnNumber, message);
+                    
+                    message.AppendLine("\t--- Connection Type ---");
+                    OutputListProperty(nameof(ipData.ConnectionType), ipData.ConnectionType, message);
+                    OutputWeightedBoolValues(nameof(ipData.IsBroadband), ipData.IsBroadband, message);
+                    OutputWeightedBoolValues(nameof(ipData.IsCellular), ipData.IsCellular, message);
+                    OutputListProperty(nameof(ipData.Mcc), ipData.Mcc, message);
+                    
+                    message.AppendLine("\t--- Security & Anonymity ---");
+                    OutputWeightedBoolValues(nameof(ipData.IsHosted), ipData.IsHosted, message);
+                    OutputWeightedBoolValues(nameof(ipData.IsProxy), ipData.IsProxy, message);
+                    OutputWeightedBoolValues(nameof(ipData.IsVPN), ipData.IsVPN, message);
+                    OutputWeightedBoolValues(nameof(ipData.IsTor), ipData.IsTor, message);
+                    OutputWeightedBoolValues(nameof(ipData.IsPublicRouter), ipData.IsPublicRouter, message);
+                    OutputWeightedIntValues(nameof(ipData.HumanProbability), ipData.HumanProbability, message);
                     output.WriteLine(message.ToString());
                 }
             }
@@ -230,6 +294,22 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
 
             private void OutputWeightedIPAddressValues(string name, 
                 IAspectPropertyValue<IReadOnlyList<IWeightedValue<System.Net.IPAddress>>> property,
+                StringBuilder message)
+            {
+                if (!property.HasValue)
+                {
+                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
+                }
+                else
+                {
+                    var values = property.Value.Select(x => 
+                        Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString() : $"({x.Value} @ {x.Weighting():F4})");
+                    message.AppendLine($"\t{name} ({property.Value.Count}): {string.Join(", ", values)}");
+                }
+            }
+
+            private void OutputWeightedBoolValues(string name, 
+                IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>> property,
                 StringBuilder message)
             {
                 if (!property.HasValue)
