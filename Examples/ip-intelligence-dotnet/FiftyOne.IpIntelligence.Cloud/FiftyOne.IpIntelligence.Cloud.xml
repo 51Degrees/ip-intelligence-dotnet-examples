@@ -1,0 +1,187 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>FiftyOne.IpIntelligence.Cloud</name>
+    </assembly>
+    <members>
+        <member name="T:FiftyOne.IpIntelligence.Cloud.Data.IpDataCloud">
+            <summary>
+            A data class that makes working with IP data from cloud 
+            services easier for the user.
+            </summary>
+        </member>
+        <member name="M:FiftyOne.IpIntelligence.Cloud.Data.IpDataCloud.#ctor(Microsoft.Extensions.Logging.ILogger{FiftyOne.Pipeline.Engines.Data.AspectDataBase},FiftyOne.Pipeline.Core.FlowElements.IPipeline,FiftyOne.Pipeline.Engines.FlowElements.IAspectEngine,FiftyOne.Pipeline.Engines.Services.IMissingPropertyService)">
+            <summary>
+            Construct a new instance of the wrapper.
+            </summary>
+            <param name="logger">
+            The logger instance to use.
+            </param>
+            <param name="pipeline">
+            The Pipeline that created this data instance.
+            </param>
+            <param name="engine">
+            The engine that create this data instance.
+            </param>
+            <param name="missingPropertyService">
+            The <see cref="T:FiftyOne.Pipeline.Engines.Services.IMissingPropertyService"/> to use if a requested
+            property does not exist.
+            </param>
+        </member>
+        <member name="T:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngine">
+            <summary>
+            Engine that takes the JSON response from the 
+            <see cref="T:FiftyOne.Pipeline.CloudRequestEngine.FlowElements.CloudRequestEngine"/> and uses it populate a 
+            IpDataCloud instance for easier consumption.
+            </summary>
+        </member>
+        <member name="M:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngine.#ctor(Microsoft.Extensions.Logging.ILogger{FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngine},System.Func{FiftyOne.Pipeline.Core.FlowElements.IPipeline,FiftyOne.Pipeline.Core.FlowElements.FlowElementBase{FiftyOne.IpIntelligence.Cloud.Data.IpDataCloud,FiftyOne.Pipeline.Engines.Data.IAspectPropertyMetaData},FiftyOne.IpIntelligence.Cloud.Data.IpDataCloud})">
+            <summary>
+            Constructor
+            </summary>
+            <param name="logger">
+            The logger for this instance to use
+            </param>
+            <param name="ipDataFactory">
+            Factory function to use when creating aspect data instances.
+            </param>
+        </member>
+        <member name="P:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngine.ElementDataKey">
+            <summary>
+            The key to use for storing this engine's data in a 
+            <see cref="T:FiftyOne.Pipeline.Core.Data.IFlowData"/> instance.
+            </summary>
+        </member>
+        <member name="P:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngine.EvidenceKeyFilter">
+            <summary>
+            The filter that defines the evidence that is used by 
+            this engine.
+            This engine needs no evidence as it works from the response
+            from the <see cref="T:FiftyOne.Pipeline.CloudRequestEngine.FlowElements.ICloudRequestEngine"/>.
+            </summary>
+        </member>
+        <member name="M:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngine.ProcessEngine(FiftyOne.Pipeline.Core.Data.IFlowData,FiftyOne.IpIntelligence.Cloud.Data.IpDataCloud)">
+            <summary>
+            Perform the processing for this engine:
+            1. Get the JSON data from the <see cref="T:FiftyOne.Pipeline.CloudRequestEngine.FlowElements.CloudRequestEngine"/> 
+            response.
+            2. Extract properties relevant to this engine.
+            3. Deserialize JSON data to populate a 
+            <see cref="T:FiftyOne.IpIntelligence.Cloud.Data.IpDataCloud"/> instance.
+            </summary>
+            <param name="data">
+            The <see cref="T:FiftyOne.Pipeline.Core.Data.IFlowData"/> instance containing data for the 
+            current request.
+            </param>
+            <param name="aspectData">
+            The <see cref="T:FiftyOne.IpIntelligence.Cloud.Data.IpDataCloud"/> instance to populate with
+            values.
+            </param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown if a required parameter is null
+            </exception>
+        </member>
+        <member name="M:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngine.CreateAPVDictionary2(System.Collections.Generic.Dictionary{System.String,System.Object},System.Collections.Generic.IReadOnlyList{FiftyOne.Pipeline.Core.Data.IElementPropertyMetaData})">
+            <summary>
+            Use the supplied cloud data to create a dictionary of 
+            <see cref="T:FiftyOne.Pipeline.Engines.Data.AspectPropertyValue`1"/> instances.
+            </summary>
+            <remarks>
+            This method uses the meta-data exposed by the 
+            <see cref="P:FiftyOne.Pipeline.CloudRequestEngine.FlowElements.CloudAspectEngineBase`1.Properties"/> collection to determine
+            if a given entry in the supplied cloudData should
+            be converted to an <see cref="T:FiftyOne.Pipeline.Engines.Data.AspectPropertyValue`1"/>
+            or not.
+            If not it will be output unchanged. If it is then a new
+            <see cref="T:FiftyOne.Pipeline.Engines.Data.AspectPropertyValue`1"/> instance will be created 
+            and the value from the cloud data assigned to it.
+            If the value is null then the code will look for a property
+            in the cloud data with the same name suffixed with 'nullreason'.
+            If it exists, then it's value will be used to set the 
+            noValueMessage on the new <see cref="T:FiftyOne.Pipeline.Engines.Data.AspectPropertyValue`1"/>.
+            </remarks>
+            <param name="cloudData">
+            The cloud data to be processed.
+            Keys are flat property names (i.e. no '.' separators).
+            Values are the property values.
+            </param>
+            <param name="propertyMetaData">
+            The meta-data for the properties in the data.
+            This will usually be the list from <see cref="P:FiftyOne.Pipeline.CloudRequestEngine.FlowElements.CloudAspectEngineBase`1.Properties"/>
+            but will be different if dealing with sub-properties.
+            </param>
+            <returns>
+            A dictionary containing the original values converted to 
+            <see cref="T:FiftyOne.Pipeline.Engines.Data.AspectPropertyValue`1"/> instances where needed.
+            Any entries in the source dictionary where the key ends 
+            with 'nullreason' will not appear in the output.
+            </returns>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown if a required parameter is null.
+            </exception>
+        </member>
+        <member name="M:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngine.ToValueForAPV(System.Object,System.Type)">
+            <summary>
+            Convert value return by cloud in json (weakly typed)
+            to a value expected by AspectPropertyValue (strongly typed)
+            </summary>
+            <param name="rawValue">Original value.</param>
+            <param name="valueType">Target type.</param>
+            <returns>Converted value.</returns>
+        </member>
+        <member name="M:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngine.GetPropertyType(FiftyOne.Pipeline.Core.Data.PropertyMetaData,System.Type)">
+            <summary>
+            Try to get the type of a property from the information
+            returned by the cloud service. This should be overridden
+            if anything other than simple types are required.
+            </summary>
+            <param name="propertyMetaData">
+            The <see cref="T:FiftyOne.Pipeline.Core.Data.PropertyMetaData"/> instance to translate.
+            </param>
+            <param name="parentObjectType">
+            The type of the object on which this property exists.
+            </param>
+            <returns>
+            The type of the property determined from the Type field
+            of propertyMetaData.
+            </returns>
+        </member>
+        <member name="T:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngineBuilder">
+            <summary>
+            Fluent builder used to create a cloud-based IP intelligence
+            engine.
+            </summary>
+        </member>
+        <member name="M:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngineBuilder.#ctor(Microsoft.Extensions.Logging.ILoggerFactory)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="loggerFactory">
+            The factory to use when creating a logger.
+            </param>
+        </member>
+        <member name="M:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngineBuilder.Build">
+            <summary>
+            Build a new engine using the configured values.
+            </summary>
+            <returns>
+            A new <see cref="T:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngine"/>
+            </returns>
+        </member>
+        <member name="M:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngineBuilder.NewEngine(System.Collections.Generic.List{System.String})">
+            <summary>
+            This method is called by the base class to create a new
+            <see cref="T:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngine"/> instance before 
+            additional configuration is applied.
+            </summary>
+            <param name="properties">
+            A string list of the properties that the engine should populate.
+            In this case, this list is ignored as the resource key 
+            defines the properties that are returned by the cloud service.
+            </param>
+            <returns>
+            A new <see cref="T:FiftyOne.IpIntelligence.Cloud.FlowElements.IpiCloudEngine"/> instance.
+            </returns>
+        </member>
+    </members>
+</doc>

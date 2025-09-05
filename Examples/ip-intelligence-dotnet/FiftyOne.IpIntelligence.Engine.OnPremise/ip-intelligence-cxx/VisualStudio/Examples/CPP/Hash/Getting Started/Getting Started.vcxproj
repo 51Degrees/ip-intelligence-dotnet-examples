@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(SolutionDir)..\src\common-cxx\VisualStudio\Application++.Build.props" />
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\examples\CPP\Hash\GettingStarted.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ExampleBase\ExampleBaseCPP.vcxproj">
+      <Project>{cab43e83-8775-4477-964f-364d79f860b7}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B6CE7480-53BA-44C7-A262-6FA94B784C3E}</ProjectGuid>
+    <RootNamespace>GettingStarted</RootNamespace>
+  </PropertyGroup>
+</Project>

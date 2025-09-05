@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(ProjectDir)..\Library++.Build.props" />
+  <ItemGroup>
+    <ClCompile Include="..\..\CollectionConfig.cpp" />
+    <ClCompile Include="..\..\ComponentMetaData.cpp" />
+    <ClCompile Include="..\..\ConfigBase.cpp" />
+    <ClCompile Include="..\..\Date.cpp" />
+    <ClCompile Include="..\..\EngineBase.cpp" />
+    <ClCompile Include="..\..\EvidenceBase.cpp" />
+    <ClCompile Include="..\..\Exceptions.cpp" />
+    <ClCompile Include="..\..\IpAddress.cpp" />
+    <ClCompile Include="..\..\MetaData.cpp" />
+    <ClCompile Include="..\..\ProfileMetaData.cpp" />
+    <ClCompile Include="..\..\PropertyMetaData.cpp" />
+    <ClCompile Include="..\..\RequiredPropertiesConfig.cpp" />
+    <ClCompile Include="..\..\ResultsBase.cpp" />
+    <ClCompile Include="..\..\string_pp.cpp" />
+    <ClCompile Include="..\..\ValueMetaData.cpp" />
+    <ClCompile Include="..\..\wkbtot_pp.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Collection.hpp" />
+    <ClInclude Include="..\..\CollectionConfig.hpp" />
+    <ClInclude Include="..\..\ComponentMetaData.hpp" />
+    <ClInclude Include="..\..\ConfigBase.hpp" />
+    <ClInclude Include="..\..\Date.hpp" />
+    <ClInclude Include="..\..\EngineBase.hpp" />
+    <ClInclude Include="..\..\EntityMetaData.hpp" />
+    <ClInclude Include="..\..\EntityMetaDataBuilder.hpp" />
+    <ClInclude Include="..\..\EvidenceBase.hpp" />
+    <ClInclude Include="..\..\Exceptions.hpp" />
+    <ClInclude Include="..\..\IpAddress.hpp" />
+    <ClInclude Include="..\..\MetaData.hpp" />
+    <ClInclude Include="..\..\string_pp.hpp" />
+    <ClInclude Include="..\..\Value.hpp" />
+    <ClInclude Include="..\..\ProfileMetaData.hpp" />
+    <ClInclude Include="..\..\PropertyMetaData.hpp" />
+    <ClInclude Include="..\..\RequiredPropertiesConfig.hpp" />
+    <ClInclude Include="..\..\ResultsBase.hpp" />
+    <ClInclude Include="..\..\ValueMetaData.hpp" />
+    <ClInclude Include="..\..\wkbtot_pp.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FiftyOne.Common.C\FiftyOne.Common.C.vcxproj">
+      <Project>{8e1b0b4c-8220-4e7b-a838-b4b3ddb4cf15}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{01DCCD38-27CC-4C1A-851F-F1700EDF8BB5}</ProjectGuid>
+    <RootNamespace>FiftyOneCommonCPP</RootNamespace>
+  </PropertyGroup>
+</Project>

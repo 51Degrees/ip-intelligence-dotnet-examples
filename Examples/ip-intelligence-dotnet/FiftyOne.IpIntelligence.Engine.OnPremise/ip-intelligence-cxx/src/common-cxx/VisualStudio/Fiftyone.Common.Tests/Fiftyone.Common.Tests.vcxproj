@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(SolutionDir)Application.Build.props" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{4804bab6-cc3d-455a-b359-0eca128fb245}</ProjectGuid>
+    <RootNamespace>FiftyOneCommonTests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FiftyOne.Common.CPP\FiftyOne.Common.CPP.vcxproj">
+      <Project>{01dccd38-27cc-4c1a-851f-f1700edf8bb5}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\FiftyOne.Common.C\FiftyOne.Common.C.vcxproj">
+      <Project>{8e1b0b4c-8220-4e7b-a838-b4b3ddb4cf15}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\tests\Base.cpp" />
+    <ClCompile Include="..\..\tests\CacheTests.cpp" />
+    <ClCompile Include="..\..\tests\CollectionConfigTests.cpp" />
+    <ClCompile Include="..\..\tests\CollectionOffsetTests.cpp" />
+    <ClCompile Include="..\..\tests\CollectionTests.cpp" />
+    <ClCompile Include="..\..\tests\EngineTests.cpp" />
+    <ClCompile Include="..\..\tests\EvidenceTests.cpp" />
+    <ClCompile Include="..\..\tests\EvidenceWithHeadersTests_MultipleHeaders.cpp" />
+    <ClCompile Include="..\..\tests\EvidenceWithHeadersTests_NoHeaders.cpp" />
+    <ClCompile Include="..\..\tests\EvidenceWithHeadersTests_SingleHeader.cpp" />
+    <ClCompile Include="..\..\tests\ExampleTests.cpp" />
+    <ClCompile Include="..\..\tests\FileHandle.cpp" />
+    <ClCompile Include="..\..\tests\FileTests.cpp" />
+    <ClCompile Include="..\..\tests\FloatTests.cpp" />
+    <ClCompile Include="..\..\tests\HeadersTests.cpp" />
+    <ClCompile Include="..\..\tests\IpAddressTests.cpp" />
+    <ClCompile Include="..\..\tests\IpHeaderParserTests.cpp" />
+    <ClCompile Include="..\..\tests\IpParserTests.cpp" />
+    <ClCompile Include="..\..\tests\JsonTests.cpp" />
+    <ClCompile Include="..\..\tests\main.cpp" />
+    <ClCompile Include="..\..\tests\MemoryLeakTests.cpp" />
+    <ClCompile Include="..\..\tests\OverridesTests.cpp" />
+    <ClCompile Include="..\..\tests\pch.cpp" />
+    <ClCompile Include="..\..\tests\PoolTests.cpp" />
+    <ClCompile Include="..\..\tests\ProfileTests.cpp" />
+    <ClCompile Include="..\..\tests\PropertiesTests.cpp" />
+    <ClCompile Include="..\..\tests\PropertyMetaDataTests.cpp" />
+    <ClCompile Include="..\..\tests\PropertyTests.cpp" />
+    <ClCompile Include="..\..\tests\RequiredPropertiesConfigTests.cpp" />
+    <ClCompile Include="..\..\tests\ResourceManagerTests.cpp" />
+    <ClCompile Include="..\..\tests\StatusTests.cpp" />
+    <ClCompile Include="..\..\tests\StoredBinaryValueTests.cpp" />
+    <ClCompile Include="..\..\tests\StringCollection.cpp" />
+    <ClCompile Include="..\..\tests\StringsTests.cpp" />
+    <ClCompile Include="..\..\tests\TestStrings.cpp" />
+    <ClCompile Include="..\..\tests\TextFileTests.cpp" />
+    <ClCompile Include="..\..\tests\ThreadingTests.cpp" />
+    <ClCompile Include="..\..\tests\ValueTests.cpp" />
+    <ClCompile Include="..\..\tests\WellKnownBinaryToTextTests.cpp" />
+    <ClCompile Include="..\..\tests\YamlFileTests.cpp" />
+    <ClCompile Include="..\..\tests\HeadersContainer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\tests\Base.hpp" />
+    <ClInclude Include="..\..\tests\EngineTests.hpp" />
+    <ClInclude Include="..\..\tests\EvidenceTests.hpp" />
+    <ClInclude Include="..\..\tests\ExampleTests.hpp" />
+    <ClInclude Include="..\..\tests\FileHandle.hpp" />
+    <ClInclude Include="..\..\tests\pch.h" />
+    <ClInclude Include="..\..\tests\StringCollection.hpp" />
+    <ClInclude Include="..\..\tests\TestStrings.hpp" />
+    <ClInclude Include="..\..\tests\FixedSizeCollection.hpp" />
+    <ClInclude Include="..\..\tests\TestUtils_Pointers.hpp" />
+    <ClInclude Include="..\..\tests\VariableSizeCollection.hpp" />
+    <ClInclude Include="..\..\tests\HeadersContainer.hpp" />
+  </ItemGroup>
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.7\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets" Condition="Exists('..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.7\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.7\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.7\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets'))" />
+  </Target>
+</Project>
