@@ -18,14 +18,11 @@ jobs:
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
           submodules: true
-      - name: Checkout common-ci
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ github.event.repository.owner.login }}/common-ci
-          path: common-ci
-      - name: Fetch assets
-        working-directory: common-ci
-        run: pwsh ../ci/fetch-assets.ps1 -DeviceDetection '${{ secrets.DEVICE_DETECTION_KEY }}' -DeviceDetectionUrl '${{ secrets.IPI_DATA_FILE_ALL_PROPERTIES_URL }}' -Assets '51Degrees-EnterpriseIpiV41-AllProperties.ipi' -SkipEvidence
+      - name: Create data directory and fetch assets
+        run: |
+          mkdir -p ip-intelligence-data
+          wget -q -O ip-intelligence-data/51Degrees-EnterpriseIpiV41-AllProperties.ipi.gz '${{ secrets.IPI_DATA_FILE_ALL_PROPERTIES_URL }}'
+          gunzip ip-intelligence-data/51Degrees-EnterpriseIpiV41-AllProperties.ipi.gz
       - name: Build
         run: |
           printf -v tag '%s-%(%y%m%dT%H%M)T' "$BASE_VERSION" -1
