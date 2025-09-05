@@ -70,7 +70,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
                         config.AddJsonFile("appsettings.json")
                             .AddInMemoryCollection(overrides);
                     })
-                    .UseUrls(Constants.AllUrls)
+                    .UseUrls("http://0.0.0.0:5225")
                     .UseStartup<Startup>()
                     .UseStaticWebAssets();
                 });

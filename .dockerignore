@@ -1,0 +1,57 @@
+# Build artifacts
+**/bin/
+**/obj/
+**/build/
+
+# Git directories
+**/.git/
+**/.gitmodules
+
+# IDE files
+**/.vs/
+**/.vscode/
+**/.idea/
+
+# OS files
+**/.DS_Store
+**/Thumbs.db
+
+# Temporary files
+**/*.tmp
+**/*.temp
+
+# Log files
+**/*.log
+
+# Documentation (keeping only necessary files)
+**/docs/
+**/*.md
+!README.md
+
+# Test files (if any)
+**/test/
+**/tests/
+**/*test*/
+
+# Data files we don't need in build context - exclude all data files
+ip-intelligence-data/
+
+# CMake build artifacts  
+**/CMakeCache.txt
+**/CMakeFiles/
+**/cmake_install.cmake
+**/Makefile
+
+# Native library build artifacts
+**/*.o
+**/*.so
+**/*.a
+**/*.dylib
+**/*.dll.a
+
+# Visual Studio files
+**/*.suo
+**/*.user
+**/*.userosscache
+**/*.sln.docstates
+**/*.userprefs
