@@ -34,7 +34,6 @@
 **/*test*/
 
 # Data files we don't need in build context - exclude all data files
-ip-intelligence-data/
 
 # CMake build artifacts  
 **/CMakeCache.txt

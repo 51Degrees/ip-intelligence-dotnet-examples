@@ -16,17 +16,16 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* packages-microsoft-prod.deb
 
-# Copy the entire project structure including the embedded ip-intelligence-dotnet
-COPY . /app
+# Copy only the Examples directory to avoid heavy ip-intelligence-data
+COPY Examples /app
 WORKDIR /app
 
-# Restore dependencies for the solution
-RUN dotnet restore FiftyOne.IpIntelligence.Examples.sln
+# Restore dependencies for the web project (will restore dependencies)
+RUN dotnet restore OnPremise/GettingStarted-Web/GettingStarted-Web.csproj
 
 # Build and publish the web example with proper platform targeting
-WORKDIR /app
 ARG CONFIG=Release
-RUN dotnet publish Examples/OnPremise/GettingStarted-Web/GettingStarted-Web.csproj \
+RUN dotnet publish OnPremise/GettingStarted-Web/GettingStarted-Web.csproj \
     -c "$CONFIG" \
     -p:Platform=x64 \
     -p:BuildType=Release \
@@ -47,6 +46,9 @@ WORKDIR /app
 
 # Copy the published application
 COPY --from=build /app/publish .
+
+# Copy the IP Intelligence data file directly to the final image
+COPY ip-intelligence-data/51Degrees-EnterpriseIpiV41-AllProperties.ipi /app/data/51Degrees-EnterpriseIpiV41-AllProperties.ipi
 
 EXPOSE 5225
 
