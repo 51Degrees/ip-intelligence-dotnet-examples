@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
-          submodules: true
+          submodules: recursive
       - name: Create data directory and fetch assets
         run: |
           mkdir -p ip-intelligence-data
