@@ -27,7 +27,6 @@ jobs:
         run: |
           sed -i '/AddOverrides_DD.*;$/d' Examples/OnPremise/Mixed/GettingStarted-API/Program.cs
           cp Examples/OnPremise/Mixed/GettingStarted-API/{docker-appsettings,appsettings}.json
-          pwsh Examples/OnPremise/Mixed/GettingStarted-API/inject-secrets.ps1 -DDLicenseKey none -IPIFileURL '${{ secrets.IPI_DATA_FILE_URL }}'
       - name: Build
         run: |
           printf -v tag '%s-%(%y%m%dT%H%M)T' "$BASE_VERSION" -1

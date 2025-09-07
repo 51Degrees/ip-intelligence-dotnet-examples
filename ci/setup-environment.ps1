@@ -43,19 +43,4 @@ Write-Debug "env:IPINTELLIGENCEDATAFILE = <$($env:IPINTELLIGENCEDATAFILE)>"
     -UserName $GitHubUser `
     -Key $env:GITHUB_TOKEN
 
-
-$MixedApiProjPath = [IO.Path]::Combine($RepoPath, "Examples", "OnPremise", "Mixed", "GettingStarted-API")
-Push-Location $MixedApiProjPath
-try {
-    Write-Information "Entered $MixedApiProjPath"
-    & ./inject-secrets.ps1 `
-        -DDLicenseKey $Keys.DeviceDetection `
-        -IPIFileURL $Keys.DeviceDetectionUrl `
-        -Clean
-} finally {
-    Write-Information "Leaving $MixedApiProjPath"
-    Pop-Location
-}
-
-
 exit $LASTEXITCODE
