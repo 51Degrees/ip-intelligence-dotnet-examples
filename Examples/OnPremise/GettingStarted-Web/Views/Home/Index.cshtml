@@ -236,7 +236,7 @@
                 <th>Key</th>
                 <th>Value</th>
             </tr>
-            @foreach (var entry in Model.Evidence.Where(e => e.Key.Equals("server.client-ip", StringComparison.OrdinalIgnoreCase)))
+            @foreach (var entry in Model.Evidence)
             {
                 <tr class="@(entry.Used ? "lightgreen" : "lightyellow")">
                     <td><b>@(entry.Key)</b></td>

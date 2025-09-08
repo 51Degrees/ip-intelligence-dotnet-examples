@@ -72,6 +72,13 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
                 using (flowData = _pipeline.CreateFlowData())
                 {
                     flowData.AddEvidence("server.client-ip", targetIp);
+                    
+                    // Add all HTTP headers as evidence
+                    foreach (var header in HttpContext.Request.Headers)
+                    {
+                        flowData.AddEvidence($"header.{header.Key.ToLower()}", string.Join(",", header.Value));
+                    }
+                    
                     flowData.Process();
                     
                     var model = new IndexModel(flowData, Response.Headers);
@@ -82,10 +89,20 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
             else
             {
                 // Fallback to default flow data if we can't determine IP
-                flowData = _provider.GetFlowData();
-                var model = new IndexModel(flowData, Response.Headers);
-                model.InputIpAddress = visitorIp;
-                return View(model);
+                using (flowData = _pipeline.CreateFlowData())
+                {
+                    // Add all HTTP headers as evidence
+                    foreach (var header in HttpContext.Request.Headers)
+                    {
+                        flowData.AddEvidence($"header.{header.Key.ToLower()}", string.Join(",", header.Value));
+                    }
+                    
+                    flowData.Process();
+                    
+                    var model = new IndexModel(flowData, Response.Headers);
+                    model.InputIpAddress = visitorIp;
+                    return View(model);
+                }
             }
         }
 
@@ -103,11 +120,31 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
                 if (!string.IsNullOrEmpty(forwardedFor))
                 {
                     // X-Forwarded-For can contain multiple IPs, take the first (original client)
-                    return forwardedFor.Split(',')[0].Trim();
+                    var clientIp = forwardedFor.Split(',')[0].Trim();
+                    return StripPortFromIp(clientIp);
                 }
             }
             
-            return remoteIp;
+            return StripPortFromIp(remoteIp);
+        }
+
+        private string StripPortFromIp(string ipAddress)
+        {
+            if (string.IsNullOrEmpty(ipAddress))
+                return ipAddress;
+                
+            // Handle IPv4 with port (e.g., "192.168.1.1:8080")
+            if (ipAddress.Contains(":") && !ipAddress.Contains("::"))
+            {
+                var lastColonIndex = ipAddress.LastIndexOf(':');
+                // Check if what follows the colon is a port number
+                if (lastColonIndex > 0 && int.TryParse(ipAddress.Substring(lastColonIndex + 1), out _))
+                {
+                    return ipAddress.Substring(0, lastColonIndex);
+                }
+            }
+            
+            return ipAddress;
         }
     }
 }
