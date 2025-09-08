@@ -24,6 +24,7 @@ using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
@@ -113,6 +114,16 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseDeveloperExceptionPage();
+
+            // Configure forwarded headers for Azure App Service
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
+                                  Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto,
+                // Trust all proxies for Azure App Service
+                KnownProxies = { },
+                KnownNetworks = { }
+            });
 
             // This is only needed when running under an ASP.NET test server.
             app.UseMiddleware<UserAgentCorrectionMiddleware>();

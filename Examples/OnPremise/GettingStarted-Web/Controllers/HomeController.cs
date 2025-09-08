@@ -27,6 +27,7 @@ using Microsoft.Extensions.Logging;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
 using System.Net;
+using System.Linq;
 
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controllers
 {
@@ -57,7 +58,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
             }
 
             // Get the visitor's IP address from the request
-            var visitorIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+            // Try X-Forwarded-For first (for Azure App Service/proxy scenarios), then RemoteIpAddress
+            var visitorIp = GetClientIpAddress();
             
             // If no custom IP provided, use the visitor's IP
             var targetIp = !string.IsNullOrWhiteSpace(ipAddress) ? ipAddress : visitorIp;
@@ -85,6 +87,27 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
                 model.InputIpAddress = visitorIp;
                 return View(model);
             }
+        }
+
+        private string GetClientIpAddress()
+        {
+            // After UseForwardedHeaders middleware, RemoteIpAddress should contain the real client IP
+            // But we'll also check X-Forwarded-For as a backup
+            var remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+            
+            // If RemoteIpAddress is still an internal IP, check X-Forwarded-For directly
+            if (remoteIp == "169.254.130.1" || remoteIp == "::1" || remoteIp == "127.0.0.1" || 
+                (remoteIp != null && (remoteIp.StartsWith("172.") || remoteIp.StartsWith("10.") || remoteIp.StartsWith("192.168."))))
+            {
+                var forwardedFor = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                if (!string.IsNullOrEmpty(forwardedFor))
+                {
+                    // X-Forwarded-For can contain multiple IPs, take the first (original client)
+                    return forwardedFor.Split(',')[0].Trim();
+                }
+            }
+            
+            return remoteIp;
         }
     }
 }
