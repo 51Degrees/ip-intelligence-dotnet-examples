@@ -180,11 +180,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             if (aspectEngine is IpiOnPremiseEngine ipiEngine)
             {
                 return ipiEngine.Components.SelectMany(comp
-                    => comp.Properties.Select(prop =>
+                    => comp.Properties.Select(prop => new PropertyMetaData(prop)
                     {
-                        var newProp = new PropertyMetaData(prop);
-                        newProp.Category = comp.Name;
-                        return newProp;
+                        Category = comp.Name
                     }));
             }
             return aspectEngine.Properties.Select(prop => new PropertyMetaData(prop));
