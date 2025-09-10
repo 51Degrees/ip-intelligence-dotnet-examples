@@ -23,6 +23,7 @@
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Engines.Data;
+using FiftyOne.Pipeline.Engines.FiftyOne.Data;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -30,62 +31,25 @@ using System.Linq;
 
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
 {
+    public class PropertyData
+    {
+        public string Name { get; set; }
+        public string Value { get; set; }
+        public string Category { get; set; }
+        public string Component { get; set; }
+        public string Description { get; set; }
+    }
+
     public class IndexModel
     {
-        // Geographic Location Properties
-        public string Country { get; private set; }
-        public string CountryCode { get; private set; }
-        public string CountryCode3 { get; private set; }
-        public string ContinentName { get; private set; }
-        public string ContinentCode2 { get; private set; }
-        public string Region { get; private set; }
-        public string State { get; private set; }
-        public string County { get; private set; }
-        public string Town { get; private set; }
-        public string Suburb { get; private set; }
-        public string ZipCode { get; private set; }
+        // Properties for backward compatibility and special cases
         public string Latitude { get; private set; }
         public string Longitude { get; private set; }
         public string Areas { get; private set; }
-        public string AccuracyRadiusMax { get; private set; }
-        public string AccuracyRadiusMin { get; private set; }
-        public string LocationConfidence { get; private set; }
-        
-        // Regional Information
-        public string IsEu { get; private set; }
-        public string CurrencyCode { get; private set; }
-        public string DialCode { get; private set; }
-        public string LanguageCode { get; private set; }
-        
-        // Time Zone
-        public string TimeZoneIana { get; private set; }
-        public string TimeZoneOffset { get; private set; }
-        
-        // Network Registration
-        public string Name { get; private set; }
-        public string RegisteredOwner { get; private set; }
-        public string RegisteredCountry { get; private set; }
-        public string IpRangeStart { get; private set; }
-        public string IpRangeEnd { get; private set; }
-        
-        // ASN Information
-        public string AsnName { get; private set; }
-        public string AsnNumber { get; private set; }
-        
-        // Connection Type
-        public string ConnectionType { get; private set; }
-        public string IsBroadband { get; private set; }
-        public string IsCellular { get; private set; }
-        public string Mcc { get; private set; }
-        
-        // Security & Anonymity
-        public string IsHosted { get; private set; }
-        public string IsProxy { get; private set; }
-        public string IsVPN { get; private set; }
-        public string IsTor { get; private set; }
-        public string IsPublicRouter { get; private set; }
-        public string HumanProbability { get; private set; }
         public string InputIpAddress { get; set; }
+        
+        // Dynamic properties list
+        public List<PropertyData> Properties { get; private set; }
 
         public IFlowData FlowData { get; private set; }
 
@@ -118,64 +82,369 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
 
             // Get the results of IP Intelligence.
             var ipiData = FlowData.Get<IIpIntelligenceData>();
-            // Use helper functions to get a human-readable string representation of various
-            // property values. These helpers handle situations such as the property missing
-            // due to using a lite data file or the property not having a value because
-            // IP intelligence didn't find a match.
             
-            // Geographic Location Properties
-            Country = ipiData.TryGetValue(d => d.Country.GetHumanReadable());
-            CountryCode = ipiData.TryGetValue(d => d.CountryCode.GetHumanReadable());
-            CountryCode3 = ipiData.TryGetValue(d => d.CountryCode3.GetHumanReadable());
-            ContinentName = ipiData.TryGetValue(d => d.ContinentName.GetHumanReadable());
-            ContinentCode2 = ipiData.TryGetValue(d => d.ContinentCode2.GetHumanReadable());
-            Region = ipiData.TryGetValue(d => d.Region.GetHumanReadable());
-            State = ipiData.TryGetValue(d => d.State.GetHumanReadable());
-            County = ipiData.TryGetValue(d => d.County.GetHumanReadable());
-            Town = ipiData.TryGetValue(d => d.Town.GetHumanReadable());
-            Suburb = ipiData.TryGetValue(d => d.Suburb.GetHumanReadable());
-            ZipCode = ipiData.TryGetValue(d => d.ZipCode.GetHumanReadable());
-            Latitude = ipiData.TryGetValue(d => d.Latitude.GetHumanReadable());
-            Longitude = ipiData.TryGetValue(d => d.Longitude.GetHumanReadable());
-            Areas = ipiData.TryGetValue(d => d.Areas.GetHumanReadable());
-            AccuracyRadiusMax = ipiData.TryGetValue(d => d.AccuracyRadiusMax.GetHumanReadable());
-            AccuracyRadiusMin = ipiData.TryGetValue(d => d.AccuracyRadiusMin.GetHumanReadable());
-            LocationConfidence = ipiData.TryGetValue(d => d.LocationConfidence.GetHumanReadable());
+            // Initialize the properties list
+            Properties = new List<PropertyData>();
             
-            // Regional Information
-            IsEu = FormatBoolProperty(ipiData.IsEu);
-            CurrencyCode = ipiData.TryGetValue(d => d.CurrencyCode.GetHumanReadable());
-            DialCode = FormatIntProperty(ipiData.DialCode);
-            LanguageCode = ipiData.TryGetValue(d => d.LanguageCode.GetHumanReadable());
+            // Get all properties dynamically from metadata and populate them the same way as original code
+            foreach (var component in Engine.Components)
+            {
+                foreach (var property in component.Properties)
+                {
+                    // Skip properties that are not available in the current data file
+                    if (!property.Available)
+                        continue;
+                    
+                    string propertyValue = GetPropertyValue(ipiData, property);
+                    
+                    // Debug: If we still see wrapper types in the result, catch them here
+                    if (propertyValue != null && propertyValue.Contains("WeightedUTF8StringListSwigWrapper"))
+                    {
+                        propertyValue = $"DEBUG MAIN - Property {property.Name} returned wrapper: {propertyValue}";
+                    }
+                    
+                    // Add to the properties list
+                    Properties.Add(new PropertyData
+                    {
+                        Name = property.Name,
+                        Value = propertyValue,
+                        Category = property.Category ?? "Other",
+                        Component = component.Name,
+                        Description = property.Description
+                    });
+                    
+                    // Keep special properties for map functionality
+                    if (property.Name == "Latitude")
+                        Latitude = propertyValue;
+                    else if (property.Name == "Longitude")
+                        Longitude = propertyValue;
+                    else if (property.Name == "Areas")
+                        Areas = propertyValue;
+                }
+            }
             
-            // Time Zone
-            TimeZoneIana = ipiData.TryGetValue(d => d.TimeZoneIana.GetHumanReadable());
-            TimeZoneOffset = ipiData.TryGetValue(d => d.TimeZoneOffset.GetHumanReadable());
+            // Sort properties by component and then by display order or name
+            Properties = Properties
+                .OrderBy(p => p.Component)
+                .ThenBy(p => p.Category)
+                .ThenBy(p => p.Name)
+                .ToList();
+        }
+        
+        private string GetPropertyValue(IIpIntelligenceData ipiData, IFiftyOneAspectPropertyMetaData property)
+        {
+            try
+            {
+                // Switch based on the property type from metadata
+                if (property.Type == typeof(string))
+                {
+                    return GetStringPropertyValue(ipiData, property.Name);
+                }
+                else if (property.Type == typeof(bool))
+                {
+                    return GetWeightedPropertyValue(ipiData, property.Name, property.Type);
+                }
+                else if (property.Type == typeof(int))
+                {
+                    return GetWeightedPropertyValue(ipiData, property.Name, property.Type);
+                }
+                else if (property.Type == typeof(double) || property.Type == typeof(float))
+                {
+                    return GetWeightedPropertyValue(ipiData, property.Name, property.Type);
+                }
+                else if (property.Type == typeof(System.Net.IPAddress))
+                {
+                    return GetWeightedPropertyValue(ipiData, property.Name, property.Type);
+                }
+                else
+                {
+                    return GetStringPropertyValue(ipiData, property.Name);
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"Error: {ex.Message}";
+            }
+        }
+        
+        private string GetStringPropertyValue(IIpIntelligenceData ipiData, string propertyName)
+        {
+            try
+            {
+                // Generic approach - get the property and handle it appropriately
+                var propInfo = ipiData.GetType().GetProperty(propertyName);
+                if (propInfo != null)
+                {
+                    var value = propInfo.GetValue(ipiData);
+                    if (value != null)
+                    {
+                        var valueType = value.GetType();
+                        var fullTypeName = valueType.FullName;
+                        var typeName = valueType.Name;
+                        
+                        // Check if this is an AspectPropertyValue containing a SWIG wrapper
+                        if (typeName.StartsWith("AspectPropertyValue") && value.ToString().Contains("SwigWrapper"))
+                        {
+                            return FormatWeightedProperty(value);
+                        }
+                        
+                        // Check if this is a wrapper type that needs special handling
+                        if (fullTypeName.Contains("SwigWrapper") || fullTypeName.Contains("Wrapper"))
+                        {
+                            return FormatWeightedProperty(value);
+                        }
+                        
+                        // Try GetHumanReadable first for normal string properties
+                        var getHumanReadableMethod = valueType.GetMethod("GetHumanReadable");
+                        if (getHumanReadableMethod != null)
+                        {
+                            return (string)getHumanReadableMethod.Invoke(value, null) ?? "Unknown";
+                        }
+                        
+                        return value.ToString();
+                    }
+                }
+                return "Unknown";
+            }
+            catch
+            {
+                return "Unknown";
+            }
+        }
+        
+        private string GetWeightedPropertyValue(IIpIntelligenceData ipiData, string propertyName, Type propertyType)
+        {
+            try
+            {
+                var propInfo = ipiData.GetType().GetProperty(propertyName);
+                if (propInfo != null)
+                {
+                    var value = propInfo.GetValue(ipiData);
+                    if (value != null)
+                    {
+                        var valueType = value.GetType();
+                        
+                        // Use the property type from metadata to determine the formatter
+                        if (propertyType == typeof(bool))
+                        {
+                            return FormatBoolProperty(value as IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>>);
+                        }
+                        else if (propertyType == typeof(int))
+                        {
+                            return FormatIntProperty(value as IAspectPropertyValue<IReadOnlyList<IWeightedValue<int>>>);
+                        }
+                        else if (propertyType == typeof(System.Net.IPAddress))
+                        {
+                            return FormatIPAddressProperty(value as IAspectPropertyValue<IReadOnlyList<IWeightedValue<System.Net.IPAddress>>>);
+                        }
+                        else if (propertyType == typeof(float))
+                        {
+                            return FormatFloatProperty(value as IAspectPropertyValue<IReadOnlyList<IWeightedValue<float>>>);
+                        }
+                        else
+                        {
+                            // Fallback to generic weighted property formatting
+                            return FormatWeightedProperty(value);
+                        }
+                    }
+                }
+                return "Unknown";
+            }
+            catch 
+            {
+                return "Unknown";
+            }
+        }
+        
+        private string FormatWeightedProperty(object value)
+        {
+            // Handle different types of wrapper values
+            var valueType = value.GetType();
+            var typeName = valueType.Name;
+            var fullTypeName = valueType.FullName;
             
-            // Network Registration
-            Name = ipiData.TryGetValue(d => d.RegisteredName.GetHumanReadable());
-            RegisteredOwner = ipiData.TryGetValue(d => d.RegisteredOwner.GetHumanReadable());
-            RegisteredCountry = ipiData.TryGetValue(d => d.RegisteredCountry.GetHumanReadable());
-            IpRangeStart = ipiData.TryGetValue(d => d.IpRangeStart.GetHumanReadable());
-            IpRangeEnd = ipiData.TryGetValue(d => d.IpRangeEnd.GetHumanReadable());
+            // Handle AspectPropertyValue containing string weighted values ONLY if it contains SWIG wrapper
+            if (typeName.StartsWith("AspectPropertyValue") && 
+                fullTypeName.Contains("IReadOnlyList") && 
+                fullTypeName.Contains("IWeightedValue") && 
+                fullTypeName.Contains("String") &&
+                value.ToString().Contains("SwigWrapper"))
+            {
+                // This is AspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>
+                try
+                {
+                    var hasValueProp = valueType.GetProperty("HasValue");
+                    var hasValue = hasValueProp != null ? (bool)hasValueProp.GetValue(value) : true;
+                    
+                    if (!hasValue)
+                    {
+                        var noValueProp = valueType.GetProperty("NoValueMessage");
+                        var noValueMsg = noValueProp?.GetValue(value)?.ToString() ?? "No value available";
+                        return $"Unknown ({noValueMsg})";
+                    }
+                    
+                    var valueProp = valueType.GetProperty("Value");
+                    if (valueProp != null)
+                    {
+                        var innerValue = valueProp.GetValue(value);
+                        if (innerValue == null)
+                        {
+                            return "Unknown (No inner value)";
+                        }
+                        
+                        if (innerValue is System.Collections.IEnumerable enumerable)
+                        {
+                            var results = new List<string>();
+                            int itemCount = 0;
+                            foreach (var wv in enumerable)
+                            {
+                                itemCount++;
+                                if (wv == null)
+                                {
+                                    results.Add("null");
+                                    continue;
+                                }
+                                
+                                var wvType = wv.GetType();
+                                var weightingProperty = wvType.GetProperty("RawWeighting");
+                                var valueProperty = wvType.GetProperty("Value");
+                                
+                                if (weightingProperty != null && valueProperty != null)
+                                {
+                                    try
+                                    {
+                                        var rawWeight = (ushort)weightingProperty.GetValue(wv);
+                                        var weight = rawWeight / (float)ushort.MaxValue;
+                                        var val = valueProperty.GetValue(wv);
+                                        
+                                        // If weight is 1.0, just show the value, otherwise show weight
+                                        if (Math.Abs(weight - 1.0f) < 0.0001f)
+                                        {
+                                            results.Add(val?.ToString() ?? "null");
+                                        }
+                                        else
+                                        {
+                                            results.Add($"({val} @ {weight:F4})");
+                                        }
+                                    }
+                                    catch (Exception itemEx)
+                                    {
+                                        results.Add($"Error: {itemEx.Message}");
+                                    }
+                                }
+                                else
+                                {
+                                    results.Add("Unknown (Missing properties)");
+                                }
+                            }
+                            
+                            return results.Count > 0 ? 
+                                string.Join(", ", results) : 
+                                "No values";
+                        }
+                        else
+                        {
+                            return $"Unknown (Not enumerable)";
+                        }
+                    }
+                    else
+                    {
+                        return "Unknown (No Value property)";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return $"Error extracting weighted string: {ex.Message}";
+                }
+            }
             
-            // ASN Information
-            AsnName = ipiData.TryGetValue(d => d.AsnName.GetHumanReadable());
-            AsnNumber = ipiData.TryGetValue(d => d.AsnNumber.GetHumanReadable());
+            // ALWAYS show debug info for WeightedUTF8StringListSwigWrapper to see what's available
+            if (value.ToString().Contains("WeightedUTF8StringListSwigWrapper"))
+            {
+                try
+                {
+                    var allMethods = valueType.GetMethods().Where(m => m.IsPublic && !m.IsSpecialName).Select(m => m.Name).Distinct().ToArray();
+                    var allProperties = valueType.GetProperties().Where(p => p.CanRead).Select(p => p.Name).ToArray();
+                    
+                    // Return debug info to see what's available
+                    return $"DEBUG FORMAT - Methods: [{string.Join(", ", allMethods)}] Properties: [{string.Join(", ", allProperties)}] Type: {fullTypeName}";
+                }
+                catch (Exception ex)
+                {
+                    return $"DEBUG FORMAT - Failed to inspect {fullTypeName}: {ex.Message}";
+                }
+            }
             
-            // Connection Type
-            ConnectionType = ipiData.TryGetValue(d => d.ConnectionType.GetHumanReadable());
-            IsBroadband = FormatBoolProperty(ipiData.IsBroadband);
-            IsCellular = FormatBoolProperty(ipiData.IsCellular);
-            Mcc = ipiData.TryGetValue(d => d.Mcc.GetHumanReadable());
+            // If it's any other wrapper type, show basic debug info
+            if (fullTypeName.Contains("Wrapper") || fullTypeName.Contains("Swig"))
+            {
+                return $"DEBUG FORMAT OTHER - Type: {fullTypeName}, Name: {typeName}";
+            }
             
-            // Security & Anonymity
-            IsHosted = FormatBoolProperty(ipiData.IsHosted);
-            IsProxy = FormatBoolProperty(ipiData.IsProxy);
-            IsVPN = FormatBoolProperty(ipiData.IsVPN);
-            IsTor = FormatBoolProperty(ipiData.IsTor);
-            IsPublicRouter = FormatBoolProperty(ipiData.IsPublicRouter);
-            HumanProbability = FormatIntProperty(ipiData.HumanProbability);
+            // Check if this is an AspectPropertyValue type
+            if (valueType.IsGenericType && valueType.GetGenericTypeDefinition().Name.StartsWith("AspectPropertyValue"))
+            {
+                // Check if it has a value
+                var hasValueProp = valueType.GetProperty("HasValue");
+                if (hasValueProp != null && !(bool)hasValueProp.GetValue(value))
+                {
+                    var noValueProp = valueType.GetProperty("NoValueMessage");
+                    if (noValueProp != null)
+                    {
+                        return noValueProp.GetValue(value)?.ToString() ?? "Unknown";
+                    }
+                    return "Unknown";
+                }
+                
+                // Get the inner value
+                var valueProp = valueType.GetProperty("Value");
+                if (valueProp != null)
+                {
+                    var innerValue = valueProp.GetValue(value);
+                    if (innerValue != null)
+                    {
+                        // Handle IReadOnlyList<IWeightedValue<T>>
+                        if (typeof(System.Collections.IEnumerable).IsAssignableFrom(innerValue.GetType()) && 
+                            innerValue.GetType().IsGenericType)
+                        {
+                            var weightedValues = innerValue as System.Collections.IEnumerable;
+                            var results = new List<string>();
+                            
+                            foreach (var wv in weightedValues)
+                            {
+                                var wvType = wv.GetType();
+                                var weightingMethod = wvType.GetMethod("Weighting");
+                                var valueProperty = wvType.GetProperty("Value");
+                                
+                                if (weightingMethod != null && valueProperty != null)
+                                {
+                                    var weight = (float)weightingMethod.Invoke(wv, null);
+                                    var val = valueProperty.GetValue(wv);
+                                    
+                                    // If weight is 1.0, just show the value, otherwise show weight
+                                    if (Math.Abs(weight - 1.0f) < 0.0001f)
+                                    {
+                                        results.Add(val?.ToString() ?? "");
+                                    }
+                                    else
+                                    {
+                                        results.Add($"({val} @ {weight:F4})");
+                                    }
+                                }
+                            }
+                            
+                            return results.Count > 0 ? string.Join(", ", results) : "Unknown";
+                        }
+                        else
+                        {
+                            // Simple value
+                            return innerValue.ToString();
+                        }
+                    }
+                }
+            }
+            
+            return value?.ToString() ?? "Unknown";
         }
 
         private string FormatBoolProperty(IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>> property)
@@ -210,6 +479,42 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
             {
                 var values = property.Value.Select(x => 
                     Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString() : $"({x.Value} @ {x.Weighting():F4})");
+                return string.Join(", ", values);
+            }
+        }
+
+        private string FormatIPAddressProperty(IAspectPropertyValue<IReadOnlyList<IWeightedValue<System.Net.IPAddress>>> property)
+        {
+            if (!property.HasValue)
+            {
+                return property.NoValueMessage;
+            }
+            else if (property.Value.Count == 1 && property.Value[0].Weighting() == 1.0f)
+            {
+                return property.Value[0].Value.ToString();
+            }
+            else
+            {
+                var values = property.Value.Select(x => 
+                    Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString() : $"({x.Value} @ {x.Weighting():F4})");
+                return string.Join(", ", values);
+            }
+        }
+
+        private string FormatFloatProperty(IAspectPropertyValue<IReadOnlyList<IWeightedValue<float>>> property)
+        {
+            if (!property.HasValue)
+            {
+                return property.NoValueMessage;
+            }
+            else if (property.Value.Count == 1 && property.Value[0].Weighting() == 1.0f)
+            {
+                return property.Value[0].Value.ToString("F6");
+            }
+            else
+            {
+                var values = property.Value.Select(x => 
+                    Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString("F6") : $"({x.Value:F6} @ {x.Weighting():F4})");
                 return string.Join(", ", values);
             }
         }

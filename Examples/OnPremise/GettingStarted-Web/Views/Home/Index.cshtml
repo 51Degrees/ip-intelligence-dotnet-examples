@@ -124,107 +124,27 @@
         The following values are determined by IP Intelligence analysis:
     </p>
     
-    <!-- Geographic Location Section -->
-    <h4>Geographic Location</h4>
+    <!-- All Properties in Single Table -->
     <table>
         <tr>
+            <th>Component</th>
+            <th>Category</th>
             <th>Property</th>
             <th>Value</th>
         </tr>
-        <tr class="lightyellow"><td><b>Country:</b></td><td>@Model.Country</td></tr>
-        <tr class="lightgreen"><td><b>Country Code:</b></td><td>@Model.CountryCode</td></tr>
-        <tr class="lightyellow"><td><b>Country Code 3:</b></td><td>@Model.CountryCode3</td></tr>
-        <tr class="lightgreen"><td><b>Continent Name:</b></td><td>@Model.ContinentName</td></tr>
-        <tr class="lightyellow"><td><b>Continent Code:</b></td><td>@Model.ContinentCode2</td></tr>
-        <tr class="lightgreen"><td><b>Region:</b></td><td>@Model.Region</td></tr>
-        <tr class="lightyellow"><td><b>State:</b></td><td>@Model.State</td></tr>
-        <tr class="lightgreen"><td><b>County:</b></td><td>@Model.County</td></tr>
-        <tr class="lightyellow"><td><b>Town:</b></td><td>@Model.Town</td></tr>
-        <tr class="lightgreen"><td><b>Suburb:</b></td><td>@Model.Suburb</td></tr>
-        <tr class="lightyellow"><td><b>Zip Code:</b></td><td>@Model.ZipCode</td></tr>
-        <tr class="lightgreen"><td><b>Latitude:</b></td><td>@Model.Latitude</td></tr>
-        <tr class="lightyellow"><td><b>Longitude:</b></td><td>@Model.Longitude</td></tr>
-        <tr class="lightgreen"><td><b>Areas:</b></td><td>@Model.Areas</td></tr>
-        <tr class="lightyellow"><td><b>Accuracy Radius Max:</b></td><td>@Model.AccuracyRadiusMax</td></tr>
-        <tr class="lightgreen"><td><b>Accuracy Radius Min:</b></td><td>@Model.AccuracyRadiusMin</td></tr>
-        <tr class="lightyellow"><td><b>Location Confidence:</b></td><td>@Model.LocationConfidence</td></tr>
-    </table>
-
-    <!-- Regional Information Section -->
-    <h4>Regional Information</h4>
-    <table>
-        <tr>
-            <th>Property</th>
-            <th>Value</th>
-        </tr>
-        <tr class="lightgreen"><td><b>Is EU:</b></td><td>@Model.IsEu</td></tr>
-        <tr class="lightyellow"><td><b>Currency Code:</b></td><td>@Model.CurrencyCode</td></tr>
-        <tr class="lightgreen"><td><b>Dial Code:</b></td><td>@Model.DialCode</td></tr>
-        <tr class="lightyellow"><td><b>Language Code:</b></td><td>@Model.LanguageCode</td></tr>
-    </table>
-
-    <!-- Time Zone Section -->
-    <h4>Time Zone</h4>
-    <table>
-        <tr>
-            <th>Property</th>
-            <th>Value</th>
-        </tr>
-        <tr class="lightgreen"><td><b>Time Zone IANA:</b></td><td>@Model.TimeZoneIana</td></tr>
-        <tr class="lightyellow"><td><b>Time Zone Offset:</b></td><td>@Model.TimeZoneOffset</td></tr>
-    </table>
-
-    <!-- Network Registration Section -->
-    <h4>Network Registration</h4>
-    <table>
-        <tr>
-            <th>Property</th>
-            <th>Value</th>
-        </tr>
-        <tr class="lightgreen"><td><b>Registered Name:</b></td><td>@Model.Name</td></tr>
-        <tr class="lightyellow"><td><b>Registered Owner:</b></td><td>@Model.RegisteredOwner</td></tr>
-        <tr class="lightgreen"><td><b>Registered Country:</b></td><td>@Model.RegisteredCountry</td></tr>
-        <tr class="lightyellow"><td><b>IP Range Start:</b></td><td>@Model.IpRangeStart</td></tr>
-        <tr class="lightgreen"><td><b>IP Range End:</b></td><td>@Model.IpRangeEnd</td></tr>
-    </table>
-
-    <!-- ASN Information Section -->
-    <h4>ASN Information</h4>
-    <table>
-        <tr>
-            <th>Property</th>
-            <th>Value</th>
-        </tr>
-        <tr class="lightyellow"><td><b>ASN Name:</b></td><td>@Model.AsnName</td></tr>
-        <tr class="lightgreen"><td><b>ASN Number:</b></td><td>@Model.AsnNumber</td></tr>
-    </table>
-
-    <!-- Connection Type Section -->
-    <h4>Connection Type</h4>
-    <table>
-        <tr>
-            <th>Property</th>
-            <th>Value</th>
-        </tr>
-        <tr class="lightgreen"><td><b>Connection Type:</b></td><td>@Model.ConnectionType</td></tr>
-        <tr class="lightyellow"><td><b>Is Broadband:</b></td><td>@Model.IsBroadband</td></tr>
-        <tr class="lightgreen"><td><b>Is Cellular:</b></td><td>@Model.IsCellular</td></tr>
-        <tr class="lightyellow"><td><b>MCC:</b></td><td>@Model.Mcc</td></tr>
-    </table>
-
-    <!-- Security & Anonymity Section -->
-    <h4>Security & Anonymity</h4>
-    <table>
-        <tr>
-            <th>Property</th>
-            <th>Value</th>
-        </tr>
-        <tr class="lightgreen"><td><b>Is Hosted:</b></td><td>@Model.IsHosted</td></tr>
-        <tr class="lightyellow"><td><b>Is Proxy:</b></td><td>@Model.IsProxy</td></tr>
-        <tr class="lightgreen"><td><b>Is VPN:</b></td><td>@Model.IsVPN</td></tr>
-        <tr class="lightyellow"><td><b>Is Tor:</b></td><td>@Model.IsTor</td></tr>
-        <tr class="lightgreen"><td><b>Is Public Router:</b></td><td>@Model.IsPublicRouter</td></tr>
-        <tr class="lightyellow"><td><b>Human Probability:</b></td><td>@Model.HumanProbability</td></tr>
+        @{
+            int rowIndex = 0;
+        }
+        @foreach (var property in Model.Properties)
+        {
+            <tr class="@(rowIndex % 2 == 0 ? "lightyellow" : "lightgreen")">
+                <td><b>@property.Component</b></td>
+                <td><b>@property.Category</b></td>
+                <td><b>@property.Name</b></td>
+                <td title="@property.Description">@property.Value</td>
+            </tr>
+            rowIndex++;
+        }
     </table>
     <br />
 
