@@ -8,6 +8,14 @@
     <Configurations>Debug;Release;CoreRelease;CoreDebug</Configurations>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
+  
+  <!-- Generate build timestamp file during build -->
+  <Target Name="GenerateBuildTimestamp" BeforeTargets="Build">
+    <PropertyGroup>
+      <BuildTimestamp>$([System.DateTime]::UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC"))</BuildTimestamp>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(ProjectDir)wwwroot/build-timestamp.txt" Lines="$(BuildTimestamp)" Overwrite="true" />
+  </Target>
 
   <ItemGroup>
     <Content Remove="appsettings.json" />

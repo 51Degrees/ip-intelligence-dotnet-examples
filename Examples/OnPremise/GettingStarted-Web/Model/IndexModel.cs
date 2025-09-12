@@ -47,6 +47,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
         public string Longitude { get; private set; }
         public string Areas { get; private set; }
         public string InputIpAddress { get; set; }
+        public string BuildTimestamp { get; set; }
         
         // Dynamic properties list
         public List<PropertyData> Properties { get; private set; }

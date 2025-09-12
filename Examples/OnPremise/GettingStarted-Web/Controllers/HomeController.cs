@@ -28,6 +28,7 @@ using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
 using System.Net;
 using System.Linq;
+using System.IO;
 
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controllers
 {
@@ -83,6 +84,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
                     
                     var model = new IndexModel(flowData, Response.Headers);
                     model.InputIpAddress = targetIp;
+                    model.BuildTimestamp = GetBuildTimestamp();
                     return View(model);
                 }
             }
@@ -101,6 +103,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
                     
                     var model = new IndexModel(flowData, Response.Headers);
                     model.InputIpAddress = visitorIp;
+                    model.BuildTimestamp = GetBuildTimestamp();
                     return View(model);
                 }
             }
@@ -145,6 +148,16 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
             }
             
             return ipAddress;
+        }
+        
+        private string GetBuildTimestamp()
+        {
+            var timestampPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "build-timestamp.txt");
+            if (System.IO.File.Exists(timestampPath))
+            {
+                return System.IO.File.ReadAllText(timestampPath).Trim();
+            }
+            return "Unknown";
         }
     }
 }
