@@ -166,26 +166,13 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
                 .SelectMany(x => x is IAspectEngine eng ? [eng] : (IEnumerable<IAspectEngine>)[])
                 .Select(eng => new KeyValuePair<string, ProductMetaData>(eng.ElementDataKey, new ProductMetaData
                 {
-                    Properties = GetEngineProperties(eng).ToList(),
+                    Properties = eng!.Properties.Select(prop => new PropertyMetaData(prop)).ToList(),
                 })));
 
             return Results.Json(new
             {
                 Products = products,
             });
-        }
-
-        private static IEnumerable<PropertyMetaData> GetEngineProperties(IAspectEngine aspectEngine)
-        {
-            if (aspectEngine is IpiOnPremiseEngine ipiEngine)
-            {
-                return ipiEngine.Components.SelectMany(comp
-                    => comp.Properties.Select(prop => new PropertyMetaData(prop)
-                    {
-                        Category = comp.Name
-                    }));
-            }
-            return aspectEngine.Properties.Select(prop => new PropertyMetaData(prop));
         }
 
         private static IResult EvidenceKeys(string? resource, HttpContext httpContext, IPipeline pipeline)
