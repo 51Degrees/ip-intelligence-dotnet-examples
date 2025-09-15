@@ -85,6 +85,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
                     var model = new IndexModel(flowData, Response.Headers);
                     model.InputIpAddress = targetIp;
                     model.BuildTimestamp = GetBuildTimestamp();
+                    model.DataFileDate = model.DataFile.DataPublishedDateTime.ToString("yyyy-MM-dd HH:mm:ss UTC");
                     return View(model);
                 }
             }
@@ -104,6 +105,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
                     var model = new IndexModel(flowData, Response.Headers);
                     model.InputIpAddress = visitorIp;
                     model.BuildTimestamp = GetBuildTimestamp();
+                    model.DataFileDate = model.DataFile.DataPublishedDateTime.ToString("yyyy-MM-dd HH:mm:ss UTC");
                     return View(model);
                 }
             }
