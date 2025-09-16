@@ -32,11 +32,6 @@ namespace FiftyOne.IpIntelligence.Examples
         public const string ENTERPRISE_IPI_DATA_FILE_NAME = "51Degrees-EnterpriseIpiV41.ipi";
 
         /// <summary>
-        /// The default name of the free 'lite' IP Intelligence data file.
-        /// </summary>
-        public const string LITE_IPI_DATA_FILE_NAME = "51Degrees-LiteV41.ipi";
-
-        /// <summary>
         /// Name of the file to use for the test evidence.
         /// </summary>
         public const string YAML_EVIDENCE_FILE_NAME = "evidence.yml";

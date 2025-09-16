@@ -194,7 +194,7 @@
                 </tr>
                 <tr class="lightyellow">
                     <td><b>Accuracy Radius:</b></td>
-                    <td>@(Model.IpData?.AccuracyRadius?.HasValue == true ? string.Join(", ", Model.IpData.AccuracyRadius.Value.Select(v => v.Value.ToString())) : "Unknown")</td>
+                    <td>@(Model.IpData?.AccuracyRadiusMin?.HasValue == true ? string.Join(", ", Model.IpData.AccuracyRadiusMin.Value.Select(v => v.Value.ToString())) : "Unknown")</td>
                 </tr>
                 <tr class="lightgreen">
                     <td><b>Time Zone Offset:</b></td>

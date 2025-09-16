@@ -94,7 +94,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model
             Latitude = ipiData.TryGetValue(d => d.Latitude.GetHumanReadable());
             Longitude = ipiData.TryGetValue(d => d.Longitude.GetHumanReadable());
             Areas = ipiData.TryGetValue(d => d.Areas.GetHumanReadable());
-            AccuracyRadius = ipiData.TryGetValue(d => d.AccuracyRadius.GetHumanReadable());
+            AccuracyRadius = ipiData.TryGetValue(d => d.AccuracyRadiusMin.GetHumanReadable());
             TimeZoneOffset = ipiData.TryGetValue(d => d.TimeZoneOffset.GetHumanReadable());
         }
     }

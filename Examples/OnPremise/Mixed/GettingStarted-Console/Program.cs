@@ -214,7 +214,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedConsole
                 OutputWeightedStringProperty("Registered Country", ipData.RegisteredCountry, message);
                 OutputWeightedIPAddressValues("IP Range Start", ipData.IpRangeStart, message);
                 OutputWeightedIPAddressValues("IP Range End", ipData.IpRangeEnd, message);
-                OutputWeightedIntValues("Accuracy Radius", ipData.AccuracyRadius, message);
+                OutputWeightedIntValues("Accuracy Radius", ipData.AccuracyRadiusMin, message);
                 OutputWeightedIntValues("Time Zone Offset", ipData.TimeZoneOffset, message);
             }
 
