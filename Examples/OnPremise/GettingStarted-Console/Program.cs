@@ -92,7 +92,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     .SetProperty("Latitude")
                     .SetProperty("Longitude")
                     .SetProperty("Areas")
-                    .SetProperty("AccuracyRadius")
+                    .SetProperty("AccuracyRadiusMin")
                     .SetProperty("TimeZoneOffset")
                     .Build())
                 {
