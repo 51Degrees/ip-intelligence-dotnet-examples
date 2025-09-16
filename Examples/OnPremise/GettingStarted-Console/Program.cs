@@ -160,7 +160,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     OutputWeightedFloatValues(nameof(ipData.Latitude), ipData.Latitude, message);
                     OutputWeightedFloatValues(nameof(ipData.Longitude), ipData.Longitude, message);
                     OutputListProperty(nameof(ipData.Areas), ipData.Areas, message);
-                    OutputWeightedIntValues(nameof(ipData.AccuracyRadius), ipData.AccuracyRadius, message);
+                    OutputWeightedIntValues(nameof(ipData.AccuracyRadiusMin), ipData.AccuracyRadiusMin, message);
                     OutputWeightedIntValues(nameof(ipData.TimeZoneOffset), ipData.TimeZoneOffset, message);
                     output.WriteLine(message.ToString());
                 }
