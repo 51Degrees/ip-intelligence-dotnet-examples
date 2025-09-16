@@ -65,7 +65,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             if (string.IsNullOrWhiteSpace(_dataFile))
             {
                 _dataFile = ExampleUtils.FindFile(
-                    Constants.LITE_IPI_DATA_FILE_NAME);
+                    Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
             }
 
             // Write data file path for debugging

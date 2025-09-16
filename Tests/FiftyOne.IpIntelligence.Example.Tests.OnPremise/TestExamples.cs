@@ -66,7 +66,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise
             if (string.IsNullOrWhiteSpace(DataFile))
             {
                 DataFile = ExampleUtils.FindFile(
-                    Constants.LITE_IPI_DATA_FILE_NAME);
+                    Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
             }
 
             File.WriteAllText($"{nameof(TestExamples)}_DataFileName.txt", DataFile);
