@@ -18,7 +18,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.152" />
+    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.153" />
     <PackageReference Include="FiftyOne.Pipeline.CloudRequestEngine" Version="4.5.0-alpha.38" />
     <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.38" />
     <PackageReference Include="FiftyOne.Pipeline.JsonBuilder" Version="4.5.0-alpha.38" />
