@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>51Degrees MiniCloud API - Info</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #d32f2f;
+        }
+        .info-box {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .info-item {
+            margin: 10px 0;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+        .value {
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <h1>51Degrees MiniCloud API</h1>
+    <div class="info-box">
+        <h2>Build Information</h2>
+        <div class="info-item">
+            <span class="label">Build Timestamp:</span>
+            <span class="value">{{BUILD_TIMESTAMP}}</span>
+        </div>
+        <div class="info-item">
+            <span class="label">Data File Date:</span>
+            <span class="value">{{DATA_FILE_DATE}}</span>
+        </div>
+        <div class="info-item">
+            <span class="label">Data File Tier:</span>
+            <span class="value">{{DATA_FILE_TIER}}</span>
+        </div>
+    </div>
+    <div class="info-box">
+        <h2>Available Endpoints</h2>
+        <ul>
+            <li><a href="/accessibleproperties">/accessibleproperties</a> - List all accessible properties</li>
+            <li><a href="/evidencekeys">/evidencekeys</a> - List all evidence keys</li>
+            <li><a href="/json">/json</a> - Process evidence and return JSON results</li>
+        </ul>
+    </div>
+</body>
+</html>

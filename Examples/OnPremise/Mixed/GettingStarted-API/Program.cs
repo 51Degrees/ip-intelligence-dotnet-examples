@@ -81,6 +81,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             app.UseHttpsRedirection();
             app.UseAuthorization();
 
+            app.MapGet("/info", ServeInfoPage).WithName(nameof(ServeInfoPage));
+
             app.Map("/accessibleproperties", AccessibleProperties).WithName(nameof(AccessibleProperties));
             app.Map("/accessibleproperties/{resource}", AccessibleProperties).WithName(nameof(AccessibleProperties) + "WithResource");
 
@@ -96,6 +98,36 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             app.Services.GetService<IPipeline>();
             
             app.Run();
+        }
+
+        private static IResult ServeInfoPage(IPipeline pipeline)
+        {
+            var ipiEngine = pipeline.GetElement<IpiOnPremiseEngine>();
+            var dataFile = ipiEngine.DataFiles[0];
+
+            var buildTimestamp = GetBuildTimestamp();
+            var dataFileDate = dataFile.DataPublishedDateTime.ToString("yyyy-MM-dd HH:mm:ss UTC");
+
+            // Read the HTML template file
+            var htmlTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "info.html");
+            var html = File.ReadAllText(htmlTemplatePath);
+
+            // Replace placeholders with actual values
+            html = html.Replace("{{BUILD_TIMESTAMP}}", buildTimestamp)
+                       .Replace("{{DATA_FILE_DATE}}", dataFileDate)
+                       .Replace("{{DATA_FILE_TIER}}", ipiEngine.DataSourceTier);
+
+            return Results.Content(html, "text/html");
+        }
+
+        private static string GetBuildTimestamp()
+        {
+            var timestampPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "build-timestamp.txt");
+            if (File.Exists(timestampPath))
+            {
+                return File.ReadAllText(timestampPath).Trim();
+            }
+            return "Unknown";
         }
 
         private static async Task GetDataFile(

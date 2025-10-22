@@ -16,7 +16,7 @@
         "BuilderName": "IpiOnPremiseEngineBuilder",
         "BuildParameters": {
           //Make sure this data file is in the ip-intelligence-data directory
-          "DataFile": "51Degrees-EnterpriseIpiV41-AllProperties.ipi",
+          "DataFile": "51Degrees-EnterpriseIpiV41.ipi",
           "CreateTempDataCopy": false,
           "AutoUpdate": false,
           "PerformanceProfile": "LowMemory"

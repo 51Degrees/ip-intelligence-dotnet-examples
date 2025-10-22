@@ -19,4 +19,14 @@
     <ProjectReference Include="..\..\..\FiftyOne.IpIntelligence.Examples.OnPremise\FiftyOne.IpIntelligence.Examples.OnPremise.csproj" />
   </ItemGroup>
 
+  <Target Name="GenerateBuildTimestamp" BeforeTargets="Build">
+    <PropertyGroup>
+      <BuildTimestamp>$([System.DateTime]::UtcNow.ToString(yyyy-MM-dd HH:mm:ss UTC))</BuildTimestamp>
+      <TimestampOutputPath>$(MSBuildProjectDirectory)\wwwroot\build-timestamp.txt</TimestampOutputPath>
+    </PropertyGroup>
+    <MakeDir Directories="$(MSBuildProjectDirectory)\wwwroot" Condition="!Exists('$(MSBuildProjectDirectory)\wwwroot')" />
+    <WriteLinesToFile File="$(TimestampOutputPath)" Lines="$(BuildTimestamp)" Overwrite="true" />
+    <Message Text="Generated build timestamp: $(BuildTimestamp)" Importance="high" />
+  </Target>
+
 </Project>

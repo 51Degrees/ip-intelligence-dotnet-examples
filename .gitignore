@@ -335,3 +335,6 @@ FiftyOne.IpIntelligence/FiftyOne.IpIntelligence.Hash.Engine.OnPremise/FiftyOne.I
 
 # docs
 4.1/*
+
+# Auto-generated build timestamp
+**/wwwroot/build-timestamp.txt
