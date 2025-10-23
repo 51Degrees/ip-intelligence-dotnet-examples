@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ip-intelligence-dotnet\FiftyOne.IpIntelligence\FiftyOne.IpIntelligence.csproj" />
-    <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.31" />
+    <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.38" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
