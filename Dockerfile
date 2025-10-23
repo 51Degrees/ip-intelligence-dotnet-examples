@@ -48,7 +48,7 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # Copy the IP Intelligence data file directly to the final image
-COPY ip-intelligence-data/51Degrees-EnterpriseIpiV41-AllProperties.ipi /app/data/51Degrees-EnterpriseIpiV41-AllProperties.ipi
+COPY ip-intelligence-data/51Degrees-EnterpriseIpiV41.ipi /app/data/51Degrees-EnterpriseIpiV41.ipi
 
 EXPOSE 5225
 

@@ -21,8 +21,8 @@ jobs:
       - name: Create data directory and fetch assets
         run: |
           mkdir -p ip-intelligence-data
-          wget -q -O ip-intelligence-data/51Degrees-EnterpriseIpiV41-AllProperties.ipi.gz '${{ secrets.IPI_DATA_FILE_URL }}'
-          gunzip ip-intelligence-data/51Degrees-EnterpriseIpiV41-AllProperties.ipi.gz
+          wget -q -O ip-intelligence-data/51Degrees-EnterpriseIpiV41.ipi.gz '${{ secrets.IPI_DATA_FILE_URL }}'
+          gunzip ip-intelligence-data/51Degrees-EnterpriseIpiV41.ipi.gz
       - name: Build
         run: |
           printf -v tag '%s-%(%y%m%dT%H%M)T' "$BASE_VERSION" -1
