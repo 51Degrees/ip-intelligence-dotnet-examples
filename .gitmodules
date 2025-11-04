@@ -1,7 +1,3 @@
 [submodule "ip-intelligence-data"]
 	path = ip-intelligence-data
 	url = ../ip-intelligence-data
-[submodule "Examples/ip-intelligence-dotnet"]
-	path = Examples/ip-intelligence-dotnet
-	url = ../ip-intelligence-dotnet
-	branch = allproperties
