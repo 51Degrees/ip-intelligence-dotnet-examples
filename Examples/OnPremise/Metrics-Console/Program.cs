@@ -628,14 +628,14 @@ public class Program
                 // Set to only return from processing the properties needed.
                 .SetProperties(
                     KeyFactory.Keys.Concat(AreaIndex.Properties).ToList())
+                // Optimize for the expected parallel workload.
+                .SetConcurrency((ushort)Environment.ProcessorCount)
                 .Build(dataFile, false);
             using var pipeline = new PipelineBuilder(loggerFactory)
                 .AddFlowElement(ipiEngine)
                 .SetAutoDisposeElements(false)
                 .Build();
             var logger = loggerFactory.CreateLogger<Example>();
-
-            logger.LogInformation("Server GC: '{0}'", GCSettings.IsServerGC);
 
             // Create the data set structure to rapidly retrieve the data
             // needed to calculate the metrics and to determine the valid
