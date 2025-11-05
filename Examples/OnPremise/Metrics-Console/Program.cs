@@ -108,6 +108,36 @@ public static class Extensions
     }
 
     /// <summary>
+    /// Increments the IP address in the buffer by 1.
+    /// </summary>
+    /// <param name="buffer">The IP address bytes to increment</param>
+    /// <returns>True if successful, false if overflow (address was max value)</returns>
+    public static bool TryGetNextAddress(Span<byte> buffer)
+    {
+        for (int i = buffer.Length - 1; i >= 0; i--)
+        {
+            if (buffer[i] < byte.MaxValue)
+            {
+                buffer[i]++;
+                return true;
+            }
+            buffer[i] = 0;
+        }
+        return false; // Overflow
+    }
+
+    /// <summary>
+    /// Compares two IP addresses represented as byte spans.
+    /// </summary>
+    /// <param name="a">First IP address bytes</param>
+    /// <param name="b">Second IP address bytes</param>
+    /// <returns>True if they are equal</returns>
+    public static bool IpEquals(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
+    {
+        return a.SequenceEqual(b);
+    }
+
+    /// <summary>
     /// Get the next address after this one.
     /// </summary>
     /// <param name="ip"></param>
@@ -634,6 +664,17 @@ public class Program
                 .Build();
             var logger = loggerFactory.CreateLogger<Example>();
 
+            // Log data file information
+            var dataFilePublishDate = ipiEngine.DataFiles[0].DataPublishedDateTime;
+            var dataFileTier = ipiEngine.DataSourceTier;
+            logger.LogInformation(
+                "Using data file: {0} (tier: {1}, published: {2:yyyy-MM-dd})",
+                dataFile,
+                dataFileTier,
+                dataFilePublishDate);
+
+            logger.LogInformation("Server GC: '{0}'", GCSettings.IsServerGC);
+
             // Create the data set structure to rapidly retrieve the data
             // needed to calculate the metrics and to determine the valid
             // IP ranges.
@@ -839,6 +880,11 @@ public class Program
         {
             var random = new Random();
             var groups = new Dictionary<string, Metric>();
+
+            // Allocate buffers outside the loop to avoid stack overflow warnings
+            Span<byte> ipBuffer = stackalloc byte[16]; // Max size for IPv6
+            Span<byte> endBuffer = stackalloc byte[16];
+
             while (ranges.IsCompleted == false &&
                 stoppingToken.IsCancellationRequested == false)
             {
@@ -846,13 +892,26 @@ public class Program
                 {
                     if (ranges.TryTake(out var range, -1, stoppingToken))
                     {
-                        var ip = IPAddress.Parse(range.Item1);
-                        var end = IPAddress.Parse(range.Item2);
-                        while (IPAddress.Equals(end, ip) == false &&
+                        var startIp = IPAddress.Parse(range.Item1);
+                        var endIp = IPAddress.Parse(range.Item2);
+
+                        // Determine buffer size based on address family
+                        int bufferSize = startIp.AddressFamily == AddressFamily.InterNetwork ? 4 : 16;
+
+                        // Get the relevant slice of the buffer for this address family
+                        var currentIpBuffer = ipBuffer.Slice(0, bufferSize);
+                        var currentEndBuffer = endBuffer.Slice(0, bufferSize);
+
+                        startIp.TryWriteBytes(currentIpBuffer, out _);
+                        endIp.TryWriteBytes(currentEndBuffer, out _);
+
+                        while (!Extensions.IpEquals(currentIpBuffer, currentEndBuffer) &&
                             stoppingToken.IsCancellationRequested == false)
                         {
                             if (random.NextDouble() <= samplePercentage)
                             {
+                                // Only allocate IPAddress object when we actually need to process it
+                                var ip = new IPAddress(currentIpBuffer);
                                 ProcessIp(
                                     pipeline, 
                                     dataSet, 
@@ -861,7 +920,10 @@ public class Program
                                     ip);
                                 consumer.Count++;
                             }
-                            ip = ip.GetNextAddress();
+
+                            // Increment to next IP address (operates on stack buffer, no allocation)
+                            if (!Extensions.TryGetNextAddress(currentIpBuffer))
+                                break; // Overflow, reached maximum IP
                         }
                     }
                 }
@@ -937,11 +999,19 @@ public class Program
 
         File.WriteAllText("Metrics_DataFileName.txt", configuration.DataFile);
 
-        // Configure a logger to output to the console.
-        configuration.LoggerFactory = LoggerFactory.Create(b => b.AddConsole());
-        
+        // Configure a logger to output to the console with timestamps.
+        configuration.LoggerFactory = LoggerFactory.Create(b =>
+            b.AddSimpleConsole(options =>
+            {
+                options.IncludeScopes = false;
+                options.SingleLine = true;
+                options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
+            }));
+        var logger = configuration.LoggerFactory.CreateLogger<Program>();
+
         if (configuration.DataFile != null)
         {
+            logger.LogInformation($"Found IPI data file: {configuration.DataFile}");
             using var output = File.CreateText(outputFile);
             configuration.Output = output;
             var builder = Host.CreateApplicationBuilder([]);
@@ -952,7 +1022,6 @@ public class Program
         }
         else
         {
-            var logger = configuration.LoggerFactory.CreateLogger<Program>();
             logger.LogError("Failed to find a IP Intelligence data file. Make sure the " +
                 "ip-intelligence-data submodule has been updated by running " +
                 "`git submodule update --recursive`. By default, the 'lite' file included " +
