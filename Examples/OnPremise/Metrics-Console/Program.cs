@@ -44,6 +44,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using System.Net.Sockets;
+using System.Diagnostics;
 
 /// <summary>
 /// @example OnPremise/Metrics-Console/Program.cs
@@ -71,7 +73,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metrics;
 
 public static class Extensions
 {
-    public static IEnumerable<(IPAddress, IPAddress)> 
+    public static IEnumerable<(string, string)> 
         ValidRanges(this IpiOnPremiseEngine engine)
     {
         var network = engine.Components.Single(i =>
@@ -85,10 +87,11 @@ public static class Extensions
             {
                 yield return range;
             }
+            profile.Dispose();
         }
     }
 
-    private static (IPAddress, IPAddress) GetRange(
+    private static (string, string) GetRange(
         IComponentMetaData network,
         IProfileMetaData profile)
     {
@@ -98,6 +101,13 @@ public static class Extensions
             return GetRange(profile);
         }
         return default;
+    }
+
+    private static (string, string) GetRange(IProfileMetaData profile)
+    {
+        var start = profile.GetValues("IpRangeStart").Single();
+        var end = profile.GetValues("IpRangeEnd").Single();
+        return new(start.Name, end.Name);
     }
 
     /// <summary>
@@ -173,13 +183,6 @@ public static class Extensions
 
         return result;
     }
-
-    private static (IPAddress, IPAddress) GetRange(IProfileMetaData profile)
-    {
-        var start = profile.GetValues("IpRangeStart").Single();
-        var end = profile.GetValues("IpRangeEnd").Single();
-        return new(IPAddress.Parse(start.Name), IPAddress.Parse(end.Name));
-    }
 }
 
 public class Program
@@ -189,13 +192,28 @@ public class Program
     /// </summary>
     private static readonly TimeSpan _logBuild = TimeSpan.FromSeconds(30);
 
+    /// <summary>
+    /// The percentage of registered IP addresses to randomly include in the
+    /// metrics sample. 1 is 100%. Higher values will result in longer elapsed
+    /// processing.
+    /// </summary>
+    private const double DEFAULT_SAMPLE_PERCENTAGE = 0.1;
+
+    public class Counter
+    {
+        public int Value = 1;
+    }
+
     public class Metric
     {
         /// <summary>
         /// Properties for the fields returned in the ToString method.
         /// </summary>
-        public static readonly string[] Properties = 
-            ["IpCount", "AverageAreaKm", "EquivalentRadiusKm"];
+        public static readonly string[] Properties = [
+            "IpCount",
+            "AverageAreaKm",
+            "EquivalentRadiusKm",
+            "AveragePolygons"];
 
         /// <summary>
         /// The total area in km squared of all IPs.
@@ -216,18 +234,61 @@ public class Program
         /// Average area in km squared for the IPs, or 0 if there is no area
         /// available.
         /// </summary>
-        public long AverageAreaKm => 
+        public long AverageAreaKm =>
             AreaCount > 0 ? TotalAreaKm / AreaCount : 0;
 
         /// <summary>
         /// The radius that a circle would need to so that it covered the same
         /// area as the <see cref="AverageAreaKm"/>.
         /// </summary>
-        public int EquivalentRadiusKm => 
+        public int EquivalentRadiusKm =>
             (int)Math.Sqrt((double)AverageAreaKm / Math.PI);
 
-        public override string ToString() => 
-            $"{IpCount},{AverageAreaKm},{EquivalentRadiusKm}";
+        /// <summary>
+        /// Key is the number of areas, and the value the number of IPs that
+        /// contain the areas.
+        /// </summary>
+        public IReadOnlyDictionary<int, int> Polygons =>
+            _polygons.ToDictionary(k => k.Key, v => v.Value.Value);
+        private Dictionary<int, Counter> _polygons = new();
+
+        /// <summary>
+        /// Average number of polygons for the metric.
+        /// </summary>
+        public double AveragePolygons
+        {
+            get
+            {
+                if (Polygons.Count == 0)
+                {
+                    return 0;
+                }
+                var weightedSum = Polygons.Sum(i => i.Key * i.Value);
+                var total = Polygons.Sum(i => i.Value);
+                return (double)weightedSum / (double)total;
+            }
+        }
+
+        public override string ToString() =>
+            $"{IpCount},{AverageAreaKm},{EquivalentRadiusKm},"+
+            $"{AveragePolygons.ToString("0.##")}";
+
+        /// <summary>
+        /// Increase the count of IP addresses with the number of polygons
+        /// provided.
+        /// </summary>
+        /// <param name="polygons"></param>
+        public void IncrementPolygons(int polygons)
+        {
+            if (_polygons.TryGetValue(polygons, out var counter))
+            {
+                counter.Value++;
+            }
+            else
+            {
+                _polygons.Add(polygons, new Counter());
+            }
+        }
 
         /// <summary>
         /// Merge the other metric instance with this one.
@@ -238,6 +299,17 @@ public class Program
             IpCount += other.IpCount;
             AreaCount += other.AreaCount;
             TotalAreaKm += other.TotalAreaKm;
+            foreach(var pair in other._polygons)
+            {
+                if (_polygons.TryGetValue(pair.Key, out var counter))
+                {
+                    counter.Value += pair.Value.Value;
+                }
+                else
+                {
+                    _polygons.Add(pair.Key, pair.Value);
+                }
+            }
         }
     }
 
@@ -312,9 +384,9 @@ public class Program
 
         /// <summary>
         /// Dictionary that takes WKT value and returns the geographic area
-        /// in square kms.
+        /// in square kms and the number polygons that form the area.
         /// </summary>
-        public IReadOnlyDictionary<string, long> WktAreas;
+        public IReadOnlyDictionary<string, (int, int)> WktAreas;
 
         public AreaIndex(
             IFiftyOneAspectPropertyMetaData property,
@@ -324,12 +396,12 @@ public class Program
             WktAreas = BuildWktAreas(property, logger, stoppingToken);
         }
 
-        private static IReadOnlyDictionary<string, long> BuildWktAreas(
+        private static IReadOnlyDictionary<string, (int, int)> BuildWktAreas(
             IFiftyOneAspectPropertyMetaData property,
             ILogger logger,
             CancellationToken stoppingToken)
         {
-            var wktAreas = new ConcurrentDictionary<string, long>();
+            var wktAreas = new ConcurrentDictionary<string, (int, int)>();
             var wktAreasTasks = new BlockingCollection<Task>(
                 Environment.ProcessorCount);
 
@@ -364,7 +436,7 @@ public class Program
         private static void AddAreas(
             IFiftyOneAspectPropertyMetaData property,
             ILogger logger,
-            ConcurrentDictionary<string, long> wktAreas,
+            ConcurrentDictionary<string, (int, int)> wktAreas,
             BlockingCollection<Task> wktAreasTasks,
             CancellationToken stoppingToken)
         {
@@ -377,7 +449,7 @@ public class Program
         }
 
         private static void AddAreas(
-            ConcurrentDictionary<string, long> areas,
+            ConcurrentDictionary<string, (int,int)> areas,
             string wkt,
             ILogger logger)
         {
@@ -388,14 +460,16 @@ public class Program
                     var geo = _wktReader.Read(wkt);
                     if (geo != null)
                     {
-                        return (long)Math.Round(GetAreas(geo));
+                        return (
+                            (int)Math.Round(GetAreas(geo)), 
+                            geo.NumGeometries);
                     }
                 }
                 catch (Exception ex)
                 {
                     logger.LogWarning(ex, wkt);
                 }
-                return 0L;
+                return (0,0);
             });
         }
 
@@ -461,20 +535,42 @@ public class Program
         }
     }
 
+    public class Configuration
+    {
+        /// <summary>
+        /// IPI data file.
+        /// </summary>
+        public string DataFile;
+
+        /// <summary>
+        /// Stream to write the output to.
+        /// </summary>
+        public StreamWriter Output;
+
+        /// <summary>
+        /// Sample of IP addresses to sample for the metrics.
+        /// </summary>
+        public double SamplePercentage;
+
+        /// <summary>
+        /// Logger factory for reporting progress.
+        /// </summary>
+        public ILoggerFactory LoggerFactory;
+    }
+
     public sealed class Worker(
         IHostApplicationLifetime hostApplicationLifetime,
-        string dataFile, 
-        ILoggerFactory loggerFactory, 
-        StreamWriter output) 
+        Configuration configuration) 
         : BackgroundService
     {
         protected override async Task ExecuteAsync(
             CancellationToken stoppingToken)
         {
             await new Example().Run(
-                dataFile,
-                loggerFactory, 
-                output, 
+                configuration.DataFile,
+                configuration.LoggerFactory, 
+                configuration.Output, 
+                configuration.SamplePercentage,
                 stoppingToken);
             hostApplicationLifetime.StopApplication();
         }
@@ -486,6 +582,7 @@ public class Program
             string dataFile, 
             ILoggerFactory loggerFactory,
             TextWriter output, 
+            double samplePercentage,
             CancellationToken stoppingToken)
         {
             // Ensure that batch latency mode is always enabled.
@@ -511,8 +608,12 @@ public class Program
                     KeyFactory.Keys.Concat(AreaIndex.Properties).ToList())
                 .Build(dataFile, false);
             using var pipeline = new PipelineBuilder(loggerFactory)
-                .AddFlowElement(ipiEngine).Build();
+                .AddFlowElement(ipiEngine)
+                .SetAutoDisposeElements(false)
+                .Build();
             var logger = loggerFactory.CreateLogger<Example>();
+
+            logger.LogInformation("Server GC: '{0}'", GCSettings.IsServerGC);
 
             // Create the data set structure to rapidly retrieve the data
             // needed to calculate the metrics and to determine the valid
@@ -534,65 +635,32 @@ public class Program
 
             // Create a collection of ranges to ensure that there are always
             // items available for the consumers.
-            var ranges = 
-                new BlockingCollection<(IPAddress, IPAddress)>(
+            var ranges =
+                new BlockingCollection<(string, string)>(
                 Environment.ProcessorCount);
-
-            // Start the consumers, they will be waiting for the producer to
-            // start.
-            var consumers = Enumerable.Range(
-                0, 
-                Environment.ProcessorCount).Select(_ =>
-                Task.Factory.StartNew(() =>
-                    ProcessRange(
-                        pipeline, 
-                        areaIndex, 
-                        factory, 
-                        ranges, 
-                        stoppingToken),
-                    TaskCreationOptions.LongRunning
-                )).ToArray();
+            var consumers = CreateConsumers(
+                samplePercentage,
+                pipeline, 
+                areaIndex, 
+                factory, 
+                ranges, 
+                stoppingToken);
             logger.LogInformation(
-                "Created '{0}' processors",
-                consumers.Length);
+                "Created '{0}' consumer processors sampling '{1:P2}' of IPs",
+                consumers.Length,
+                samplePercentage);
 
             // Use the main thread as the producer adding ranges for the
             // consumers to process.
-            var added = 0;
-            var nextLog = DateTime.UtcNow.Add(_logBuild);
-            foreach (var range in ipiEngine.ValidRanges().TakeWhile(
-                _ => stoppingToken.IsCancellationRequested == false))
-            {
-                try
-                {
-                    ranges.TryAdd(range, -1, stoppingToken);
-                    added++;
-                    if (DateTime.UtcNow >= nextLog)
-                    {
-                        logger.LogInformation(
-                            "Processed '{0}' ranges with '{1}' in queue, " +
-                            "most recent '{2}', and '{3}' consumers",
-                            added,
-                            ranges.Count,
-                            range.Item1,
-                            consumers.Count(i => i.IsCompleted == false));
-                        nextLog = DateTime.UtcNow.Add(_logBuild);
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    // Do nothing and exit as if the ranges had been fully
-                    // consumed.
-                }
-            }
-            ranges.CompleteAdding();
+            AddRanges(ipiEngine, logger, ranges, consumers, stoppingToken);
 
             // Combine all the consumer groups into the main groups.
             var groups = new Dictionary<string, Metric>();
-            foreach(var consumer in consumers)
+            foreach (var consumer in consumers)
             {
                 await consumer;
-                foreach(var group in consumer.Result)
+                logger.LogInformation("Finished consumer '{0}'", consumer.Id);
+                foreach (var group in consumer.Result)
                 {
                     if (groups.TryGetValue(group.Key, out var metric))
                     {
@@ -607,7 +675,7 @@ public class Program
 
             // Write out the headings as the first line.
             output.WriteLine(String.Join(
-                ",", 
+                ",",
                 KeyFactory.Keys.Concat(Metric.Properties)
                 .Select(i => "\"" + i + "\"")));
 
@@ -622,13 +690,112 @@ public class Program
                 loggerFactory.CreateLogger<Program>());
         }
 
+        /// <summary>
+        /// Create and start the consumers which will be waiting on the
+        /// producer to start.
+        /// </summary>
+        /// <param name="samplePercentage"></param>
+        /// <param name="pipeline"></param>
+        /// <param name="areaIndex"></param>
+        /// <param name="factory"></param>
+        /// <param name="ranges"></param>
+        /// <param name="stoppingToken"></param>
+        /// <returns></returns>
+        private static Task<IReadOnlyDictionary<string, Metric>>[] 
+            CreateConsumers(
+                double samplePercentage,
+                IPipeline pipeline,
+                AreaIndex areaIndex, 
+                KeyFactory factory,
+                BlockingCollection<(string, string)> ranges,
+                CancellationToken stoppingToken)
+        {
+            return Enumerable.Range(
+                0,
+                Environment.ProcessorCount).Select(_ =>
+                Task.Factory.StartNew(() =>
+                    ProcessRange(
+                        pipeline,
+                        areaIndex,
+                        factory,
+                        samplePercentage,
+                        ranges,
+                        stoppingToken),
+                    TaskCreationOptions.LongRunning
+                )).ToArray();
+        }
+
+        private static void AddRanges(
+            IpiOnPremiseEngine ipiEngine, 
+            ILogger<Example> logger, 
+            BlockingCollection<(string, string)> ranges, 
+            Task<IReadOnlyDictionary<string, Metric>>[] consumers, 
+            CancellationToken stoppingToken)
+        {
+            var process = Process.GetCurrentProcess();
+            var added = 0;
+            var lastLog = DateTime.UtcNow;
+            var nextLog = lastLog.Add(_logBuild);
+            var lastProcessorTime = process.TotalProcessorTime;
+            foreach (var range in ipiEngine.ValidRanges().TakeWhile(
+                _ => stoppingToken.IsCancellationRequested == false))
+            {
+                try
+                {
+                    ranges.TryAdd(range, -1, stoppingToken);
+                    added++;
+                    if (DateTime.UtcNow >= nextLog)
+                    {
+                        // Log the ranges and other telemetry.
+                        logger.LogInformation(
+                            "Processed '{0}' ranges with '{1}' in " +
+                            "queue, most recent '{2}', and '{3}' " +
+                            "consumers",
+                            added,
+                            ranges.Count,
+                            range.Item1,
+                            consumers.Count(i => i.IsCompleted == false));
+
+                        // The amount of CPU used is the processor time
+                        // difference divided by the wall clock time
+                        // difference.
+                        var cpu = 
+                            (process.TotalProcessorTime - lastProcessorTime) /
+                            (DateTime.UtcNow - lastLog);
+
+                        // Log the resource usage.
+                        logger.LogInformation(
+                            "'{0:F2}' processors used, '{1}' threads, " +
+                            "'{2}' handles, and '{3:N0}MB' memory used",
+                            cpu,
+                            process.Threads.Count,
+                            process.HandleCount,
+                            process.WorkingSet64 / 1000);
+
+                        lastLog = DateTime.UtcNow;
+                        nextLog = DateTime.UtcNow.Add(_logBuild);
+                        lastProcessorTime = process.TotalProcessorTime;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // Do nothing and exit as if the ranges had been fully
+                    // consumed.
+                }
+            }
+            ranges.CompleteAdding();
+            logger.LogInformation("Finished adding '{0}' ranges", added);
+        }
+
         private static IReadOnlyDictionary<string, Metric> ProcessRange(
             IPipeline pipeline, 
             AreaIndex dataSet, 
             KeyFactory factory, 
-            BlockingCollection<(IPAddress, IPAddress)> ranges,
+            double samplePercentage,
+            BlockingCollection<(string, string)> ranges,
             CancellationToken stoppingToken)
         {
+            var random = new Random();
             var groups = new Dictionary<string, Metric>();
             while (ranges.IsCompleted == false &&
                 stoppingToken.IsCancellationRequested == false)
@@ -637,12 +804,21 @@ public class Program
                 {
                     if (ranges.TryTake(out var range, -1, stoppingToken))
                     {
-                        var current = range.Item1;
-                        while (range.Item2.Equals(current) == false &&
+                        var ip = IPAddress.Parse(range.Item1);
+                        var end = IPAddress.Parse(range.Item2);
+                        while (IPAddress.Equals(end, ip) == false &&
                             stoppingToken.IsCancellationRequested == false)
                         {
-                            ProcessIp(pipeline, dataSet, groups, factory, current);
-                            current = current.GetNextAddress();
+                            if (random.NextDouble() <= samplePercentage)
+                            {
+                                ProcessIp(
+                                    pipeline, 
+                                    dataSet, 
+                                    groups, 
+                                    factory, 
+                                    ip);
+                            }
+                            ip = ip.GetNextAddress();
                         }
                     }
                 }
@@ -675,7 +851,7 @@ public class Program
                 groups.Add(key, metric);
             }
 
-            // Increase the number of IP address that relate to this key.
+            // Increase the number of IP addresses that relate to this key.
             metric.IpCount++;
 
             // Increase the total area and number of areas for the metric only
@@ -684,48 +860,56 @@ public class Program
             {
                 if (dataSet.WktAreas.TryGetValue(
                     area.Value,
-                    out var value) && value > 0)
+                    out var value) && value.Item1 > 0)
                 {
-                    metric.TotalAreaKm += value;
+                    metric.TotalAreaKm += value.Item1;
+                    metric.IncrementPolygons(value.Item2);
                     metric.AreaCount++;
                 }
             }
         }
-    }        
+    }
 
     static void Main(string[] args)
     {
+        var configuration = new Configuration();
+
         // Use the supplied path for the data file or find the lite file that is included
         // in the repository.
-        var dataFile = args.Length > 0 ? args[0] :
+        configuration.DataFile = args.Length > 0 ? args[0] :
             // In this example, by default, the 51degrees IP Intelligence data file needs to be somewhere in the
             // project space, or you may specify another file as a command line parameter.
             //
             // For testing, contact us to obtain an enterprise data file: https://51degrees.com/contact-us
             Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
-        // Finally, get the location for the output file. Use the same location as the
+        
+        // Get the location for the output file. Use the same location as the
         // evidence if a path is not supplied on the command line.
         var outputFile = args.Length > 1 ? args[1] : "metrics-output.csv";
 
-        File.WriteAllText("Metrics_DataFileName.txt", dataFile);
+        // Get the sample percentage or use the default.
+        configuration.SamplePercentage = args.Length > 2 ?
+            double.Parse(args[2]) : 
+            DEFAULT_SAMPLE_PERCENTAGE;
+
+        File.WriteAllText("Metrics_DataFileName.txt", configuration.DataFile);
 
         // Configure a logger to output to the console.
-        var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        configuration.LoggerFactory = LoggerFactory.Create(b => b.AddConsole());
         
-        if (dataFile != null)
+        if (configuration.DataFile != null)
         {
-            using var stream = File.CreateText(outputFile);
+            using var output = File.CreateText(outputFile);
+            configuration.Output = output;
             var builder = Host.CreateApplicationBuilder([]);
-            builder.Services.AddSingleton(dataFile);
-            builder.Services.AddSingleton(stream);
-            builder.Services.AddSingleton(loggerFactory);
+            builder.Services.AddSingleton(configuration);
             builder.Services.AddHostedService<Worker>();
             using var host = builder.Build();
             host.Run();
         }
         else
         {
-            var logger = loggerFactory.CreateLogger<Program>();
+            var logger = configuration.LoggerFactory.CreateLogger<Program>();
             logger.LogError("Failed to find a IP Intelligence data file. Make sure the " +
                 "ip-intelligence-data submodule has been updated by running " +
                 "`git submodule update --recursive`. By default, the 'lite' file included " +
@@ -734,6 +918,6 @@ public class Program
         }
 
         // Dispose the logger to ensure any messages get flushed
-        loggerFactory.Dispose();
+        configuration.LoggerFactory.Dispose();
     }
 }
