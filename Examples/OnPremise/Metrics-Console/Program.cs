@@ -348,6 +348,14 @@ public class Program
         /// <returns></returns>
         private static string GetValue(object obj)
         {
+            if (obj is IAspectPropertyValue<string>)
+            {
+                var value = obj as IAspectPropertyValue<string>;
+                if (value.HasValue)
+                {
+                    return value.Value;
+                }
+            }
             if (obj is IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>)
             {
                 var value = obj as 
@@ -368,6 +376,20 @@ public class Program
             }
             return "Missing";
         }
+    }
+
+    public class Consumer
+    {
+        /// <summary>
+        /// The task associated with the consumer.
+        /// </summary>
+        public Task<IReadOnlyDictionary<string, Metric>> Task;
+
+        /// <summary>
+        /// The number of IP pipeline processes that have been completed in
+        /// a given period of time. Used for logging during processing.
+        /// </summary>
+        public int Count;
     }
 
     public class AreaIndex
@@ -658,9 +680,11 @@ public class Program
             var groups = new Dictionary<string, Metric>();
             foreach (var consumer in consumers)
             {
-                await consumer;
-                logger.LogInformation("Finished consumer '{0}'", consumer.Id);
-                foreach (var group in consumer.Result)
+                await consumer.Task;
+                logger.LogInformation(
+                    "Finished consumer '{0}'", 
+                    consumer.Task.Id);
+                foreach (var group in consumer.Task.Result)
                 {
                     if (groups.TryGetValue(group.Key, out var metric))
                     {
@@ -701,7 +725,7 @@ public class Program
         /// <param name="ranges"></param>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        private static Task<IReadOnlyDictionary<string, Metric>>[] 
+        private static Consumer[] 
             CreateConsumers(
                 double samplePercentage,
                 IPipeline pipeline,
@@ -713,23 +737,27 @@ public class Program
             return Enumerable.Range(
                 0,
                 Environment.ProcessorCount).Select(_ =>
-                Task.Factory.StartNew(() =>
-                    ProcessRange(
-                        pipeline,
-                        areaIndex,
-                        factory,
-                        samplePercentage,
-                        ranges,
-                        stoppingToken),
-                    TaskCreationOptions.LongRunning
-                )).ToArray();
+                {
+                    var consumer = new Consumer();
+                    consumer.Task = Task.Factory.StartNew(() =>
+                        ProcessRange(
+                            pipeline,
+                            areaIndex,
+                            factory,
+                            samplePercentage,
+                            ranges,
+                            consumer,
+                            stoppingToken),
+                        TaskCreationOptions.LongRunning);
+                    return consumer;
+                }).ToArray();
         }
 
         private static void AddRanges(
             IpiOnPremiseEngine ipiEngine, 
             ILogger<Example> logger, 
             BlockingCollection<(string, string)> ranges, 
-            Task<IReadOnlyDictionary<string, Metric>>[] consumers, 
+            Consumer[] consumers, 
             CancellationToken stoppingToken)
         {
             var process = Process.GetCurrentProcess();
@@ -754,24 +782,40 @@ public class Program
                             added,
                             ranges.Count,
                             range.Item1,
-                            consumers.Count(i => i.IsCompleted == false));
+                            consumers.Count(i => i.Task.IsCompleted == false));
+
+                        // Get the elapsed time since last logged.
+                        var elapsed = DateTime.UtcNow - lastLog;
 
                         // The amount of CPU used is the processor time
                         // difference divided by the wall clock time
                         // difference.
                         var cpu = 
                             (process.TotalProcessorTime - lastProcessorTime) /
-                            (DateTime.UtcNow - lastLog);
+                            elapsed;
+
+                        // Work out the number of queries per second.
+                        var total = consumers.Sum(i => i.Count);
+                        var qps = total / elapsed.TotalSeconds;
 
                         // Log the resource usage.
                         logger.LogInformation(
-                            "'{0:F2}' processors used, '{1}' threads, " +
-                            "'{2}' handles, and '{3:N0}MB' memory used",
+                            "'{0:F2}' processors used, '{1:N0} qps, " +
+                            "'{2}' threads, '{3}' handles, and '{4:N0}MB' " +
+                            "memory used",
                             cpu,
-                            process.Threads.Count,
+                            qps, 
+                            process.Threads.Count,                            
                             process.HandleCount,
                             process.WorkingSet64 / 1000);
 
+                        // Reset the count of queries to IPI.
+                        foreach (var consumer in consumers)
+                        {
+                            consumer.Count = 0;
+                        }
+
+                        // Reset the other logging parameters.
                         lastLog = DateTime.UtcNow;
                         nextLog = DateTime.UtcNow.Add(_logBuild);
                         lastProcessorTime = process.TotalProcessorTime;
@@ -793,6 +837,7 @@ public class Program
             KeyFactory factory, 
             double samplePercentage,
             BlockingCollection<(string, string)> ranges,
+            Consumer consumer,
             CancellationToken stoppingToken)
         {
             var random = new Random();
@@ -817,6 +862,7 @@ public class Program
                                     groups, 
                                     factory, 
                                     ip);
+                                consumer.Count++;
                             }
                             ip = ip.GetNextAddress();
                         }
