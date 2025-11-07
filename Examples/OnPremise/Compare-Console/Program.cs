@@ -23,6 +23,7 @@
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
+using Examples.OnPremise.Areas;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
@@ -32,6 +33,7 @@ using GeoCoordinatePortable;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NetTopologySuite.Algorithm;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -40,6 +42,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -103,6 +106,11 @@ public class Program
         public string Ip { get; set; }
 
         /// <summary>
+        /// The version of the IP address.
+        /// </summary>
+        public string AddressFamily { get; set; }
+
+        /// <summary>
         /// The continent associated with the latitude and longitude.
         /// </summary>
         public string Continent { get; set; }
@@ -139,6 +147,18 @@ public class Program
         /// of the device and the latitude and longitude from the service.
         /// </summary>
         public double DistanceKms { get; set; }
+
+        /// <summary>
+        /// The area in square kilometers that the IP address is likely to be
+        /// found within.
+        /// </summary>
+        public int SquareKms { get; set; }
+
+        /// <summary>
+        /// The number of non overlapping areas that the IP address might be
+        /// located in.
+        /// </summary>
+        public int Geometries { get; set; }
     }
 
     public class Output(Truth truth, Result result)
@@ -233,6 +253,7 @@ public class Program
                 .SetProperty("Latitude")
                 .SetProperty("Longitude")
                 .SetProperty("LocationConfidence")
+                .SetProperty("Areas")
                 // Optimize for the expected parallel workload.
                 .SetConcurrency((ushort)Environment.ProcessorCount)
                 .Build(dataFile, false);
@@ -435,24 +456,34 @@ public class Program
             flowData.Process();
             var data = flowData.Get<IIpIntelligenceData>();
 
-            // Get the latitude and longitude from the service.
-            var latitude = GetValue(data.Latitude);
-            var longitude = GetValue(data.Longitude);
+            // Set the address family of the source truth does not provide it.
+            if (String.IsNullOrEmpty(truth.AddressFamily))
+            {
+                truth.AddressFamily = IPAddress.Parse(truth.Ip)
+                    .AddressFamily.ToString();
+            }
 
             // Get the truth and result as points.
             var truthPoint = new GeoCoordinate(
                 truth.Latitude, 
                 truth.Longitude);
-            var resultPoint = new GeoCoordinate(latitude, longitude);
+            var resultPoint = new GeoCoordinate(
+                GetValue(data.Latitude), 
+                GetValue(data.Longitude));
+
+            // Get the area.
+            var area = Calculations.GetAreas(GetValue(data.Areas));
 
             // Return the result including the latitude, longitude, and
             // distance in kilometers between the result and the truth.
             return new Result()
             {
-                Latitude = latitude,
-                Longitude = longitude,
+                Latitude = resultPoint.Latitude,
+                Longitude = resultPoint.Longitude,
                 Confidence = GetValue(data.LocationConfidence),
-                DistanceKms = truthPoint.GetDistanceTo(resultPoint) / 1000
+                DistanceKms = truthPoint.GetDistanceTo(resultPoint) / 1000,
+                SquareKms = area.SquareKms,
+                Geometries = area.Geometries
             };
         }
 

@@ -20,6 +20,7 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+using Examples.OnPremise.Areas;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
@@ -30,7 +31,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NetTopologySuite.Geometries;
-using NetTopologySuite.IO;
 using ProjNet.CoordinateSystems;
 using ProjNet.CoordinateSystems.Transformations;
 using System;
@@ -428,16 +428,11 @@ public class Program
         /// </summary>
         public static readonly string[] Properties = ["Areas"];
 
-        private static readonly WKTReader _wktReader = new();
-
-        private static readonly CoordinateTransformationFactory
-            _transformFactory = new();
-
         /// <summary>
         /// Dictionary that takes WKT value and returns the geographic area
         /// in square kms and the number polygons that form the area.
         /// </summary>
-        public IReadOnlyDictionary<string, (int, int)> WktAreas;
+        public IReadOnlyDictionary<string, Result> WktAreas;
 
         public AreaIndex(
             IFiftyOneAspectPropertyMetaData property,
@@ -447,19 +442,18 @@ public class Program
             WktAreas = BuildWktAreas(property, logger, stoppingToken);
         }
 
-        private static IReadOnlyDictionary<string, (int, int)> BuildWktAreas(
+        private static IReadOnlyDictionary<string, Result> BuildWktAreas(
             IFiftyOneAspectPropertyMetaData property,
             ILogger logger,
             CancellationToken stoppingToken)
         {
-            var wktAreas = new ConcurrentDictionary<string, (int, int)>();
+            var wktAreas = new ConcurrentDictionary<string, Result>();
             var wktAreasTasks = new BlockingCollection<Task>(
                 Environment.ProcessorCount);
 
             var producer = Task.Run(() =>
                 AddAreas(
                     property,
-                    logger,
                     wktAreas,
                     wktAreasTasks,
                     stoppingToken),
@@ -486,103 +480,23 @@ public class Program
 
         private static void AddAreas(
             IFiftyOneAspectPropertyMetaData property,
-            ILogger logger,
-            ConcurrentDictionary<string, (int, int)> wktAreas,
+            ConcurrentDictionary<string, Result> wktAreas,
             BlockingCollection<Task> wktAreasTasks,
             CancellationToken stoppingToken)
         {
             foreach (var area in property.GetValues())
             {
                 wktAreasTasks.TryAdd(Task.Run(() =>
-                    AddAreas(wktAreas, area.Name, logger)), -1, stoppingToken);
+                    AddAreas(wktAreas, area.Name)), -1, stoppingToken);
             }
             wktAreasTasks.CompleteAdding();
         }
 
         private static void AddAreas(
-            ConcurrentDictionary<string, (int, int)> areas,
-            string wkt,
-            ILogger logger)
+            ConcurrentDictionary<string, Result> areas,
+            string wkt)
         {
-            areas.GetOrAdd(wkt, (_) =>
-            {
-                try
-                {
-                    var geo = _wktReader.Read(wkt);
-                    if (geo != null)
-                    {
-                        return (
-                            (int)Math.Round(GetAreas(geo)),
-                            geo.NumGeometries);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, wkt);
-                }
-                return (0, 0);
-            });
-        }
-
-        private static double GetAreas(Geometry geo)
-        {
-            var area = 0.0;
-            if (geo.NumGeometries > 0)
-            {
-                for (var i = 0; i < geo.NumGeometries; i++)
-                {
-                    area += GetArea(geo.GetGeometryN(i));
-                }
-            }
-            else
-            {
-                area += GetArea(geo);
-            }
-            return area;
-        }
-
-        private static double GetArea(Geometry geo)
-        {
-            // Create UTM projected coordinate system for a specific zone
-            // (e.g., Zone 30N for London)
-            var utmZone = (int)Math.Floor((geo.InteriorPoint.X + 180) / 6) + 1;
-            var isNorthernHemisphere = geo.InteriorPoint.Y >= 0;
-
-            // Create a coordinate transformation
-            var transform = _transformFactory.CreateFromCoordinateSystems(
-                // Define the source (WGS84) and target (Projected) coordinate
-                // systems
-                GeographicCoordinateSystem.WGS84,
-                // Adjust UTM zone and hemisphere as needed
-                ProjectedCoordinateSystem.WGS84_UTM(
-                    utmZone,
-                    isNorthernHemisphere));
-
-            // Re-project the polygon to the UTM coordinate system
-            var transformedPolygon = TransformGeometry(
-                geo,
-                transform.MathTransform);
-
-            // Calculate area in square meters and convert to square kilometers
-            return transformedPolygon.Area / 1_000_000;
-        }
-
-        private static Geometry TransformGeometry(
-            Geometry geometry,
-            MathTransform transform)
-        {
-            var factory = geometry.Factory;
-            var coordinates = geometry.Coordinates;
-
-            for (int i = 0; i < coordinates.Length; i++)
-            {
-                var transformed =
-                    transform.Transform([coordinates[i].X, coordinates[i].Y]);
-                coordinates[i].X = transformed[0];
-                coordinates[i].Y = transformed[1];
-            }
-
-            return factory.CreateGeometry(geometry);
+            areas.GetOrAdd(wkt, (_) => Calculations.GetAreas(wkt));
         }
     }
 
@@ -999,10 +913,10 @@ public class Program
             {
                 if (dataSet.WktAreas.TryGetValue(
                     area.Value,
-                    out var value) && value.Item1 > 0)
+                    out var value) && value != null)
                 {
-                    metric.TotalAreaKm += value.Item1;
-                    metric.IncrementPolygons(value.Item2);
+                    metric.TotalAreaKm += value.SquareKms;
+                    metric.IncrementPolygons(value.Geometries);
                     metric.AreaCount++;
                 }
             }
