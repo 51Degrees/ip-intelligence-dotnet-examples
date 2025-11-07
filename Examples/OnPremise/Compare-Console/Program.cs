@@ -20,38 +20,29 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+using CsvHelper;
+using CsvHelper.Configuration;
+using CsvHelper.Configuration.Attributes;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines;
 using FiftyOne.Pipeline.Engines.Data;
-using FiftyOne.Pipeline.Engines.FiftyOne.Data;
+using GeoCoordinatePortable;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NetTopologySuite.Geometries;
-using NetTopologySuite.IO;
-using NetTopologySuite.Operation.Union;
-using ProjNet.CoordinateSystems;
-using ProjNet.CoordinateSystems.Transformations;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Data;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Runtime;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using System.Net.Sockets;
-using System.Diagnostics;
-using System.Data;
-using CsvHelper;
-using System.Globalization;
-using CsvHelper.Configuration;
-using GeoCoordinatePortable;
-using CsvHelper.Configuration.Attributes;
 
 /// <summary>
 /// @example OnPremise/Metrics-Console/Program.cs
@@ -336,13 +327,17 @@ public class Program
             var lastLog = DateTime.UtcNow;
             var nextLog = lastLog.Add(_logBuild);
             var lastProcessorTime = process.TotalProcessorTime;
+            var ips = new HashSet<string>();
             foreach (var item in source.GetRecords<Truth>().TakeWhile(
                 _ => stoppingToken.IsCancellationRequested == false))
             {
                 try
                 {
-                    truth.TryAdd(item, -1, stoppingToken);
-                    added++;
+                    if (ips.Contains(item.Ip) == false)
+                    {
+                        truth.TryAdd(item, -1, stoppingToken);
+                        ips.Add(item.Ip);
+                    }
                     if (DateTime.UtcNow >= nextLog)
                     {
                         // Log the ranges and other telemetry.
