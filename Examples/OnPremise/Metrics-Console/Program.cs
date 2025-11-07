@@ -376,33 +376,34 @@ public class Program
         /// <returns></returns>
         private static string GetValue(object obj)
         {
+            var result = "Missing";
             if (obj is IAspectPropertyValue<string>)
             {
                 var value = obj as IAspectPropertyValue<string>;
                 if (value.HasValue)
                 {
-                    return value.Value;
+                    result = value.Value;
                 }
             }
-            if (obj is IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>)
+            else if (obj is IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>)
             {
                 var value = obj as
                     IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>;
                 if (value.HasValue && value.Value.Count == 1)
                 {
-                    return value.Value[0].Value;
+                    result = value.Value[0].Value;
                 }
             }
-            if (obj is IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>>)
+            else if (obj is IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>>)
             {
                 var value = obj as
                     IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>>;
                 if (value.HasValue && value.Value.Count == 1)
                 {
-                    return value.Value[0].Value.ToString();
+                    result = value.Value[0].Value.ToString();
                 }
             }
-            return "Missing";
+            return result;
         }
     }
 
@@ -813,51 +814,15 @@ public class Program
                     added++;
                     if (DateTime.UtcNow >= nextLog)
                     {
-                        // Log the ranges and other telemetry.
-                        logger.LogInformation(
-                            "Processed '{0}' ranges with '{1}' in " +
-                            "queue, most recent '{2}', and '{3}' " +
-                            "consumers",
-                            added,
-                            ranges.Count,
-                            range.Item1,
-                            consumers.Count(i => i.Task.IsCompleted == false));
-
-                        // Get the elapsed time since last logged.
-                        var elapsed = DateTime.UtcNow - lastLog;
-
-                        // The amount of CPU used is the processor time
-                        // difference divided by the wall clock time
-                        // difference.
-                        var cpu =
-                            (process.TotalProcessorTime - lastProcessorTime) /
-                            elapsed;
-
-                        // Work out the number of queries per second.
-                        var total = consumers.Sum(i => i.Count);
-                        var qps = total / elapsed.TotalSeconds;
-
-                        // Log the resource usage.
-                        logger.LogInformation(
-                            "'{0:F2}' processors used, '{1:N0} qps, " +
-                            "'{2}' threads, '{3}' handles, and '{4:N0}MB' " +
-                            "memory used",
-                            cpu,
-                            qps,
-                            process.Threads.Count,
-                            process.HandleCount,
-                            process.WorkingSet64 / 1000);
-
-                        // Reset the count of queries to IPI.
-                        foreach (var consumer in consumers)
-                        {
-                            consumer.Count = 0;
-                        }
-
-                        // Reset the other logging parameters.
-                        lastLog = DateTime.UtcNow;
-                        nextLog = DateTime.UtcNow.Add(_logBuild);
-                        lastProcessorTime = process.TotalProcessorTime;
+                        nextLog = Log(
+                            logger, 
+                            ranges, 
+                            consumers, 
+                            process, 
+                            added, 
+                            ref lastLog,
+                            ref lastProcessorTime, 
+                            range);
                     }
                 }
                 catch (OperationCanceledException)
@@ -868,6 +833,63 @@ public class Program
             }
             ranges.CompleteAdding();
             logger.LogInformation("Finished adding '{0}' ranges", added);
+        }
+
+        private static DateTime Log(
+            ILogger<Example> logger,
+            BlockingCollection<(string, string)> ranges,
+            Consumer[] consumers, 
+            Process process, 
+            int added, 
+            ref DateTime lastLog, 
+            ref TimeSpan lastProcessorTime, 
+            (string, string) range)
+        {
+            // Log the ranges and other telemetry.
+            logger.LogInformation(
+                "Processed '{0}' ranges with '{1}' in " +
+                "queue, most recent '{2}', and '{3}' " +
+                "consumers",
+                added,
+                ranges.Count,
+                range.Item1,
+                consumers.Count(i => i.Task.IsCompleted == false));
+
+            // Get the elapsed time since last logged.
+            var elapsed = DateTime.UtcNow - lastLog;
+
+            // The amount of CPU used is the processor time
+            // difference divided by the wall clock time
+            // difference.
+            var cpu =
+                (process.TotalProcessorTime - lastProcessorTime) /
+                elapsed;
+
+            // Work out the number of queries per second.
+            var total = consumers.Sum(i => i.Count);
+            var qps = total / elapsed.TotalSeconds;
+
+            // Log the resource usage.
+            logger.LogInformation(
+                "'{0:F2}' processors used, '{1:N0} qps, " +
+                "'{2}' threads, '{3}' handles, and '{4:N0}MB' " +
+                "memory used",
+                cpu,
+                qps,
+                process.Threads.Count,
+                process.HandleCount,
+                process.WorkingSet64 / 1000);
+
+            // Reset the count of queries to IPI.
+            foreach (var consumer in consumers)
+            {
+                consumer.Count = 0;
+            }
+
+            // Reset the other logging parameters.
+            lastLog = DateTime.UtcNow;
+            lastProcessorTime = process.TotalProcessorTime;
+            return DateTime.UtcNow.Add(_logBuild);
         }
 
         private static IReadOnlyDictionary<string, Metric> ProcessRange(
@@ -897,21 +919,31 @@ public class Program
                         var endIp = IPAddress.Parse(range.Item2);
 
                         // Determine buffer size based on address family
-                        int bufferSize = startIp.AddressFamily == AddressFamily.InterNetwork ? 4 : 16;
+                        int bufferSize = 
+                            startIp.AddressFamily == 
+                            AddressFamily.InterNetwork ? 4 : 16;
 
-                        // Get the relevant slice of the buffer for this address family
-                        var currentIpBuffer = ipBuffer.Slice(0, bufferSize);
-                        var currentEndBuffer = endBuffer.Slice(0, bufferSize);
+                        // Get the relevant slice of the buffer for this
+                        // address family
+                        var currentIpBuffer = ipBuffer.Slice(
+                            0, 
+                            bufferSize);
+                        var currentEndBuffer = endBuffer.Slice(
+                            0, 
+                            bufferSize);
 
                         startIp.TryWriteBytes(currentIpBuffer, out _);
                         endIp.TryWriteBytes(currentEndBuffer, out _);
 
-                        while (!Extensions.IpEquals(currentIpBuffer, currentEndBuffer) &&
+                        while (!Extensions.IpEquals(
+                            currentIpBuffer, 
+                            currentEndBuffer) &&
                             stoppingToken.IsCancellationRequested == false)
                         {
                             if (random.NextDouble() <= samplePercentage)
                             {
-                                // Only allocate IPAddress object when we actually need to process it
+                                // Only allocate IPAddress object when we
+                                // actually need to process it
                                 var ip = new IPAddress(currentIpBuffer);
                                 ProcessIp(
                                     pipeline,
@@ -922,7 +954,8 @@ public class Program
                                 consumer.Count++;
                             }
 
-                            // Increment to next IP address (operates on stack buffer, no allocation)
+                            // Increment to next IP address (operates on stack
+                            // buffer, no allocation)
                             if (!Extensions.TryGetNextAddress(currentIpBuffer))
                                 break; // Overflow, reached maximum IP
                         }

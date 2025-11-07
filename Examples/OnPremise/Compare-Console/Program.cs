@@ -47,6 +47,11 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Net.Sockets;
 using System.Diagnostics;
 using System.Data;
+using CsvHelper;
+using System.Globalization;
+using CsvHelper.Configuration;
+using GeoCoordinatePortable;
+using CsvHelper.Configuration.Attributes;
 
 /// <summary>
 /// @example OnPremise/Metrics-Console/Program.cs
@@ -71,120 +76,6 @@ using System.Data;
 /// - [Microsoft.Extensions.Logging.Console](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Console/)
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.Compare;
-
-public static class Extensions
-{
-    public static IEnumerable<(string, string)> 
-        ValidRanges(this IpiOnPremiseEngine engine)
-    {
-        var network = engine.Components.Single(i =>
-            "Network".Equals(
-                i.Name,
-                StringComparison.InvariantCultureIgnoreCase));
-        foreach(var profile in engine.Profiles)
-        {
-            var range = GetRange(network, profile);
-            if (range.Item1 != null && range.Item2 != null)
-            {
-                yield return range;
-            }
-            profile.Dispose();
-        }
-    }
-
-    private static (string, string) GetRange(
-        IComponentMetaData network,
-        IProfileMetaData profile)
-    {
-        if (network.Equals(profile.Component) &&
-            profile.GetValue("RegisteredCountry", "Unknown") == null)
-        {
-            return GetRange(profile);
-        }
-        return default;
-    }
-
-    private static (string, string) GetRange(IProfileMetaData profile)
-    {
-        var start = profile.GetValues("IpRangeStart").Single();
-        var end = profile.GetValues("IpRangeEnd").Single();
-        return new(start.Name, end.Name);
-    }
-
-    /// <summary>
-    /// Get the next address after this one.
-    /// </summary>
-    /// <param name="ip"></param>
-    /// <returns></returns>
-    public static IPAddress GetNextAddress(this IPAddress ip)
-    {
-        return ip.GetNextAddress(0);
-    }
-
-    /// <summary>
-    /// Get the next address after this one.
-    /// </summary>
-    /// <param name="ip"></param>
-    /// <param name="ignoreBytes">
-    /// The number of bytes to ignore, starting with the least 
-    /// significant.
-    /// e.g. 
-    /// With ip 0.0.0.0 and ignore bytes 0, the result would be 0.0.0.1
-    /// With ip 0.0.0.0 and ignore bytes 1, the result would be 0.0.1.0
-    /// </param>
-    /// <returns>
-    /// The provided IPAddress with 1 added to the least significant 
-    /// possible byte
-    /// </returns>
-    public static IPAddress GetNextAddress(
-        this IPAddress ip,
-        int ignoreBytes)
-    {
-        IPAddress result = null;
-
-        var bytes = ip.GetAddressBytes();
-        var newBytes = new byte[bytes.Length];
-
-        var added = false;
-
-        // Work through the IP address bytes from least significant 
-        // to most significant.
-        for (var i = newBytes.Length - 1; i >= 0; i--)
-        {
-            // If we've already added to a byte or if this byte
-            // is being ignored, just copy the existing byte value 
-            // to the new array.
-            if (added || newBytes.Length - i <= ignoreBytes)
-            {
-                newBytes[i] = bytes[i];
-            }
-            // Otherwise, either add one to the byte value or, if it's 
-            // already 255, set it to 0.
-            else
-            {
-                if (bytes[i] == byte.MaxValue)
-                {
-                    newBytes[i] = 0;
-                }
-                else
-                {
-                    newBytes[i] = (byte)(bytes[i] + 1);
-                    added = true;
-                }
-            }
-        }
-        // As long as we've managed to add to one of the bytes, set the
-        // result from the new byte array.
-        // Otherwise, return null. 
-        // (e.g. if the provided IP was 255.255.255.255)
-        if (added != false)
-        {
-            result = new IPAddress(newBytes);
-        }
-
-        return result;
-    }
-}
 
 public class Program
 {
@@ -219,185 +110,50 @@ public class Program
         /// The public IP address associated with the device.
         /// </summary>
         public string Ip { get; set; }
+
+        /// <summary>
+        /// The continent associated with the latitude and longitude.
+        /// </summary>
+        public string Continent { get; set; }
+
+        /// <summary>
+        /// The country associated with the latitude and longitude.
+        /// </summary>
+        public string Country { get; set; }
     }
 
-    public class Counter
+    public class Result
     {
-        public int Value = 1;
+        /// <summary>
+        /// The latitude returned for the IP address from the service being
+        /// compared to the truth.
+        /// </summary>
+        [Name("LatitudeResult")]
+        public double? Latitude { get; set; }
+
+        /// <summary>
+        /// The longitude returned for the IP address from the service being
+        /// compared to the truth.
+        /// </summary>
+        [Name("LongitudeResult")]
+        public double? Longitude { get; set; }
+
+        /// <summary>
+        /// An indicator concerning how confident the service is in the result.
+        /// </summary>
+        public string Confidence { get; set; }
+
+        /// <summary>
+        /// The distance in kilometres between the true latitude and longitude
+        /// of the device and the latitude and longitude from the service.
+        /// </summary>
+        public double DistanceKms { get; set; }
     }
 
-    public class Metric
+    public class Output(Truth truth, Result result)
     {
-        /// <summary>
-        /// Properties for the fields returned in the ToString method.
-        /// </summary>
-        public static readonly string[] Properties = [
-            "IpCount",
-            "AverageAreaKm",
-            "EquivalentRadiusKm",
-            "AveragePolygons"];
-
-        /// <summary>
-        /// The total area in km squared of all IPs.
-        /// </summary>
-        public long TotalAreaKm = 0;
-
-        /// <summary>
-        /// Number of areas included.
-        /// </summary>
-        public int AreaCount = 0;
-
-        /// <summary>
-        /// Number of IP addresses that relate to this metric.
-        /// </summary>
-        public int IpCount = 0;
-
-        /// <summary>
-        /// Average area in km squared for the IPs, or 0 if there is no area
-        /// available.
-        /// </summary>
-        public long AverageAreaKm =>
-            AreaCount > 0 ? TotalAreaKm / AreaCount : 0;
-
-        /// <summary>
-        /// The radius that a circle would need to so that it covered the same
-        /// area as the <see cref="AverageAreaKm"/>.
-        /// </summary>
-        public int EquivalentRadiusKm =>
-            (int)Math.Sqrt((double)AverageAreaKm / Math.PI);
-
-        /// <summary>
-        /// Key is the number of areas, and the value the number of IPs that
-        /// contain the areas.
-        /// </summary>
-        public IReadOnlyDictionary<int, int> Polygons =>
-            _polygons.ToDictionary(k => k.Key, v => v.Value.Value);
-        private Dictionary<int, Counter> _polygons = new();
-
-        /// <summary>
-        /// Average number of polygons for the metric.
-        /// </summary>
-        public double AveragePolygons
-        {
-            get
-            {
-                if (Polygons.Count == 0)
-                {
-                    return 0;
-                }
-                var weightedSum = Polygons.Sum(i => i.Key * i.Value);
-                var total = Polygons.Sum(i => i.Value);
-                return (double)weightedSum / (double)total;
-            }
-        }
-
-        public override string ToString() =>
-            $"{IpCount},{AverageAreaKm},{EquivalentRadiusKm},"+
-            $"{AveragePolygons.ToString("0.##")}";
-
-        /// <summary>
-        /// Increase the count of IP addresses with the number of polygons
-        /// provided.
-        /// </summary>
-        /// <param name="polygons"></param>
-        public void IncrementPolygons(int polygons)
-        {
-            if (_polygons.TryGetValue(polygons, out var counter))
-            {
-                counter.Value++;
-            }
-            else
-            {
-                _polygons.Add(polygons, new Counter());
-            }
-        }
-
-        /// <summary>
-        /// Merge the other metric instance with this one.
-        /// </summary>
-        /// <param name="other"></param>
-        public void Merge(Metric other)
-        {
-            IpCount += other.IpCount;
-            AreaCount += other.AreaCount;
-            TotalAreaKm += other.TotalAreaKm;
-            foreach(var pair in other._polygons)
-            {
-                if (_polygons.TryGetValue(pair.Key, out var counter))
-                {
-                    counter.Value += pair.Value.Value;
-                }
-                else
-                {
-                    _polygons.Add(pair.Key, pair.Value);
-                }
-            }
-        }
-    }
-
-    public class KeyFactory
-    {
-        /// <summary>
-        /// The properties used to form the key.
-        /// </summary>
-        public static readonly string[] Keys = [
-            "ContinentName",
-            "Country",
-            "LocationConfidence",
-            "ConnectionType",
-            "IsVPN",
-            "IsProxy",
-            "IsTor",
-            "IsPublicRouter"];
-
-        /// <summary>
-        /// Returns the key for the data instance provided.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public string Create(IIpIntelligenceData data)
-        {
-            return String.Join(
-                ",", 
-                Keys.Select(i => "\"" + GetValue(data[i]) + "\""));
-        }
-
-        /// <summary>
-        /// Returns the value as a string for inclusion in the key, or 
-        /// "Missing" if the value can't be turned into a string.
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        private static string GetValue(object obj)
-        {
-            if (obj is IAspectPropertyValue<string>)
-            {
-                var value = obj as IAspectPropertyValue<string>;
-                if (value.HasValue)
-                {
-                    return value.Value;
-                }
-            }
-            if (obj is IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>)
-            {
-                var value = obj as 
-                    IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>;
-                if (value.HasValue && value.Value.Count == 1)
-                {
-                    return value.Value[0].Value;
-                }
-            }
-            if (obj is IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>>)
-            {
-                var value = obj as
-                    IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>>;
-                if (value.HasValue && value.Value.Count == 1)
-                {
-                    return value.Value[0].Value.ToString();
-                }
-            }
-            return "Missing";
-        }
+        public Truth Truth => truth;
+        public Result Result => result;
     }
 
     public class Consumer
@@ -405,7 +161,7 @@ public class Program
         /// <summary>
         /// The task associated with the consumer.
         /// </summary>
-        public Task<IReadOnlyDictionary<string, Metric>> Task;
+        public Task<IReadOnlyList<Output>> Task;
 
         /// <summary>
         /// The number of IP pipeline processes that have been completed in
@@ -413,172 +169,7 @@ public class Program
         /// </summary>
         public int Count;
     }
-
-    public class AreaIndex
-    {
-        /// <summary>
-        /// Properties used by the Area index.
-        /// </summary>
-        public static readonly string[] Properties = ["Areas"];
-
-        private static readonly WKTReader _wktReader = new();
-
-        private static readonly CoordinateTransformationFactory
-            _transformFactory = new();
-
-        /// <summary>
-        /// Dictionary that takes WKT value and returns the geographic area
-        /// in square kms and the number polygons that form the area.
-        /// </summary>
-        public IReadOnlyDictionary<string, (int, int)> WktAreas;
-
-        public AreaIndex(
-            IFiftyOneAspectPropertyMetaData property,
-            ILogger logger,
-            CancellationToken stoppingToken)
-        {
-            WktAreas = BuildWktAreas(property, logger, stoppingToken);
-        }
-
-        private static IReadOnlyDictionary<string, (int, int)> BuildWktAreas(
-            IFiftyOneAspectPropertyMetaData property,
-            ILogger logger,
-            CancellationToken stoppingToken)
-        {
-            var wktAreas = new ConcurrentDictionary<string, (int, int)>();
-            var wktAreasTasks = new BlockingCollection<Task>(
-                Environment.ProcessorCount);
-
-            var producer = Task.Run(() =>
-                AddAreas(
-                    property, 
-                    logger, 
-                    wktAreas, 
-                    wktAreasTasks, 
-                    stoppingToken),
-                stoppingToken);
-
-            var nextLog = DateTime.UtcNow.Add(_logBuild);
-            while (wktAreasTasks.IsCompleted == false &&
-                wktAreasTasks.TryTake(out var task, -1, stoppingToken))
-            {
-                task.Wait();
-                if (DateTime.UtcNow >= nextLog)
-                {
-                    logger.LogInformation(
-                        "Mapped '{0}' areas",
-                        wktAreas.Count);
-                    nextLog = DateTime.UtcNow.Add(_logBuild);
-                }
-            }
-
-            producer.Wait();
-
-            return wktAreas;
-        }
-
-        private static void AddAreas(
-            IFiftyOneAspectPropertyMetaData property,
-            ILogger logger,
-            ConcurrentDictionary<string, (int, int)> wktAreas,
-            BlockingCollection<Task> wktAreasTasks,
-            CancellationToken stoppingToken)
-        {
-            foreach (var area in property.GetValues())
-            {
-                wktAreasTasks.TryAdd(Task.Run(() =>
-                    AddAreas(wktAreas, area.Name, logger)), -1, stoppingToken);
-            }
-            wktAreasTasks.CompleteAdding();
-        }
-
-        private static void AddAreas(
-            ConcurrentDictionary<string, (int,int)> areas,
-            string wkt,
-            ILogger logger)
-        {
-            areas.GetOrAdd(wkt, (_) =>
-            {
-                try
-                {
-                    var geo = _wktReader.Read(wkt);
-                    if (geo != null)
-                    {
-                        return (
-                            (int)Math.Round(GetAreas(geo)), 
-                            geo.NumGeometries);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, wkt);
-                }
-                return (0,0);
-            });
-        }
-
-        private static double GetAreas(Geometry geo)
-        {
-            var area = 0.0;
-            if (geo.NumGeometries > 0)
-            {
-                for (var i = 0; i < geo.NumGeometries; i++)
-                {
-                    area += GetArea(geo.GetGeometryN(i));
-                }
-            }
-            else
-            {
-                area += GetArea(geo);
-            }
-            return area;
-        }
-
-        private static double GetArea(Geometry geo)
-        {
-            // Create UTM projected coordinate system for a specific zone
-            // (e.g., Zone 30N for London)
-            var utmZone = (int)Math.Floor((geo.InteriorPoint.X + 180) / 6) + 1;
-            var isNorthernHemisphere = geo.InteriorPoint.Y >= 0;
-
-            // Create a coordinate transformation
-            var transform = _transformFactory.CreateFromCoordinateSystems(
-                // Define the source (WGS84) and target (Projected) coordinate
-                // systems
-                GeographicCoordinateSystem.WGS84,
-                // Adjust UTM zone and hemisphere as needed
-                ProjectedCoordinateSystem.WGS84_UTM(
-                    utmZone,
-                    isNorthernHemisphere));
-
-            // Re-project the polygon to the UTM coordinate system
-            var transformedPolygon = TransformGeometry(
-                geo,
-                transform.MathTransform);
-
-            // Calculate area in square meters and convert to square kilometers
-            return transformedPolygon.Area / 1_000_000;
-        }
-
-        private static Geometry TransformGeometry(
-            Geometry geometry,
-            MathTransform transform)
-        {
-            var factory = geometry.Factory;
-            var coordinates = geometry.Coordinates;
-
-            for (int i = 0; i < coordinates.Length; i++)
-            {
-                var transformed =
-                    transform.Transform([coordinates[i].X, coordinates[i].Y]);
-                coordinates[i].X = transformed[0];
-                coordinates[i].Y = transformed[1];
-            }
-
-            return factory.CreateGeometry(geometry);
-        }
-    }
-
+        
     public class Configuration
     {
         /// <summary>
@@ -587,15 +178,15 @@ public class Program
         public string DataFile;
 
         /// <summary>
+        /// The source truth CSV file.
+        /// </summary>
+        public string CsvTruthFile;
+
+        /// <summary>
         /// Stream to write the output to.
         /// </summary>
         public StreamWriter Output;
-
-        /// <summary>
-        /// Sample of IP addresses to sample for the metrics.
-        /// </summary>
-        public double SamplePercentage;
-
+                
         /// <summary>
         /// Logger factory for reporting progress.
         /// </summary>
@@ -612,9 +203,9 @@ public class Program
         {
             await new Example().Run(
                 configuration.DataFile,
-                configuration.LoggerFactory, 
-                configuration.Output, 
-                configuration.SamplePercentage,
+                configuration.CsvTruthFile,
+                configuration.Output,
+                configuration.LoggerFactory,
                 stoppingToken);
             hostApplicationLifetime.StopApplication();
         }
@@ -624,9 +215,9 @@ public class Program
     {
         public async Task Run(
             string dataFile, 
+            string csvTruthFile,
+            TextWriter output,
             ILoggerFactory loggerFactory,
-            TextWriter output, 
-            double samplePercentage,
             CancellationToken stoppingToken)
         {
             // Ensure that batch latency mode is always enabled.
@@ -648,8 +239,9 @@ public class Program
                 .SetDataFileSystemWatcher(false)
                 .SetDataUpdateOnStartup(false)
                 // Set to only return from processing the properties needed.
-                .SetProperties(
-                    KeyFactory.Keys.Concat(AreaIndex.Properties).ToList())
+                .SetProperty("Latitude")
+                .SetProperty("Longitude")
+                .SetProperty("LocationConfidence")
                 // Optimize for the expected parallel workload.
                 .SetConcurrency((ushort)Environment.ProcessorCount)
                 .Build(dataFile, false);
@@ -657,78 +249,42 @@ public class Program
                 .AddFlowElement(ipiEngine)
                 .SetAutoDisposeElements(false)
                 .Build();
+            using var reader = File.OpenText(csvTruthFile);
+            var config = CsvConfiguration.FromAttributes<Truth>(
+                CultureInfo.InvariantCulture);
+            config.MissingFieldFound = null;
+            using var source = new CsvReader(reader, config);
             var logger = loggerFactory.CreateLogger<Example>();
-
-            // Create the data set structure to rapidly retrieve the data
-            // needed to calculate the metrics and to determine the valid
-            // IP ranges.
-            logger.LogInformation("Creating area index");
-            var areaIndex = new AreaIndex(
-                ipiEngine.Properties.Single(i => "Areas".Equals(
-                    i.Name,
-                    StringComparison.InvariantCultureIgnoreCase)),
-                logger,
-                stoppingToken);
-            logger.LogInformation(
-                "Created index for '{0}' areas",
-                areaIndex.WktAreas.Count);
-
-            // Perform IP lookup for all the IP addresses in the ranges
-            // and record the results.
-            var factory = new KeyFactory();
 
             // Create a collection of ranges to ensure that there are always
             // items available for the consumers.
-            var ranges =
-                new BlockingCollection<(string, string)>(
+            var truth = new BlockingCollection<Truth>(
                 Environment.ProcessorCount);
             var consumers = CreateConsumers(
-                samplePercentage,
-                pipeline, 
-                areaIndex, 
-                factory, 
-                ranges, 
+                pipeline,
+                truth,
                 stoppingToken);
             logger.LogInformation(
-                "Created '{0}' consumer processors sampling '{1:P2}' of IPs",
-                consumers.Length,
-                samplePercentage);
+                "Created '{0}' consumer processors",
+                consumers.Length);
 
             // Use the main thread as the producer adding ranges for the
             // consumers to process.
-            AddRanges(ipiEngine, logger, ranges, consumers, stoppingToken);
+            AddTruth(ipiEngine, logger, source, truth, consumers, stoppingToken);
 
             // Combine all the consumer groups into the main groups.
-            var groups = new Dictionary<string, Metric>();
+            using var writer = new CsvWriter(output, 
+                new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    Delimiter = ","
+                });
             foreach (var consumer in consumers)
             {
                 await consumer.Task;
                 logger.LogInformation(
                     "Finished consumer '{0}'", 
                     consumer.Task.Id);
-                foreach (var group in consumer.Task.Result)
-                {
-                    if (groups.TryGetValue(group.Key, out var metric))
-                    {
-                        metric.Merge(group.Value);
-                    }
-                    else
-                    {
-                        groups.Add(group.Key, group.Value);
-                    }
-                }
-            }
-
-            // Write out the headings as the first line.
-            output.WriteLine(String.Join(
-                ",",
-                KeyFactory.Keys.Concat(Metric.Properties)
-                .Select(i => "\"" + i + "\"")));
-
-            // Write out all the groups.
-            foreach (var group in groups.OrderBy(i => i.Key))
-            {
-                output.WriteLine(group.Key + "," + group.Value.ToString());
+                writer.WriteRecords(consumer.Task.Result);
             }
 
             ExampleUtils.CheckDataFile(
@@ -740,20 +296,15 @@ public class Program
         /// Create and start the consumers which will be waiting on the
         /// producer to start.
         /// </summary>
-        /// <param name="samplePercentage"></param>
+        /// <param name="source"></param>
         /// <param name="pipeline"></param>
-        /// <param name="areaIndex"></param>
-        /// <param name="factory"></param>
-        /// <param name="ranges"></param>
+        /// <param name="truth"></param>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
         private static Consumer[] 
             CreateConsumers(
-                double samplePercentage,
                 IPipeline pipeline,
-                AreaIndex areaIndex, 
-                KeyFactory factory,
-                BlockingCollection<(string, string)> ranges,
+                BlockingCollection<Truth> truth,
                 CancellationToken stoppingToken)
         {
             return Enumerable.Range(
@@ -762,12 +313,9 @@ public class Program
                 {
                     var consumer = new Consumer();
                     consumer.Task = Task.Factory.StartNew(() =>
-                        ProcessRange(
+                        ProcessTruth(
                             pipeline,
-                            areaIndex,
-                            factory,
-                            samplePercentage,
-                            ranges,
+                            truth,
                             consumer,
                             stoppingToken),
                         TaskCreationOptions.LongRunning);
@@ -775,10 +323,11 @@ public class Program
                 }).ToArray();
         }
 
-        private static void AddRanges(
+        private static void AddTruth(
             IpiOnPremiseEngine ipiEngine, 
-            ILogger<Example> logger, 
-            BlockingCollection<(string, string)> ranges, 
+            ILogger<Example> logger,
+            CsvReader source,
+            BlockingCollection<Truth> truth,
             Consumer[] consumers, 
             CancellationToken stoppingToken)
         {
@@ -787,23 +336,24 @@ public class Program
             var lastLog = DateTime.UtcNow;
             var nextLog = lastLog.Add(_logBuild);
             var lastProcessorTime = process.TotalProcessorTime;
-            foreach (var range in ipiEngine.ValidRanges().TakeWhile(
+            foreach (var item in source.GetRecords<Truth>().TakeWhile(
                 _ => stoppingToken.IsCancellationRequested == false))
             {
                 try
                 {
-                    ranges.TryAdd(range, -1, stoppingToken);
+                    truth.TryAdd(item, -1, stoppingToken);
                     added++;
                     if (DateTime.UtcNow >= nextLog)
                     {
                         // Log the ranges and other telemetry.
                         logger.LogInformation(
-                            "Processed '{0}' ranges with '{1}' in " +
-                            "queue, most recent '{2}', and '{3}' " +
+                            "Processed '{0}' source records with '{1}' in " +
+                            "queue, most recent '{2:N2},{3:N2}', and '{4}' " +
                             "consumers",
                             added,
-                            ranges.Count,
-                            range.Item1,
+                            truth.Count,
+                            item.Latitude,
+                            item.Longitude,
                             consumers.Count(i => i.Task.IsCompleted == false));
 
                         // Get the elapsed time since last logged.
@@ -849,44 +399,28 @@ public class Program
                     // consumed.
                 }
             }
-            ranges.CompleteAdding();
-            logger.LogInformation("Finished adding '{0}' ranges", added);
+            truth.CompleteAdding();
+            logger.LogInformation("Finished adding '{0}' sources", added);
         }
 
-        private static IReadOnlyDictionary<string, Metric> ProcessRange(
-            IPipeline pipeline, 
-            AreaIndex dataSet, 
-            KeyFactory factory, 
-            double samplePercentage,
-            BlockingCollection<(string, string)> ranges,
+        private static IReadOnlyList<Output> ProcessTruth(
+            IPipeline pipeline,
+            BlockingCollection<Truth> source,
             Consumer consumer,
             CancellationToken stoppingToken)
         {
-            var random = new Random();
-            var groups = new Dictionary<string, Metric>();
-            while (ranges.IsCompleted == false &&
+            var output = new List<Output>();
+            while (source.IsCompleted == false &&
                 stoppingToken.IsCancellationRequested == false)
             {
                 try
                 {
-                    if (ranges.TryTake(out var range, -1, stoppingToken))
+                    if (source.TryTake(out var truth, -1, stoppingToken))
                     {
-                        var ip = IPAddress.Parse(range.Item1);
-                        var end = IPAddress.Parse(range.Item2);
-                        while (IPAddress.Equals(end, ip) == false &&
-                            stoppingToken.IsCancellationRequested == false)
+                        var result = ProcessTruth(pipeline, truth);
+                        if (result != null)
                         {
-                            if (random.NextDouble() <= samplePercentage)
-                            {
-                                ProcessIp(
-                                    pipeline, 
-                                    dataSet, 
-                                    groups, 
-                                    factory, 
-                                    ip);
-                                consumer.Count++;
-                            }
-                            ip = ip.GetNextAddress();
+                            output.Add(new Output(truth, result));
                         }
                     }
                 }
@@ -895,46 +429,47 @@ public class Program
                     // Do nothing and exit the consumer.
                 }
             }
-            return groups;
+            return output;
         }
 
-        private static void ProcessIp(
-            IPipeline pipeline, 
-            AreaIndex dataSet, 
-            Dictionary<string, Metric> groups,
-            KeyFactory factory, 
-            IPAddress ipAddress)
+        private static Result ProcessTruth(IPipeline pipeline, Truth truth)
         {
             // Get the data for the IP address.
             using var flowData = pipeline.CreateFlowData();
-            flowData.AddEvidence("query.client-ip", ipAddress.ToString());
+            flowData.AddEvidence("query.client-ip", truth.Ip);
             flowData.Process();
             var data = flowData.Get<IIpIntelligenceData>();
 
-            // Get the metric instance for the group key.
-            var key = factory.Create(data);
-            if (groups.TryGetValue(key, out var metric) == false)
-            {
-                metric = new Metric();
-                groups.Add(key, metric);
-            }
+            // Get the latitude and longitude from the service.
+            var latitude = GetValue(data.Latitude);
+            var longitude = GetValue(data.Longitude);
 
-            // Increase the number of IP addresses that relate to this key.
-            metric.IpCount++;
+            // Get the truth and result as points.
+            var truthPoint = new GeoCoordinate(
+                truth.Latitude, 
+                truth.Longitude);
+            var resultPoint = new GeoCoordinate(latitude, longitude);
 
-            // Increase the total area and number of areas for the metric only
-            // where a non zero area is available.
-            foreach (var area in data.Areas.Value)
+            // Return the result including the latitude, longitude, and
+            // distance in kilometers between the result and the truth.
+            return new Result()
             {
-                if (dataSet.WktAreas.TryGetValue(
-                    area.Value,
-                    out var value) && value.Item1 > 0)
-                {
-                    metric.TotalAreaKm += value.Item1;
-                    metric.IncrementPolygons(value.Item2);
-                    metric.AreaCount++;
-                }
+                Latitude = latitude,
+                Longitude = longitude,
+                Confidence = GetValue(data.LocationConfidence),
+                DistanceKms = truthPoint.GetDistanceTo(resultPoint) / 1000
+            };
+        }
+
+        private static T? GetValue<T>(
+            IAspectPropertyValue<IReadOnlyList<IWeightedValue<T>>> 
+            value)
+        {
+            if (value.HasValue)
+            {
+                return value.Value[0].Value;
             }
+            return default;
         }
     }
 
@@ -950,15 +485,13 @@ public class Program
             //
             // For testing, contact us to obtain an enterprise data file: https://51degrees.com/contact-us
             Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
-        
+
+        // Get the of the CSV file containing source truth.
+        configuration.CsvTruthFile = args.Length > 1 ? args[1] : "todo";
+
         // Get the location for the output file. Use the same location as the
         // evidence if a path is not supplied on the command line.
-        var outputFile = args.Length > 1 ? args[1] : "metrics-output.csv";
-
-        // Get the sample percentage or use the default.
-        configuration.SamplePercentage = args.Length > 2 ?
-            double.Parse(args[2]) : 
-            DEFAULT_SAMPLE_PERCENTAGE;
+        var outputFile = args.Length > 2 ? args[2] : "metrics-output.csv";
 
         File.WriteAllText("Metrics_DataFileName.txt", configuration.DataFile);
 
