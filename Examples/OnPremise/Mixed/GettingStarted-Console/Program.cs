@@ -202,20 +202,20 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedConsole
 
             private void OutputIpData(IIpIntelligenceData ipData, StringBuilder message)
             {
-                OutputWeightedStringProperty("Country", ipData.Country, message);
-                OutputWeightedStringProperty("Country Code", ipData.CountryCode, message);
-                OutputWeightedStringProperty("Region", ipData.Region, message);
-                OutputWeightedStringProperty("State", ipData.State, message);
-                OutputWeightedStringProperty("Town", ipData.Town, message);
-                OutputWeightedFloatValues("Latitude", ipData.Latitude, message);
-                OutputWeightedFloatValues("Longitude", ipData.Longitude, message);
-                OutputWeightedStringProperty("Registered Name", ipData.RegisteredName, message);
-                OutputWeightedStringProperty("Registered Owner", ipData.RegisteredOwner, message);
-                OutputWeightedStringProperty("Registered Country", ipData.RegisteredCountry, message);
-                OutputWeightedIPAddressValues("IP Range Start", ipData.IpRangeStart, message);
-                OutputWeightedIPAddressValues("IP Range End", ipData.IpRangeEnd, message);
-                OutputWeightedIntValues("Accuracy Radius", ipData.AccuracyRadiusMin, message);
-                OutputWeightedIntValues("Time Zone Offset", ipData.TimeZoneOffset, message);
+                OutputValue("Country", ipData.Country, message);
+                OutputValue("Country Code", ipData.CountryCode, message);
+                OutputValue("Region", ipData.Region, message);
+                OutputValue("State", ipData.State, message);
+                OutputValue("Town", ipData.Town, message);
+                OutputValue("Latitude", ipData.Latitude, message);
+                OutputValue("Longitude", ipData.Longitude, message);
+                OutputValue("Registered Name", ipData.RegisteredName, message);
+                OutputValue("Registered Owner", ipData.RegisteredOwner, message);
+                OutputValue("Registered Country", ipData.RegisteredCountry, message);
+                OutputValue("IP Range Start", ipData.IpRangeStart, message);
+                OutputValue("IP Range End", ipData.IpRangeEnd, message);
+                OutputValue("Accuracy Radius", ipData.AccuracyRadiusMin, message);
+                OutputValue("Time Zone Offset", ipData.TimeZoneOffset, message);
             }
 
             private void OutputValue(string name, 

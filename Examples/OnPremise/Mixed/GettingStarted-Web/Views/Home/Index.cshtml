@@ -138,67 +138,67 @@
                 </tr>
                 <tr class="lightyellow">
                     <td><b>Registered Name:</b></td>
-                    <td>@(Model.IpData?.RegisteredName?.HasValue == true ? string.Join(", ", Model.IpData.RegisteredName.Value.Select(v => v.Value)) : "Unknown")</td>
+                    <td>@(Model.IpData?.RegisteredName?.HasValue == true ? Model.IpData.RegisteredName.Value : "Unknown")</td>
                 </tr>
                 <tr class="lightgreen">
                     <td><b>Registered Owner:</b></td>
-                    <td>@(Model.IpData?.RegisteredOwner?.HasValue == true ? string.Join(", ", Model.IpData.RegisteredOwner.Value.Select(v => v.Value)) : "Unknown")</td>
+                    <td>@(Model.IpData?.RegisteredOwner?.HasValue == true ? Model.IpData.RegisteredOwner.Value : "Unknown")</td>
                 </tr>
                 <tr class="lightyellow">
                     <td><b>Registered Country:</b></td>
-                    <td>@(Model.IpData?.RegisteredCountry?.HasValue == true ? string.Join(", ", Model.IpData.RegisteredCountry.Value.Select(v => v.Value)) : "Unknown")</td>
+                    <td>@(Model.IpData?.RegisteredCountry?.HasValue == true ? Model.IpData.RegisteredCountry.Value : "Unknown")</td>
                 </tr>
                 <tr class="lightgreen">
                     <td><b>IP Range Start:</b></td>
-                    <td>@(Model.IpData?.IpRangeStart?.HasValue == true ? string.Join(", ", Model.IpData.IpRangeStart.Value.Select(v => v.Value)) : "Unknown")</td>
+                    <td>@(Model.IpData?.IpRangeStart?.HasValue == true ? Model.IpData.IpRangeStart.Value : "Unknown")</td>
                 </tr>
                 <tr class="lightyellow">
                     <td><b>IP Range End:</b></td>
-                    <td>@(Model.IpData?.IpRangeEnd?.HasValue == true ? string.Join(", ", Model.IpData.IpRangeEnd.Value.Select(v => v.Value)) : "Unknown")</td>
+                    <td>@(Model.IpData?.IpRangeEnd?.HasValue == true ? Model.IpData.IpRangeEnd.Value : "Unknown")</td>
                 </tr>
                 <tr class="lightgreen">
                     <td><b>Country:</b></td>
-                    <td>@(Model.IpData?.Country?.HasValue == true ? string.Join(", ", Model.IpData.Country.Value.Select(v => v.Value)) : "Unknown")</td>
+                    <td>@(Model.IpData?.Country?.HasValue == true ? Model.IpData.Country.Value : "Unknown")</td>
                 </tr>
                 <tr class="lightyellow">
                     <td><b>Country Code:</b></td>
-                    <td>@(Model.IpData?.CountryCode?.HasValue == true ? string.Join(", ", Model.IpData.CountryCode.Value.Select(v => v.Value)) : "Unknown")</td>
+                    <td>@(Model.IpData?.CountryCode?.HasValue == true ? Model.IpData.CountryCode.Value : "Unknown")</td>
                 </tr>
                 <tr class="lightgreen">
                     <td><b>Country Code 3:</b></td>
-                    <td>@(Model.IpData?.CountryCode3?.HasValue == true ? string.Join(", ", Model.IpData.CountryCode3.Value.Select(v => v.Value)) : "Unknown")</td>
+                    <td>@(Model.IpData?.CountryCode3?.HasValue == true ? Model.IpData.CountryCode3.Value : "Unknown")</td>
                 </tr>
                 <tr class="lightyellow">
                     <td><b>Region:</b></td>
-                    <td>@(Model.IpData?.Region?.HasValue == true ? string.Join(", ", Model.IpData.Region.Value.Select(v => v.Value)) : "Unknown")</td>
+                    <td>@(Model.IpData?.Region?.HasValue == true ? Model.IpData.Region.Value : "Unknown")</td>
                 </tr>
                 <tr class="lightgreen">
                     <td><b>State:</b></td>
-                    <td>@(Model.IpData?.State?.HasValue == true ? string.Join(", ", Model.IpData.State.Value.Select(v => v.Value)) : "Unknown")</td>
+                    <td>@(Model.IpData?.State?.HasValue == true ? Model.IpData.State.Value : "Unknown")</td>
                 </tr>
                 <tr class="lightyellow">
                     <td><b>Town:</b></td>
-                    <td>@(Model.IpData?.Town?.HasValue == true ? string.Join(", ", Model.IpData.Town.Value.Select(v => v.Value)) : "Unknown")</td>
+                    <td>@(Model.IpData?.Town?.HasValue == true ? Model.IpData.Town.Value : "Unknown")</td>
                 </tr>
                 <tr class="lightgreen">
                     <td><b>Latitude:</b></td>
-                    <td>@(Model.IpData?.Latitude?.HasValue == true ? string.Join(", ", Model.IpData.Latitude.Value.Select(v => v.Value.ToString("F4"))) : "Unknown")</td>
+                    <td>@(Model.IpData?.Latitude?.HasValue == true ? Model.IpData.Latitude.Value.ToString("F4") : "Unknown")</td>
                 </tr>
                 <tr class="lightyellow">
                     <td><b>Longitude:</b></td>
-                    <td>@(Model.IpData?.Longitude?.HasValue == true ? string.Join(", ", Model.IpData.Longitude.Value.Select(v => v.Value.ToString("F4"))) : "Unknown")</td>
+                    <td>@(Model.IpData?.Longitude?.HasValue == true ? Model.IpData.Longitude.Value.ToString("F4") : "Unknown")</td>
                 </tr>
                 <tr class="lightgreen">
                     <td><b>Areas:</b></td>
-                    <td>@(Model.IpData?.Areas?.HasValue == true ? string.Join(", ", Model.IpData.Areas.Value.Select(v => v.Value)) : "Unknown")</td>
+                    <td>@(Model.IpData?.Areas?.HasValue == true ? Model.IpData.Areas.Value : "Unknown")</td>
                 </tr>
                 <tr class="lightyellow">
                     <td><b>Accuracy Radius:</b></td>
-                    <td>@(Model.IpData?.AccuracyRadiusMin?.HasValue == true ? string.Join(", ", Model.IpData.AccuracyRadiusMin.Value.Select(v => v.Value.ToString())) : "Unknown")</td>
+                    <td>@(Model.IpData?.AccuracyRadiusMin?.HasValue == true ? Model.IpData.AccuracyRadiusMin.Value.ToString() : "Unknown")</td>
                 </tr>
                 <tr class="lightgreen">
                     <td><b>Time Zone Offset:</b></td>
-                    <td>@(Model.IpData?.TimeZoneOffset?.HasValue == true ? string.Join(", ", Model.IpData.TimeZoneOffset.Value.Select(v => v.Value.ToString())) : "Unknown")</td>
+                    <td>@(Model.IpData?.TimeZoneOffset?.HasValue == true ? Model.IpData.TimeZoneOffset.Value.ToString() : "Unknown")</td>
                 </tr>
             </table>
         </div>
