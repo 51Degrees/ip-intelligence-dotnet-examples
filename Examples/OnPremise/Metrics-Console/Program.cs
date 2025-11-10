@@ -30,9 +30,6 @@ using FiftyOne.Pipeline.Engines.FiftyOne.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NetTopologySuite.Geometries;
-using ProjNet.CoordinateSystems;
-using ProjNet.CoordinateSystems.Transformations;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -48,16 +45,20 @@ using System.Threading.Tasks;
 /// <summary>
 /// @example OnPremise/Metrics-Console/Program.cs
 ///
-/// This example shows how to access Metrics about the IP Intelligence properties that are available 
-/// in the data file. This can be useful for understanding what information is available and how to access it.
+/// This example uses all the public IP addresses and passes them to the IP
+/// Intelligence service recording the average geographic area in square
+/// kilometers, the number of polygons that form the area, and the equivalent
+/// circle radius if the area could be represented as a circle.
+/// 
+/// Depending on the available processor cores the example can take a long time
+/// to complete.
+/// 
+/// The sample of IP addresses used in the metrics can be adjusted as a
+/// parameter.
+/// 
+/// It is primarily designed for those who are interested to verify the
+/// published metrics associated with 51Degrees IP intelligence service.
 ///
-/// The example will output the available properties along with details about their data types and descriptions.
-/// This helps you understand what IP Intelligence data you can access for your use case.
-/// 
-/// Finally, the evidence keys that are accepted by IP Intelligence are listed. These are the 
-/// keys that, when added to the evidence collection in flow data, could have some impact on the
-/// result returned by IP Intelligence.
-/// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Metrics-Console/Program.cs). 
 /// 
 /// This example requires an enterprise IP Intelligence data file (.ipi). 
@@ -385,7 +386,8 @@ public class Program
                     result = value.Value;
                 }
             }
-            else if (obj is IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>)
+            else if (obj is 
+                IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>)
             {
                 var value = obj as
                     IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>;
@@ -394,7 +396,8 @@ public class Program
                     result = value.Value[0].Value;
                 }
             }
-            else if (obj is IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>>)
+            else if (obj is 
+                IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>>)
             {
                 var value = obj as
                     IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>>;
@@ -496,7 +499,7 @@ public class Program
             ConcurrentDictionary<string, Result> areas,
             string wkt)
         {
-            areas.GetOrAdd(wkt, (_) => Calculations.GetAreas(wkt));
+            areas.GetOrAdd(wkt, (_) => Calculations.GetAreas(wkt, 0, 0));
         }
     }
 
@@ -553,15 +556,12 @@ public class Program
             // Ensure that batch latency mode is always enabled.
             GCSettings.LatencyMode = GCLatencyMode.Batch;
 
-            // Build a new on-premise IP Intelligence engine with the low memory performance profile.
-            // Note that there is no need to construct a complete pipeline in order to access
-            // the meta-data.
-            // If you already have a pipeline and just want to get a reference to the engine 
-            // then you can use `var engine = pipeline.GetElement<IpiOnPremiseEngine>();`
+            // Build a new on-premise IP Intelligence engine with the max
+            // performance profile.
             using var ipiEngine = new IpiOnPremiseEngineBuilder(loggerFactory)
-                // We use the max performance profile for optimal detection speed in this
-                // example. See the documentation for more detail on this and other
-                // configuration options.
+                // We use the max performance profile for optimal detection
+                // speed in this example. See the documentation for more detail
+                // on this and other configuration options.
                 // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
                 .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
                 // inhibit auto-update of the data file for this test

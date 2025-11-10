@@ -1,7 +1,7 @@
 ﻿// Ignore Spelling: wkt
 
-/********************************************************************
- *This Original Work is copyright of 51 Degrees Mobile Experts Limited.
+/* *********************************************************************
+ * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
  * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
  * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
@@ -11,7 +11,7 @@
  * If a copy of the EUPL was not distributed with this file, You can obtain
  * one at https://opensource.org/licenses/EUPL-1.2.
  *
- *The 'Compatible Licences' set out in the Appendix to the EUPL (as may be
+ * The 'Compatible Licences' set out in the Appendix to the EUPL (as may be
  * amended by the European Commission) shall be deemed incompatible for
  * the purposes of the Work and the provisions of the compatibility
  * clause in Article 5 of the EUPL shall not apply.
@@ -30,23 +30,59 @@ using System;
 
 namespace Examples.OnPremise.Areas;
 
-public class Calculations
+/// <summary>
+/// Used to work out the common values for areas in the examples.
+/// </summary>
+public static class Calculations
 {
+    /// <summary>
+    /// Parses the WKT string into geometries.
+    /// </summary>
     private static readonly WKTReader _wktReader = new();
 
+    /// <summary>
+    /// Used to handle area calculations that are aware the earth is not a
+    /// sphere and has more complex mappings between WGS84 latitudes and
+    /// longitudes are geographic areas.
+    /// </summary>
     private static readonly CoordinateTransformationFactory
         _transformFactory = new();
 
-    public static Result GetAreas(string wkt)
+    /// <summary>
+    /// Returns the result for the WKT string, and geographic point.
+    /// </summary>
+    /// <param name="wkt">
+    /// WKT format geometric area(s).
+    /// </param>
+    /// <param name="latitude">
+    /// Of the point being tested for inclusion in the geographic area.
+    /// </param>
+    /// <param name="longitude">
+    /// Of the point being tested for inclusion in the geographic area.
+    /// </param>
+    /// <returns></returns>
+    public static Result GetAreas(
+        string wkt, 
+        double latitude,
+        double longitude)
     {
         var geo = _wktReader.Read(wkt);
         if (geo != null)
         {
+            // True if the area contains the point. This must be done before
+            // the geo instance is manipulated by GetAreas and converted to
+            // different coordinate units.
+            var contains = geo.Contains(new Point(longitude, latitude));
+            var areaSqKms = GetAreas(geo);
             return new (
-                (int)Math.Round(GetAreas(geo)),
-                geo.NumGeometries);
+                // The total area in square kms.
+                (int)Math.Round(areaSqKms),
+                // Number of polygons in the area.
+                geo.NumGeometries,
+                // Whether the geographic area contains the point.
+                contains);
         }
-        return new(0,0);
+        return new(0,0,false);
     }
 
     private static double GetAreas(Geometry geo)

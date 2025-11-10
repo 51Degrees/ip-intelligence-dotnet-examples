@@ -33,7 +33,6 @@ using GeoCoordinatePortable;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NetTopologySuite.Algorithm;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -48,19 +47,46 @@ using System.Threading;
 using System.Threading.Tasks;
 
 /// <summary>
-/// @example OnPremise/Metrics-Console/Program.cs
+/// @example OnPremise/Compare-Console/Program.cs
 ///
-/// This example shows how to access Metrics about the IP Intelligence properties that are available 
-/// in the data file. This can be useful for understanding what information is available and how to access it.
+/// This example compares a CSV file containing known true IP addresses with
+/// associated latitude and longitudes against an IP Intelligence service that
+/// can return latitude and longitude and area information for a given IP 
+/// address. This can be useful for understanding how the results of IP to
+/// location compare to real world information when evaluating difference
+/// solutions.
 ///
-/// The example will output the available properties along with details about their data types and descriptions.
-/// This helps you understand what IP Intelligence data you can access for your use case.
+/// The example will ingest the following fields from a CSV file.
 /// 
-/// Finally, the evidence keys that are accepted by IP Intelligence are listed. These are the 
-/// keys that, when added to the evidence collection in flow data, could have some impact on the
-/// result returned by IP Intelligence.
+/// Date Time
+/// IP address
+/// Address Family (optional)
+/// Latitude
+/// Longitude
+/// Continent (optional)
+/// Country (optional)
 /// 
-/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Metrics-Console/Program.cs). 
+/// See the `Truth` class for all fields and descriptions.
+/// 
+/// The IP Intelligence service is used to obtain the latitude and longitude
+/// from the IP address. The distance in kilometers is then calculate along
+/// with the confidence if available, the total geographic area covered by
+/// the area returned, and an indicator as to if the provided latitude and
+/// longitude is within the area returned.
+/// 
+/// Output fields are defined in the `Result` class and include.
+/// 
+/// Latitude
+/// Longitude
+/// Found
+/// Geometries
+/// SquareKms
+/// DistanceKms
+/// 
+/// The output CSV file contains the input truth and the result fields for easy
+/// evaluation.
+/// 
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Compare-Console/Program.cs). 
 /// 
 /// This example requires an enterprise IP Intelligence data file (.ipi). 
 /// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
@@ -159,14 +185,29 @@ public class Program
         /// located in.
         /// </summary>
         public int Geometries { get; set; }
+
+        /// <summary>
+        /// True if the latitude and longitude provided in the truth was found
+        /// in the area returned.
+        /// </summary>
+        public bool Contains { get; set; }
     }
 
+    /// <summary>
+    /// Classes used when writing out the CSV file both the truth provided and
+    /// the result from the IP Intelligence service.
+    /// </summary>
+    /// <param name="truth"></param>
+    /// <param name="result"></param>
     public class Output(Truth truth, Result result)
     {
         public Truth Truth => truth;
         public Result Result => result;
     }
 
+    /// <summary>
+    /// Wrapper for a consumer task that returns a list of records.
+    /// </summary>
     public class Consumer
     {
         /// <summary>
@@ -180,7 +221,11 @@ public class Program
         /// </summary>
         public int Count;
     }
-        
+    
+    /// <summary>
+    /// Configuration passed to the worker host service via dependency
+    /// injection.
+    /// </summary>
     public class Configuration
     {
         /// <summary>
@@ -204,6 +249,11 @@ public class Program
         public ILoggerFactory LoggerFactory;
     }
 
+    /// <summary>
+    /// BackgroundService for running the <see cref="Example"/>.
+    /// </summary>
+    /// <param name="hostApplicationLifetime"></param>
+    /// <param name="configuration"></param>
     public sealed class Worker(
         IHostApplicationLifetime hostApplicationLifetime,
         Configuration configuration) 
@@ -222,6 +272,10 @@ public class Program
         }
     }
 
+    /// <summary>
+    /// Implementation of the example that can be called from the Program's
+    /// main method or any other consuming service.
+    /// </summary>
     public class Example : ExampleBase
     {
         public async Task Run(
@@ -231,18 +285,17 @@ public class Program
             ILoggerFactory loggerFactory,
             CancellationToken stoppingToken)
         {
+            var logger = loggerFactory.CreateLogger<Example>();
+
             // Ensure that batch latency mode is always enabled.
             GCSettings.LatencyMode = GCLatencyMode.Batch;
 
-            // Build a new on-premise IP Intelligence engine with the low memory performance profile.
-            // Note that there is no need to construct a complete pipeline in order to access
-            // the meta-data.
-            // If you already have a pipeline and just want to get a reference to the engine 
-            // then you can use `var engine = pipeline.GetElement<IpiOnPremiseEngine>();`
+            // Build a new on-premise IP Intelligence engine with the max
+            // performance profile.
             using var ipiEngine = new IpiOnPremiseEngineBuilder(loggerFactory)
-                // We use the max performance profile for optimal detection speed in this
-                // example. See the documentation for more detail on this and other
-                // configuration options.
+                // We use the max performance profile for optimal detection
+                // speed in this example. See the documentation for more detail
+                // on this and other configuration options.
                 // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
                 .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
                 // inhibit auto-update of the data file for this test
@@ -257,21 +310,31 @@ public class Program
                 // Optimize for the expected parallel workload.
                 .SetConcurrency((ushort)Environment.ProcessorCount)
                 .Build(dataFile, false);
+
+            // Build a pipeline to consumer the IP intelligence engine. Needed
+            // so that flowdata can be used to pass evidence in and get
+            // results.
             using var pipeline = new PipelineBuilder(loggerFactory)
                 .AddFlowElement(ipiEngine)
                 .SetAutoDisposeElements(false)
                 .Build();
+
+            // Create a reader for the source of truth.
             using var reader = File.OpenText(csvTruthFile);
             var config = CsvConfiguration.FromAttributes<Truth>(
                 CultureInfo.InvariantCulture);
             config.MissingFieldFound = null;
             using var source = new CsvReader(reader, config);
-            var logger = loggerFactory.CreateLogger<Example>();
 
-            // Create a collection of ranges to ensure that there are always
-            // items available for the consumers.
+            // Create a collection of truths to ensure that there are records
+            // always available to the consumer.
             var truth = new BlockingCollection<Truth>(
                 Environment.ProcessorCount);
+
+            // Create consumers that are used to add the result to the truth.
+            // These run in parallel to ensure best performance as the IPI and 
+            // area calculations can be time consuming compared to reading new
+            // truth records.
             var consumers = CreateConsumers(
                 pipeline,
                 truth,
@@ -280,16 +343,20 @@ public class Program
                 "Created '{0}' consumer processors",
                 consumers.Length);
 
-            // Use the main thread as the producer adding ranges for the
+            // Use the main thread as the producer adding truths for the
             // consumers to process.
             AddTruth(ipiEngine, logger, source, truth, consumers, stoppingToken);
 
-            // Combine all the consumer groups into the main groups.
-            using var writer = new CsvWriter(output, 
+            // Create the write for the destination output.
+            using var writer = new CsvWriter(
+                output,
                 new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
                     Delimiter = ","
                 });
+
+            // Wait for the consumer to stop and then write out the records it
+            // generated.
             foreach (var consumer in consumers)
             {
                 await consumer.Task;
@@ -299,6 +366,8 @@ public class Program
                 writer.WriteRecords(consumer.Task.Result);
             }
 
+            // Finally check the data file used for consistency with the other
+            // examples.
             ExampleUtils.CheckDataFile(
                 ipiEngine,
                 loggerFactory.CreateLogger<Program>());
@@ -306,18 +375,17 @@ public class Program
 
         /// <summary>
         /// Create and start the consumers which will be waiting on the
-        /// producer to start.
+        /// producer to start. The number of consumers matches the number of
+        /// processor cores.
         /// </summary>
-        /// <param name="source"></param>
         /// <param name="pipeline"></param>
         /// <param name="truth"></param>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        private static Consumer[] 
-            CreateConsumers(
-                IPipeline pipeline,
-                BlockingCollection<Truth> truth,
-                CancellationToken stoppingToken)
+        private static Consumer[] CreateConsumers(
+            IPipeline pipeline,
+            BlockingCollection<Truth> truth,
+            CancellationToken stoppingToken)
         {
             return Enumerable.Range(
                 0,
@@ -344,7 +412,6 @@ public class Program
             CancellationToken stoppingToken)
         {
             var process = Process.GetCurrentProcess();
-            var added = 0;
             var lastLog = DateTime.UtcNow;
             var nextLog = lastLog.Add(_logBuild);
             var lastProcessorTime = process.TotalProcessorTime;
@@ -359,66 +426,112 @@ public class Program
                         truth.TryAdd(item, -1, stoppingToken);
                         ips.Add(item.Ip);
                     }
-                    if (DateTime.UtcNow >= nextLog)
-                    {
-                        // Log the ranges and other telemetry.
-                        logger.LogInformation(
-                            "Processed '{0}' source records with '{1}' in " +
-                            "queue, most recent '{2:N2},{3:N2}', and '{4}' " +
-                            "consumers",
-                            added,
-                            truth.Count,
-                            item.Latitude,
-                            item.Longitude,
-                            consumers.Count(i => i.Task.IsCompleted == false));
-
-                        // Get the elapsed time since last logged.
-                        var elapsed = DateTime.UtcNow - lastLog;
-
-                        // The amount of CPU used is the processor time
-                        // difference divided by the wall clock time
-                        // difference.
-                        var cpu = 
-                            (process.TotalProcessorTime - lastProcessorTime) /
-                            elapsed;
-
-                        // Work out the number of queries per second.
-                        var total = consumers.Sum(i => i.Count);
-                        var qps = total / elapsed.TotalSeconds;
-
-                        // Log the resource usage.
-                        logger.LogInformation(
-                            "'{0:F2}' processors used, '{1:N0} qps, " +
-                            "'{2}' threads, '{3}' handles, and '{4:N0}MB' " +
-                            "memory used",
-                            cpu,
-                            qps, 
-                            process.Threads.Count,                            
-                            process.HandleCount,
-                            process.WorkingSet64 / 1000);
-
-                        // Reset the count of queries to IPI.
-                        foreach (var consumer in consumers)
-                        {
-                            consumer.Count = 0;
-                        }
-
-                        // Reset the other logging parameters.
-                        lastLog = DateTime.UtcNow;
-                        nextLog = DateTime.UtcNow.Add(_logBuild);
-                        lastProcessorTime = process.TotalProcessorTime;
-                    }
+                    LogProgress(
+                        logger, 
+                        truth, 
+                        consumers, 
+                        process,
+                        ips.Count, 
+                        ref lastLog, 
+                        ref nextLog, 
+                        ref lastProcessorTime, 
+                        item);
                 }
                 catch (OperationCanceledException)
                 {
-                    // Do nothing and exit as if the ranges had been fully
+                    // Do nothing and exit as if the truths had been fully
                     // consumed.
                 }
             }
             truth.CompleteAdding();
-            logger.LogInformation("Finished adding '{0}' sources", added);
+            logger.LogInformation("Finished adding '{0}' sources", ips.Count);
         }
 
+        /// <summary>
+        /// Logs progress from the producer.
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="truth"></param>
+        /// <param name="consumers"></param>
+        /// <param name="process"></param>
+        /// <param name="added"></param>
+        /// <param name="lastLog"></param>
+        /// <param name="nextLog"></param>
+        /// <param name="lastProcessorTime"></param>
+        /// <param name="item"></param>
+        private static void LogProgress(
+            ILogger<Example> logger,
+            BlockingCollection<Truth> truth, 
+            Consumer[] consumers,
+            Process process, 
+            int added, 
+            ref DateTime lastLog, 
+            ref DateTime nextLog,
+            ref TimeSpan lastProcessorTime,
+            Truth item)
+        {
+            if (DateTime.UtcNow >= nextLog)
+            {
+                // Log the ranges and other telemetry.
+                logger.LogInformation(
+                    "Processed '{0}' source records with '{1}' in " +
+                    "queue, most recent '{2:N2},{3:N2}', and '{4}' " +
+                    "consumers",
+                    added,
+                    truth.Count,
+                    item.Latitude,
+                    item.Longitude,
+                    consumers.Count(i => i.Task.IsCompleted == false));
+
+                // Get the elapsed time since last logged.
+                var elapsed = DateTime.UtcNow - lastLog;
+
+                // The amount of CPU used is the processor time
+                // difference divided by the wall clock time
+                // difference.
+                var cpu =
+                    (process.TotalProcessorTime - lastProcessorTime) /
+                    elapsed;
+
+                // Work out the number of queries per second.
+                var total = consumers.Sum(i => i.Count);
+                var qps = total / elapsed.TotalSeconds;
+
+                // Log the resource usage.
+                logger.LogInformation(
+                    "'{0:F2}' processors used, '{1:N0} qps, " +
+                    "'{2}' threads, '{3}' handles, and '{4:N0}MB' " +
+                    "memory used",
+                    cpu,
+                    qps,
+                    process.Threads.Count,
+                    process.HandleCount,
+                    process.WorkingSet64 / 1000);
+
+                // Reset the count of queries to IPI.
+                foreach (var consumer in consumers)
+                {
+                    consumer.Count = 0;
+                }
+
+                // Reset the other logging parameters.
+                lastLog = DateTime.UtcNow;
+                nextLog = DateTime.UtcNow.Add(_logBuild);
+                lastProcessorTime = process.TotalProcessorTime;
+            }
+        }
+
+        /// <summary>
+        /// Processes the truths in the blocking collection until completed or
+        /// stopped.
+        /// </summary>
+        /// <param name="pipeline"></param>
+        /// <param name="source"></param>
+        /// <param name="consumer"></param>
+        /// <param name="stoppingToken"></param>
+        /// <returns>
+        /// A list of the output results.
+        /// </returns>
         private static IReadOnlyList<Output> ProcessTruth(
             IPipeline pipeline,
             BlockingCollection<Truth> source,
@@ -448,6 +561,12 @@ public class Program
             return output;
         }
 
+        /// <summary>
+        /// Process the specific truth returning the result.
+        /// </summary>
+        /// <param name="pipeline"></param>
+        /// <param name="truth"></param>
+        /// <returns></returns>
         private static Result ProcessTruth(IPipeline pipeline, Truth truth)
         {
             // Get the data for the IP address.
@@ -471,8 +590,12 @@ public class Program
                 GetValue(data.Latitude), 
                 GetValue(data.Longitude));
 
-            // Get the area.
-            var area = Calculations.GetAreas(GetValue(data.Areas));
+            // Get the area result for the returned data and the true latitude
+            // and longitude.
+            var area = Calculations.GetAreas(
+                GetValue(data.Areas), 
+                truth.Latitude,
+                truth.Longitude);
 
             // Return the result including the latitude, longitude, and
             // distance in kilometers between the result and the truth.
@@ -483,7 +606,8 @@ public class Program
                 Confidence = GetValue(data.LocationConfidence),
                 DistanceKms = truthPoint.GetDistanceTo(resultPoint) / 1000,
                 SquareKms = area.SquareKms,
-                Geometries = area.Geometries
+                Geometries = area.Geometries,
+                Contains = area.Contains
             };
         }
 
@@ -503,21 +627,25 @@ public class Program
     {
         var configuration = new Configuration();
 
-        // Use the supplied path for the data file or find the lite file that is included
-        // in the repository.
+        // Use the supplied path for the data file or find the lite file that
+        // is included in the repository.
         configuration.DataFile = args.Length > 0 ? args[0] :
-            // In this example, by default, the 51degrees IP Intelligence data file needs to be somewhere in the
-            // project space, or you may specify another file as a command line parameter.
+            // In this example, by default, the 51Degrees IP Intelligence data
+            // file needs to be somewhere in the project space, or you may
+            // specify another file as a command line parameter.
             //
-            // For testing, contact us to obtain an enterprise data file: https://51degrees.com/contact-us
-            Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
+            // For testing, contact us to obtain an enterprise data file:
+            // https://51degrees.com/contact-us
+            Examples.ExampleUtils.FindFile(
+                Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
 
         // Get the of the CSV file containing source truth.
+        // TODO: Provide a simple example for testing purposes.
         configuration.CsvTruthFile = args.Length > 1 ? args[1] : "todo";
 
         // Get the location for the output file. Use the same location as the
         // evidence if a path is not supplied on the command line.
-        var outputFile = args.Length > 2 ? args[2] : "metrics-output.csv";
+        var outputFile = args.Length > 2 ? args[2] : "compare-output.csv";
 
         File.WriteAllText("Metrics_DataFileName.txt", configuration.DataFile);
 
@@ -537,11 +665,12 @@ public class Program
         else
         {
             var logger = configuration.LoggerFactory.CreateLogger<Program>();
-            logger.LogError("Failed to find a IP Intelligence data file. Make sure the " +
-                "ip-intelligence-data submodule has been updated by running " +
-                "`git submodule update --recursive`. By default, the 'lite' file included " +
-                "with this code will be used. A different file can be specified " +
-                "by supplying the full path as a command line argument");
+            logger.LogError("Failed to find a IP Intelligence data file. " +
+                "Make sure the ip-intelligence-data submodule has been " +
+                "updated by running `git submodule update --recursive`. By " +
+                "default, the 'lite' file included with this code will be " +
+                "used. A different file can be specified by supplying the " +
+                "full path as a command line argument");
         }
 
         // Dispose the logger to ensure any messages get flushed

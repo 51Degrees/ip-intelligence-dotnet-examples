@@ -20,14 +20,26 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+using System.Globalization;
+
 namespace Examples.OnPremise.Areas;
 
+/// <summary>
+/// The result of an area calculation.
+/// </summary>
 public class Result
 {
-    public Result(int squareKms, int geometries)
+    /// <summary>
+    /// Constructs a new instance of <see cref="Result"/>.
+    /// </summary>
+    /// <param name="squareKms"></param>
+    /// <param name="geometries"></param>
+    /// <param name="contains"></param>
+    public Result(int squareKms, int geometries, bool contains)
     {
         SquareKms = squareKms;
         Geometries = geometries;
+        Contains = contains;
     }
 
     /// <summary>
@@ -39,4 +51,9 @@ public class Result
     /// Number of irregular polygons that form the area.
     /// </summary>
     public int Geometries { get; set; }
+
+    /// <summary>
+    /// True if the area contains the point passed, otherwise false.
+    /// </summary>
+    public bool Contains { get; set; }
 }
