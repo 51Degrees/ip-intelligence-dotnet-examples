@@ -20,6 +20,8 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+using CsvHelper;
+using CsvHelper.Configuration;
 using Examples.OnPremise.Areas;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
@@ -34,6 +36,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -642,21 +645,34 @@ public class Program
                 }
             }
 
-            // Write out the headings as the first line.
-            output.WriteLine(String.Join(
-                ",",
-                KeyFactory.Keys.Concat(Metric.Properties)
-                .Select(i => "\"" + i + "\"")));
-
-            // Write out all the groups.
-            foreach (var group in groups.OrderBy(i => i.Key))
-            {
-                output.WriteLine(group.Key + "," + group.Value.ToString());
-            }
+            WriteToCsv(output, groups);
 
             ExampleUtils.CheckDataFile(
                 ipiEngine,
                 loggerFactory.CreateLogger<Program>());
+        }
+
+        /// <summary>
+        /// Write the metrics to the provided output in CSV format.
+        /// </summary>
+        /// <param name="output"></param>
+        /// <param name="groups"></param>
+        private static void WriteToCsv(TextWriter output, Dictionary<string, Metric> groups)
+        {
+            using var writer = new CsvWriter(
+                output,
+                new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    Delimiter = ","
+                });
+
+            // write Header
+            writer.WriteRecord(KeyFactory.Keys.Concat(Metric.Properties));
+            writer.NextRecord();
+
+            writer.WriteRecords(groups.OrderBy(i => i.Key));
+
+            writer.Flush();
         }
 
         /// <summary>
