@@ -262,7 +262,7 @@ public class Program
         protected override async Task ExecuteAsync(
             CancellationToken stoppingToken)
         {
-            await new Example().Run(
+            await Example.Run(
                 configuration.DataFile,
                 configuration.CsvTruthFile,
                 configuration.Output,
@@ -278,7 +278,7 @@ public class Program
     /// </summary>
     public class Example : ExampleBase
     {
-        public async Task Run(
+        public static async Task Run(
             string dataFile, 
             string csvTruthFile,
             TextWriter output,
@@ -345,7 +345,7 @@ public class Program
 
             // Use the main thread as the producer adding truths for the
             // consumers to process.
-            AddTruth(ipiEngine, logger, source, truth, consumers, stoppingToken);
+            AddTruth(logger, source, truth, consumers, stoppingToken);
 
             // Create the write for the destination output.
             using var writer = new CsvWriter(
@@ -404,7 +404,6 @@ public class Program
         }
 
         private static void AddTruth(
-            IpiOnPremiseEngine ipiEngine, 
             ILogger<Example> logger,
             CsvReader source,
             BlockingCollection<Truth> truth,
@@ -611,7 +610,7 @@ public class Program
             };
         }
 
-        private static T? GetValue<T>(
+        private static T GetValue<T>(
             IAspectPropertyValue<IReadOnlyList<IWeightedValue<T>>> 
             value)
         {
@@ -625,23 +624,24 @@ public class Program
 
     static void Main(string[] args)
     {
-        var configuration = new Configuration();
-
-        // Use the supplied path for the data file or find the lite file that
-        // is included in the repository.
-        configuration.DataFile = args.Length > 0 ? args[0] :
+        var configuration = new Configuration
+        {
+            // Use the supplied path for the data file or find the lite file that
+            // is included in the repository.
+            DataFile = args.Length > 0 ? args[0] :
             // In this example, by default, the 51Degrees IP Intelligence data
             // file needs to be somewhere in the project space, or you may
             // specify another file as a command line parameter.
             //
             // For testing, contact us to obtain an enterprise data file:
             // https://51degrees.com/contact-us
-            Examples.ExampleUtils.FindFile(
-                Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
+                Examples.ExampleUtils.FindFile(
+                    Constants.ENTERPRISE_IPI_DATA_FILE_NAME),
 
-        // Get the of the CSV file containing source truth.
-        // TODO: Provide a simple example for testing purposes.
-        configuration.CsvTruthFile = args.Length > 1 ? args[1] : "todo";
+            // Get the of the CSV file containing source truth.
+            // TODO: Provide a simple example for testing purposes.
+            CsvTruthFile = args.Length > 1 ? args[1] : "evidence_geoip_no_truth.csv"
+        };
 
         // Get the location for the output file. Use the same location as the
         // evidence if a path is not supplied on the command line.

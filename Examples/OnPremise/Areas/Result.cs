@@ -27,33 +27,27 @@ namespace Examples.OnPremise.Areas;
 /// <summary>
 /// The result of an area calculation.
 /// </summary>
-public class Result
+/// <remarks>
+/// Constructs a new instance of <see cref="Result"/>.
+/// </remarks>
+/// <param name="squareKms"></param>
+/// <param name="geometries"></param>
+/// <param name="contains"></param>
+public class Result(int squareKms, int geometries, bool contains)
 {
-    /// <summary>
-    /// Constructs a new instance of <see cref="Result"/>.
-    /// </summary>
-    /// <param name="squareKms"></param>
-    /// <param name="geometries"></param>
-    /// <param name="contains"></param>
-    public Result(int squareKms, int geometries, bool contains)
-    {
-        SquareKms = squareKms;
-        Geometries = geometries;
-        Contains = contains;
-    }
 
     /// <summary>
     /// Area in square kilometers rounded to nearest integer.
     /// </summary>
-    public int SquareKms { get; set; }
+    public int SquareKms { get; set; } = squareKms;
 
     /// <summary>
     /// Number of irregular polygons that form the area.
     /// </summary>
-    public int Geometries { get; set; }
+    public int Geometries { get; set; } = geometries;
 
     /// <summary>
     /// True if the area contains the point passed, otherwise false.
     /// </summary>
-    public bool Contains { get; set; }
+    public bool Contains { get; set; } = contains;
 }

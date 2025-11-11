@@ -271,7 +271,7 @@ public class Program
         /// area as the <see cref="AverageAreaKm"/>.
         /// </summary>
         public int EquivalentRadiusKm =>
-            (int)Math.Sqrt((double)AverageAreaKm / Math.PI);
+            (int)Math.Sqrt(AverageAreaKm / Math.PI);
 
         /// <summary>
         /// Key is the number of areas, and the value the number of IPs that
@@ -279,7 +279,7 @@ public class Program
         /// </summary>
         public IReadOnlyDictionary<int, int> Polygons =>
             _polygons.ToDictionary(k => k.Key, v => v.Value.Value);
-        private Dictionary<int, Counter> _polygons = new();
+        private Dictionary<int, Counter> _polygons = [];
 
         /// <summary>
         /// Average number of polygons for the metric.
@@ -294,7 +294,7 @@ public class Program
                 }
                 var weightedSum = Polygons.Sum(i => i.Key * i.Value);
                 var total = Polygons.Sum(i => i.Value);
-                return (double)weightedSum / (double)total;
+                return (double)weightedSum / total;
             }
         }
 
@@ -466,7 +466,7 @@ public class Program
             while (wktAreasTasks.IsCompleted == false &&
                 wktAreasTasks.TryTake(out var task, -1, stoppingToken))
             {
-                task.Wait();
+                task.Wait(stoppingToken);
                 if (DateTime.UtcNow >= nextLog)
                 {
                     logger.LogInformation(
@@ -476,7 +476,7 @@ public class Program
                 }
             }
 
-            producer.Wait();
+            producer.Wait(stoppingToken);
 
             return wktAreas;
         }
@@ -490,7 +490,8 @@ public class Program
             foreach (var area in property.GetValues())
             {
                 wktAreasTasks.TryAdd(Task.Run(() =>
-                    AddAreas(wktAreas, area.Name)), -1, stoppingToken);
+                    AddAreas(wktAreas, area.Name), stoppingToken),
+                    -1, stoppingToken);
             }
             wktAreasTasks.CompleteAdding();
         }
@@ -534,7 +535,7 @@ public class Program
         protected override async Task ExecuteAsync(
             CancellationToken stoppingToken)
         {
-            await new Example().Run(
+            await Example.Run(
                 configuration.DataFile,
                 configuration.LoggerFactory,
                 configuration.Output,
@@ -546,7 +547,7 @@ public class Program
 
     public class Example : ExampleBase
     {
-        public async Task Run(
+        public static async Task Run(
             string dataFile,
             ILoggerFactory loggerFactory,
             TextWriter output,
@@ -925,16 +926,18 @@ public class Program
 
     static void Main(string[] args)
     {
-        var configuration = new Configuration();
-
-        // Use the supplied path for the data file or find the lite file that is included
-        // in the repository.
-        configuration.DataFile = args.Length > 0 ? args[0] :
+        var configuration = new Configuration
+        {
+            // Use the supplied path for the data file or find the lite file that is included
+            // in the repository.
+            DataFile = args.Length > 0 ? args[0] :
             // In this example, by default, the 51degrees IP Intelligence data file needs to be somewhere in the
             // project space, or you may specify another file as a command line parameter.
             //
             // For testing, contact us to obtain an enterprise data file: https://51degrees.com/contact-us
-            Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
+            Examples.ExampleUtils.FindFile(
+                Constants.ENTERPRISE_IPI_DATA_FILE_NAME)
+        };
 
         // Get the location for the output file. Use the same location as the
         // evidence if a path is not supplied on the command line.
