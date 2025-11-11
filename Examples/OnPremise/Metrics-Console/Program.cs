@@ -370,43 +370,33 @@ public class Program
         }
 
         /// <summary>
-        /// Returns the value as a string for inclusion in the key, or 
-        /// "Missing" if the value can't be turned into a string.
+        /// Use pattern matching to return the value as a string 
+        /// for inclusion in the key, or "Missing" if the value can't be
+        /// turned into a string.
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
         private static string GetValue(object obj)
         {
-            var result = "Missing";
-            if (obj is IAspectPropertyValue<string>)
+            return obj switch
             {
-                var value = obj as IAspectPropertyValue<string>;
-                if (value.HasValue)
-                {
-                    result = value.Value;
-                }
-            }
-            else if (obj is 
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>)
-            {
-                var value = obj as
-                    IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>;
-                if (value.HasValue && value.Value.Count == 1)
-                {
-                    result = value.Value[0].Value;
-                }
-            }
-            else if (obj is 
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>>)
-            {
-                var value = obj as
-                    IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>>;
-                if (value.HasValue && value.Value.Count == 1)
-                {
-                    result = value.Value[0].Value.ToString();
-                }
-            }
-            return result;
+                // Single value
+                IAspectPropertyValue<string> 
+                { HasValue: true, Value: var str } => str,
+
+                // weighted string 
+                IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> 
+                { HasValue: true, Value: { Count: 1 } list }
+                    => list[0].Value,
+
+                // weighted bool
+                IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>> 
+                { HasValue: true, Value: { Count: 1 } list }
+                    => list[0].Value.ToString(),
+
+                // default
+                _ => "Missing"
+            };
         }
     }
 
