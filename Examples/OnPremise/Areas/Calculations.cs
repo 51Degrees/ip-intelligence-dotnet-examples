@@ -146,9 +146,11 @@ public static class Calculations
             }
             catch(TopologyException)
             {
-                // Some areas are currently not simple polygons and can result
-                // in an exception. Just use the non intersecting area
-                // TODO remove when area WKT is guaranteed to be polygons.
+                // In rare situations the intersection between the rectangle
+                // and the geometric area results in an exception. When this
+                // happens fall back to calculating the area with the
+                // rectangle's transformation not using the intersection or
+                // other rectangles.
                 area = GetArea(geo, geo, rectangle.Transformation);
                 break;
             }

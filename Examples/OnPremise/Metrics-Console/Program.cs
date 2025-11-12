@@ -909,16 +909,15 @@ public class Program
 
             // Increase the total area and number of areas for the metric only
             // where a non zero area is available.
-            foreach (var area in data.Areas.Value)
+            if (data.Areas.HasValue && 
+                dataSet.WktAreas.TryGetValue(
+                    data.Areas.Value,
+                    out var value) && 
+                value != null)
             {
-                if (dataSet.WktAreas.TryGetValue(
-                    area.Value,
-                    out var value) && value != null)
-                {
-                    metric.TotalAreaKm += value.SquareKms;
-                    metric.IncrementPolygons(value.Geometries);
-                    metric.AreaCount++;
-                }
+                metric.TotalAreaKm += value.SquareKms;
+                metric.IncrementPolygons(value.Geometries);
+                metric.AreaCount++;
             }
         }
     }
