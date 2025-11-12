@@ -44,6 +44,7 @@ using System.Net.Sockets;
 using System.Runtime;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 /// <summary>
 /// @example OnPremise/Metrics-Console/Program.cs
@@ -609,7 +610,6 @@ public class Program
                 new BlockingCollection<(string, string)>(
                 Environment.ProcessorCount);
             var consumers = CreateConsumers(
-                samplePercentage,
                 pipeline,
                 areaIndex,
                 factory,
@@ -622,7 +622,13 @@ public class Program
 
             // Use the main thread as the producer adding ranges for the
             // consumers to process.
-            AddRanges(ipiEngine, logger, ranges, consumers, stoppingToken);
+            AddRanges(
+                ipiEngine,
+                logger, 
+                ranges,
+                samplePercentage, 
+                consumers,
+                stoppingToken);
 
             // Combine all the consumer groups into the main groups.
             var groups = new Dictionary<string, Metric>();
@@ -667,7 +673,8 @@ public class Program
                 });
 
             // write Header
-            writer.WriteRecord(KeyFactory.Keys.Concat(Metric.Properties));
+            foreach(var header in KeyFactory.Keys.Concat(Metric.Properties))
+                writer.WriteField(header);
             writer.NextRecord();
 
             writer.WriteRecords(groups.OrderBy(i => i.Key));
@@ -688,7 +695,6 @@ public class Program
         /// <returns></returns>
         private static Consumer[]
             CreateConsumers(
-                double samplePercentage,
                 IPipeline pipeline,
                 AreaIndex areaIndex,
                 KeyFactory factory,
@@ -705,7 +711,6 @@ public class Program
                             pipeline,
                             areaIndex,
                             factory,
-                            samplePercentage,
                             ranges,
                             consumer,
                             stoppingToken),
@@ -718,16 +723,20 @@ public class Program
             IpiOnPremiseEngine ipiEngine,
             ILogger<Example> logger,
             BlockingCollection<(string, string)> ranges,
+            double samplePercentage,
             Consumer[] consumers,
             CancellationToken stoppingToken)
         {
+            var random = new Random();
             var process = Process.GetCurrentProcess();
             var added = 0;
             var lastLog = DateTime.UtcNow;
             var nextLog = lastLog.Add(_logBuild);
             var lastProcessorTime = process.TotalProcessorTime;
             foreach (var range in ipiEngine.ValidRanges().TakeWhile(
-                _ => stoppingToken.IsCancellationRequested == false))
+                _ => stoppingToken.IsCancellationRequested == false &&
+                // limit the amount of data processed based on the sample
+                random.NextDouble() <= samplePercentage))
             {
                 try
                 {
@@ -817,7 +826,6 @@ public class Program
             IPipeline pipeline,
             AreaIndex dataSet,
             KeyFactory factory,
-            double samplePercentage,
             BlockingCollection<(string, string)> ranges,
             Consumer consumer,
             CancellationToken stoppingToken)
@@ -861,19 +869,17 @@ public class Program
                             currentEndBuffer) &&
                             stoppingToken.IsCancellationRequested == false)
                         {
-                            if (random.NextDouble() <= samplePercentage)
-                            {
-                                // Only allocate IPAddress object when we
-                                // actually need to process it
-                                var ip = new IPAddress(currentIpBuffer);
-                                ProcessIp(
-                                    pipeline,
-                                    dataSet,
-                                    groups,
-                                    factory,
-                                    ip);
-                                consumer.Count++;
-                            }
+                          
+                            // Only allocate IPAddress object when we
+                            // actually need to process it
+                            var ip = new IPAddress(currentIpBuffer);
+                            ProcessIp(
+                                pipeline,
+                                dataSet,
+                                groups,
+                                factory,
+                                ip);
+                            consumer.Count++;
 
                             // Increment to next IP address (operates on stack
                             // buffer, no allocation)
