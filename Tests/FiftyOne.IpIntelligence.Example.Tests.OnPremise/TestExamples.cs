@@ -87,7 +87,7 @@ public class TestExamples
         if (string.IsNullOrWhiteSpace(GeoIpTruthEvidenceFile))
         {
             GeoIpTruthEvidenceFile = ExampleUtils.FindFile(
-                Constants.GEOIP_TRUTH_EVIDENCE_FILE_NAME);
+                Constants.GEOIP_COMPARISON_EVIDENCE_FILE_NAME);
         }
     }
 

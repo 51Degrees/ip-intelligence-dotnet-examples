@@ -680,7 +680,8 @@ public class Program
             // Write Records
             foreach (var record in groups.OrderBy(i => i.Key))
             {
-                var values = (record.Key + record.Value.ToString()).Split(',');
+                var values = (record.Key + record.Value.ToString())
+                    .Split(',');
                 writer.WriteField(values);
                 writer.NextRecord();
             }

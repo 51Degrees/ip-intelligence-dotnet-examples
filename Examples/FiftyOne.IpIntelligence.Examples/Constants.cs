@@ -39,7 +39,7 @@ namespace FiftyOne.IpIntelligence.Examples
         /// <summary>
         /// Name of the file to use for the test evidence.
         /// </summary>
-        public const string GEOIP_TRUTH_EVIDENCE_FILE_NAME = "evidence_geoip_no_truth.csv";
+        public const string GEOIP_COMPARISON_EVIDENCE_FILE_NAME = "geoip_comparison_evidence.csv";
 
         /// <summary>
         /// Environment variable key for the license key file to use for the 
