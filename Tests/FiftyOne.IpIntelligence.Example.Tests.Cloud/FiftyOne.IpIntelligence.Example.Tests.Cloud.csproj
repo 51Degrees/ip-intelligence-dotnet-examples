@@ -19,10 +19,10 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.157" />
-    <PackageReference Include="FiftyOne.Pipeline.CloudRequestEngine" Version="4.5.0-alpha.38" />
-    <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.38" />
-    <PackageReference Include="FiftyOne.Pipeline.JsonBuilder" Version="4.5.0-alpha.38" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10" />
+    <PackageReference Include="FiftyOne.Pipeline.CloudRequestEngine" Version="4.5.0-alpha.40" />
+    <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.40" />
+    <PackageReference Include="FiftyOne.Pipeline.JsonBuilder" Version="4.5.0-alpha.40" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.11" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" />
