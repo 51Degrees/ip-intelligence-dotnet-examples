@@ -20,8 +20,6 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-using System.Globalization;
-
 namespace Examples.OnPremise.Areas;
 
 /// <summary>
