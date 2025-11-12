@@ -672,12 +672,18 @@ public class Program
                     Delimiter = ","
                 });
 
-            // write Header
+            // Write Header
             foreach(var header in KeyFactory.Keys.Concat(Metric.Properties))
                 writer.WriteField(header);
             writer.NextRecord();
 
-            writer.WriteRecords(groups.OrderBy(i => i.Key));
+            // Write Records
+            foreach (var record in groups.OrderBy(i => i.Key))
+            {
+                writer.WriteField(record.Key);
+                writer.WriteField(record.Value.ToString());
+                writer.NextRecord();
+            }
 
             writer.Flush();
         }
