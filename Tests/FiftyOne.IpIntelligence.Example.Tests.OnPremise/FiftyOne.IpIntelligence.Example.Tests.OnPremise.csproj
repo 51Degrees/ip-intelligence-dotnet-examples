@@ -29,9 +29,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Examples\OnPremise\GettingStarted-Console\GettingStarted-Console.csproj" />
     <ProjectReference Include="..\..\Examples\OnPremise\Metadata-Console\Metadata-Console.csproj" />
+    <ProjectReference Include="..\..\Examples\OnPremise\Metrics-Console\Metrics-Console.csproj" />
     <ProjectReference Include="..\..\Examples\OnPremise\OfflineProcessing-Console\OfflineProcessing-Console.csproj" />
     <ProjectReference Include="..\..\Examples\OnPremise\UpdateDataFile-Console\UpdateDataFile-Console.csproj" />
-    <ProjectReference Include="..\..\Examples\OnPremise\Areas\Areas.csproj" />
+    <ProjectReference Include="..\..\Examples\OnPremise\Compare-Console\Compare-Console.csproj" />
   </ItemGroup>
 
 </Project>

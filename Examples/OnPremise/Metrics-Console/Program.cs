@@ -20,6 +20,8 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+using CsvHelper;
+using CsvHelper.Configuration;
 using Examples.OnPremise.Areas;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
@@ -34,6 +36,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -41,6 +44,7 @@ using System.Net.Sockets;
 using System.Runtime;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 /// <summary>
 /// @example OnPremise/Metrics-Console/Program.cs
@@ -271,7 +275,7 @@ public class Program
         /// area as the <see cref="AverageAreaKm"/>.
         /// </summary>
         public int EquivalentRadiusKm =>
-            (int)Math.Sqrt((double)AverageAreaKm / Math.PI);
+            (int)Math.Sqrt(AverageAreaKm / Math.PI);
 
         /// <summary>
         /// Key is the number of areas, and the value the number of IPs that
@@ -279,7 +283,7 @@ public class Program
         /// </summary>
         public IReadOnlyDictionary<int, int> Polygons =>
             _polygons.ToDictionary(k => k.Key, v => v.Value.Value);
-        private Dictionary<int, Counter> _polygons = new();
+        private Dictionary<int, Counter> _polygons = [];
 
         /// <summary>
         /// Average number of polygons for the metric.
@@ -294,7 +298,7 @@ public class Program
                 }
                 var weightedSum = Polygons.Sum(i => i.Key * i.Value);
                 var total = Polygons.Sum(i => i.Value);
-                return (double)weightedSum / (double)total;
+                return (double)weightedSum / total;
             }
         }
 
@@ -364,49 +368,39 @@ public class Program
         /// <returns></returns>
         public string Create(IIpIntelligenceData data)
         {
-            return String.Join(
+            return string.Join(
                 ",",
-                Keys.Select(i => "\"" + GetValue(data[i]) + "\""));
+                Keys.Select(i => GetValue(data[i])));
         }
 
         /// <summary>
-        /// Returns the value as a string for inclusion in the key, or 
-        /// "Missing" if the value can't be turned into a string.
+        /// Use pattern matching to return the value as a string 
+        /// for inclusion in the key, or "Missing" if the value can't be
+        /// turned into a string.
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
         private static string GetValue(object obj)
         {
-            var result = "Missing";
-            if (obj is IAspectPropertyValue<string>)
+            return obj switch
             {
-                var value = obj as IAspectPropertyValue<string>;
-                if (value.HasValue)
-                {
-                    result = value.Value;
-                }
-            }
-            else if (obj is 
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>)
-            {
-                var value = obj as
-                    IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>>;
-                if (value.HasValue && value.Value.Count == 1)
-                {
-                    result = value.Value[0].Value;
-                }
-            }
-            else if (obj is 
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>>)
-            {
-                var value = obj as
-                    IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>>;
-                if (value.HasValue && value.Value.Count == 1)
-                {
-                    result = value.Value[0].Value.ToString();
-                }
-            }
-            return result;
+                // Single value
+                IAspectPropertyValue<string> 
+                { HasValue: true, Value: var str } => str,
+
+                // weighted string 
+                IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> 
+                { HasValue: true, Value: { Count: 1 } list }
+                    => list[0].Value,
+
+                // weighted bool
+                IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>> 
+                { HasValue: true, Value: { Count: 1 } list }
+                    => list[0].Value.ToString(),
+
+                // default
+                _ => "Missing"
+            };
         }
     }
 
@@ -466,7 +460,7 @@ public class Program
             while (wktAreasTasks.IsCompleted == false &&
                 wktAreasTasks.TryTake(out var task, -1, stoppingToken))
             {
-                task.Wait();
+                task.Wait(stoppingToken);
                 if (DateTime.UtcNow >= nextLog)
                 {
                     logger.LogInformation(
@@ -476,7 +470,7 @@ public class Program
                 }
             }
 
-            producer.Wait();
+            producer.Wait(stoppingToken);
 
             return wktAreas;
         }
@@ -490,7 +484,8 @@ public class Program
             foreach (var area in property.GetValues())
             {
                 wktAreasTasks.TryAdd(Task.Run(() =>
-                    AddAreas(wktAreas, area.Name)), -1, stoppingToken);
+                    AddAreas(wktAreas, area.Name), stoppingToken),
+                    -1, stoppingToken);
             }
             wktAreasTasks.CompleteAdding();
         }
@@ -534,7 +529,7 @@ public class Program
         protected override async Task ExecuteAsync(
             CancellationToken stoppingToken)
         {
-            await new Example().Run(
+            await Example.Run(
                 configuration.DataFile,
                 configuration.LoggerFactory,
                 configuration.Output,
@@ -546,7 +541,7 @@ public class Program
 
     public class Example : ExampleBase
     {
-        public async Task Run(
+        public static async Task Run(
             string dataFile,
             ILoggerFactory loggerFactory,
             TextWriter output,
@@ -615,11 +610,11 @@ public class Program
                 new BlockingCollection<(string, string)>(
                 Environment.ProcessorCount);
             var consumers = CreateConsumers(
-                samplePercentage,
                 pipeline,
                 areaIndex,
                 factory,
                 ranges,
+                samplePercentage,
                 stoppingToken);
             logger.LogInformation(
                 "Created '{0}' consumer processors sampling '{1:P2}' of IPs",
@@ -628,7 +623,12 @@ public class Program
 
             // Use the main thread as the producer adding ranges for the
             // consumers to process.
-            AddRanges(ipiEngine, logger, ranges, consumers, stoppingToken);
+            AddRanges(
+                ipiEngine,
+                logger, 
+                ranges,
+                consumers,
+                stoppingToken);
 
             // Combine all the consumer groups into the main groups.
             var groups = new Dictionary<string, Metric>();
@@ -651,21 +651,42 @@ public class Program
                 }
             }
 
-            // Write out the headings as the first line.
-            output.WriteLine(String.Join(
-                ",",
-                KeyFactory.Keys.Concat(Metric.Properties)
-                .Select(i => "\"" + i + "\"")));
-
-            // Write out all the groups.
-            foreach (var group in groups.OrderBy(i => i.Key))
-            {
-                output.WriteLine(group.Key + "," + group.Value.ToString());
-            }
+            WriteToCsv(output, groups);
 
             ExampleUtils.CheckDataFile(
                 ipiEngine,
                 loggerFactory.CreateLogger<Program>());
+        }
+
+        /// <summary>
+        /// Write the metrics to the provided output in CSV format.
+        /// </summary>
+        /// <param name="output"></param>
+        /// <param name="groups"></param>
+        private static void WriteToCsv(TextWriter output, Dictionary<string, Metric> groups)
+        {
+            using var writer = new CsvWriter(
+                output,
+                new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    Delimiter = ","
+                });
+
+            // Write Header
+            foreach(var header in KeyFactory.Keys.Concat(Metric.Properties))
+                writer.WriteField(header);
+            writer.NextRecord();
+
+            // Write Records
+            foreach (var record in groups.OrderBy(i => i.Key))
+            {
+                var values = (record.Key + record.Value.ToString())
+                    .Split(',');
+                writer.WriteField(values);
+                writer.NextRecord();
+            }
+
+            writer.Flush();
         }
 
         /// <summary>
@@ -681,11 +702,11 @@ public class Program
         /// <returns></returns>
         private static Consumer[]
             CreateConsumers(
-                double samplePercentage,
                 IPipeline pipeline,
                 AreaIndex areaIndex,
                 KeyFactory factory,
                 BlockingCollection<(string, string)> ranges,
+                double samplePercentage,
                 CancellationToken stoppingToken)
         {
             return Enumerable.Range(
@@ -698,9 +719,9 @@ public class Program
                             pipeline,
                             areaIndex,
                             factory,
-                            samplePercentage,
                             ranges,
                             consumer,
+                            samplePercentage,
                             stoppingToken),
                         TaskCreationOptions.LongRunning);
                     return consumer;
@@ -714,13 +735,15 @@ public class Program
             Consumer[] consumers,
             CancellationToken stoppingToken)
         {
+            var random = new Random();
             var process = Process.GetCurrentProcess();
             var added = 0;
             var lastLog = DateTime.UtcNow;
             var nextLog = lastLog.Add(_logBuild);
             var lastProcessorTime = process.TotalProcessorTime;
-            foreach (var range in ipiEngine.ValidRanges().TakeWhile(
-                _ => stoppingToken.IsCancellationRequested == false))
+            foreach (var range in ipiEngine
+                .ValidRanges()
+                .Take(200))
             {
                 try
                 {
@@ -810,9 +833,9 @@ public class Program
             IPipeline pipeline,
             AreaIndex dataSet,
             KeyFactory factory,
-            double samplePercentage,
             BlockingCollection<(string, string)> ranges,
             Consumer consumer,
+            double samplePercentage,
             CancellationToken stoppingToken)
         {
             var random = new Random();
@@ -924,16 +947,18 @@ public class Program
 
     static void Main(string[] args)
     {
-        var configuration = new Configuration();
-
-        // Use the supplied path for the data file or find the lite file that is included
-        // in the repository.
-        configuration.DataFile = args.Length > 0 ? args[0] :
+        var configuration = new Configuration
+        {
+            // Use the supplied path for the data file or find the lite file that is included
+            // in the repository.
+            DataFile = args.Length > 0 ? args[0] :
             // In this example, by default, the 51degrees IP Intelligence data file needs to be somewhere in the
             // project space, or you may specify another file as a command line parameter.
             //
             // For testing, contact us to obtain an enterprise data file: https://51degrees.com/contact-us
-            Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
+            Examples.ExampleUtils.FindFile(
+                Constants.ENTERPRISE_IPI_DATA_FILE_NAME)
+        };
 
         // Get the location for the output file. Use the same location as the
         // evidence if a path is not supplied on the command line.
