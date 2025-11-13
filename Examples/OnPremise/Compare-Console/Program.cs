@@ -658,7 +658,8 @@ public class Program
             // Get the of the CSV file containing source truth.
             CsvTruthFile = args.Length > 1 
             ? args[1] 
-            : Constants.GEOIP_COMPARISON_EVIDENCE_FILE_NAME
+            : Examples.ExampleUtils.FindFile(
+                    Constants.GEOIP_COMPARISON_EVIDENCE_FILE_NAME),
         };
 
         // Get the location for the output file. Use the same location as the
