@@ -283,14 +283,26 @@ public class Program
     /// </summary>
     public class Example : ExampleBase
     {
+        /// <summary>
+        /// Runs the Compare console example
+        /// </summary>
+        /// <param name="dataFile"></param>
+        /// <param name="csvTruthFile"></param>
+        /// <param name="output"></param>
+        /// <param name="loggerFactory"></param>
+        /// <param name="stoppingToken"></param>
+        /// <param name="logger"></param>
+        /// <returns>Allow passing in of an external logger
+        /// for automated comparison</returns>
         public static async Task Run(
             string dataFile, 
             string csvTruthFile,
             TextWriter output,
             ILoggerFactory loggerFactory,
-            CancellationToken stoppingToken)
+            CancellationToken stoppingToken,
+            ILogger logger = null)
         {
-            var logger = loggerFactory.CreateLogger<Example>();
+            logger ??= loggerFactory.CreateLogger<Example>();
 
             // Ensure that batch latency mode is always enabled.
             GCSettings.LatencyMode = GCLatencyMode.Batch;
@@ -409,7 +421,7 @@ public class Program
         }
 
         private static void AddTruth(
-            ILogger<Example> logger,
+            ILogger logger,
             CsvReader source,
             BlockingCollection<Truth> truth,
             Consumer[] consumers, 
@@ -464,7 +476,7 @@ public class Program
         /// <param name="lastProcessorTime"></param>
         /// <param name="item"></param>
         private static void LogProgress(
-            ILogger<Example> logger,
+            ILogger logger,
             BlockingCollection<Truth> truth, 
             Consumer[] consumers,
             Process process, 
@@ -644,8 +656,9 @@ public class Program
                     Constants.ENTERPRISE_IPI_DATA_FILE_NAME),
 
             // Get the of the CSV file containing source truth.
-            // TODO: Provide a simple example for testing purposes.
-            CsvTruthFile = args.Length > 1 ? args[1] : "evidence_geoip_no_truth.csv"
+            CsvTruthFile = args.Length > 1 
+            ? args[1] 
+            : Constants.GEOIP_COMPARISON_EVIDENCE_FILE_NAME
         };
 
         // Get the location for the output file. Use the same location as the
