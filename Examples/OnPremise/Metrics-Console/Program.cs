@@ -49,10 +49,10 @@ using System.Threading.Tasks.Dataflow;
 /// <summary>
 /// @example OnPremise/Metrics-Console/Program.cs
 ///
-/// This example uses all the public IP addresses and passes them to the IP
-/// Intelligence service recording the average geographic area in square
+/// This example takes all public IP addresses and passes them to the IP
+/// Intelligence service, recording the average geographic area in square
 /// kilometers, the number of polygons that form the area, and the equivalent
-/// circle radius if the area could be represented as a circle.
+/// radius if the area can be represented as a circle.
 /// 
 /// Depending on the available processor cores the example can take a long time
 /// to complete.
@@ -60,8 +60,9 @@ using System.Threading.Tasks.Dataflow;
 /// The sample of IP addresses used in the metrics can be adjusted as a
 /// parameter.
 /// 
-/// It is primarily designed for those who are interested to verify the
-/// published metrics associated with 51Degrees IP intelligence service.
+/// This example is primarily designed for those who are interested in 
+/// verifying the published metrics associated with 51Degrees' 
+/// IP intelligence service.
 ///
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Metrics-Console/Program.cs). 
 /// 

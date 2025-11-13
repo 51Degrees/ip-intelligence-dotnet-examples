@@ -48,13 +48,18 @@ using System.Threading.Tasks;
 
 /// <summary>
 /// @example OnPremise/Compare-Console/Program.cs
-///
-/// This example compares a CSV file containing known true IP addresses with
-/// associated latitude and longitudes against an IP Intelligence service that
-/// can return latitude and longitude and area information for a given IP 
-/// address. This can be useful for understanding how the results of IP to
-/// location compare to real world information when evaluating difference
-/// solutions.
+/// 
+/// This example takes in a CSV file containing 'known and true' IP-Location 
+/// records (IP addresses with associated latitude and longitudes).
+/// In this context, 'known and true' refers to real-world data the user 
+/// has collected that is considered accurate and trustworthy.
+/// 
+/// These records are then used for comparison against an IP Intelligence 
+/// service that can return latitude, longitude and area information 
+/// for a given IP address.
+/// This can be useful for understanding how the results of an IP to
+/// location service compare to real-world information, especially when 
+/// evaluating different solutions.
 ///
 /// The example will ingest the following fields from a CSV file.
 /// 
