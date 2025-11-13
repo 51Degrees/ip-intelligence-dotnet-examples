@@ -611,12 +611,12 @@ public class Program
         }
 
         private static T GetValue<T>(
-            IAspectPropertyValue<IReadOnlyList<IWeightedValue<T>>> 
+            IAspectPropertyValue<T> 
             value)
         {
             if (value.HasValue)
             {
-                return value.Value[0].Value;
+                return value.Value;
             }
             return default;
         }
