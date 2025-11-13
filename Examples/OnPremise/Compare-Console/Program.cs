@@ -645,7 +645,7 @@ public class Program
 
             // Get the of the CSV file containing source truth.
             // TODO: Provide a simple example for testing purposes.
-            CsvTruthFile = args.Length > 1 ? args[1] : "evidence_geoip_no_truth.csv"
+            CsvTruthFile = args.Length > 1 ? args[1] : Examples.ExampleUtils.FindFile("geoip_comparison_evidence.csv"),
         };
 
         // Get the location for the output file. Use the same location as the
