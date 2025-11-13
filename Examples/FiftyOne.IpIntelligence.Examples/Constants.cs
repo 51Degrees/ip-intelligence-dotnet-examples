@@ -37,6 +37,11 @@ namespace FiftyOne.IpIntelligence.Examples
         public const string YAML_EVIDENCE_FILE_NAME = "evidence.yml";
 
         /// <summary>
+        /// Name of the file to use for the test evidence.
+        /// </summary>
+        public const string GEOIP_COMPARISON_EVIDENCE_FILE_NAME = "geoip_comparison_evidence.csv";
+
+        /// <summary>
         /// Environment variable key for the license key file to use for the 
         /// tests.
         /// </summary>
@@ -51,6 +56,12 @@ namespace FiftyOne.IpIntelligence.Examples
         /// Environment variable key for the evidence file to use for the tests.
         /// </summary>
         public const string EVIDENCE_FILE_ENV_VAR = "EVIDENCEFILE";
+
+        /// <summary>
+        /// Environment variable key for the geo ip truth 
+        /// evidence file to use for the tests.
+        /// </summary>
+        public const string GEOIP_TRUTH_EVIDENCE_FILE_ENV_VAR = "GEOIPEVIDENCEFILE";
 
         /// <summary>
         /// Ports used for running web examples and their tests.
