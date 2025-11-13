@@ -187,9 +187,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
                         }
                         else
                         {
-                            var nameValues = string.Join(", ", name.Value.Select(x => $"('{x.Value}' @ {x.Weighting()})"));
                             output.Add(nameof(ipData.RegisteredName), 
-                                $"\t{nameof(ipData.RegisteredName)}  ({name.Value.Count}): {nameValues}");
+                                $"\t{nameof(ipData.RegisteredName)}  : {name.Value}");
                         }
                     }
                     // Our IP Intelligence solution uses machine learning to find the optimal

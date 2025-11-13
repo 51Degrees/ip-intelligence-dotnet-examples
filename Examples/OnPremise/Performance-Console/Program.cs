@@ -229,10 +229,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                                 // out the very method that the benchmark is testing.
                                 if (ipData.RegisteredName.HasValue)
                                 {
-                                    foreach (var nextName in ipData.RegisteredName.Value)
-                                    {
-                                        result.HashSum += nextName.Value[0].GetHashCode();
-                                    }
+                                    result.HashSum += ipData.RegisteredName.Value.GetHashCode();
                                 }
                             }
 

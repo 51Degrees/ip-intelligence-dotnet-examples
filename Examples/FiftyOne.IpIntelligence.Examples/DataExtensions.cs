@@ -63,48 +63,12 @@ namespace FiftyOne.IpIntelligence.Examples
         /// </summary>
         /// <param name="apv"></param>
         /// <returns></returns>
-        public static string GetHumanReadable(this IAspectPropertyValue<string> apv)
-        {
-            return apv.HasValue ? apv.Value : $"Unknown ({apv.NoValueMessage})";
-        }
-        public static string GetHumanReadable(this IAspectPropertyValue<IReadOnlyList<string>> apv)
-        {
-            return apv.HasValue ? string.Join(", ", apv.Value) : $"Unknown ({apv.NoValueMessage})";
-        }
-        public static string GetHumanReadable(this IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> apv)
-        {
-            if (!apv.HasValue)
-                return $"Unknown ({apv.NoValueMessage})";
-            
-            // If there's only one element with weighting 1, just show the value without weighting
-            if (apv.Value.Count == 1 && Math.Abs(apv.Value[0].Weighting() - 1.0f) < 0.0001f)
-                return apv.Value[0].Value;
-            
-            return string.Join(", ", apv.Value.Select(x => $"{x.Weighting()}x'{x.Value}'"));
-        }
-        public static string GetHumanReadable(this IAspectPropertyValue<int> apv)
+        public static string GetHumanReadable<T>(this IAspectPropertyValue<T> apv)
         {
             return apv.HasValue ? apv.Value.ToString() : $"Unknown ({apv.NoValueMessage})";
         }
-        public static string GetHumanReadable(this IAspectPropertyValue<IReadOnlyList<IWeightedValue<int>>> apv)
-        {
-            if (!apv.HasValue)
-                return $"Unknown ({apv.NoValueMessage})";
-            
-            var values = apv.Value.Select(x => 
-                Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString() : $"({x.Value} @ {x.Weighting():F4})");
-            return string.Join(", ", values);
-        }
-        public static string GetHumanReadable(this IAspectPropertyValue<IReadOnlyList<IWeightedValue<float>>> apv)
-        {
-            if (!apv.HasValue)
-                return $"Unknown ({apv.NoValueMessage})";
-            
-            var values = apv.Value.Select(x => 
-                Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString("F6") : $"({x.Value:F6} @ {x.Weighting():F4})");
-            return string.Join(", ", values);
-        }
-        public static string GetHumanReadable(this IAspectPropertyValue<IReadOnlyList<IWeightedValue<IPAddress>>> apv)
+        /// <inheritdoc cref="GetHumanReadable{T}(IAspectPropertyValue{T})"/>
+        public static string GetHumanReadable<T>(this IAspectPropertyValue<IReadOnlyList<IWeightedValue<T>>> apv)
         {
             if (!apv.HasValue)
                 return $"Unknown ({apv.NoValueMessage})";
