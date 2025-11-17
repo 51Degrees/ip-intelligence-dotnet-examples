@@ -20,7 +20,7 @@ $RunTestsArgs = @{
     Arch = $Arch
     BuildMethod = $BuildMethod
     OutputFolder = $OutputFolder
-    Filter = ".*Tests(|\.OnPremise)(|\.Core)\.dll"
+    Filter = ".*Tests(|\.OnPremise)(|\.Core)(|\.Cloud)\.dll"
 }
 
 ./dotnet/run-unit-tests.ps1 @RunTestsArgs
