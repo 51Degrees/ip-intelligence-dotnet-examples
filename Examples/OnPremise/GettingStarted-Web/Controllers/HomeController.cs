@@ -25,8 +25,6 @@ using FiftyOne.Pipeline.Web.Services;
 using FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model;
 using Microsoft.Extensions.Logging;
 using FiftyOne.Pipeline.Core.FlowElements;
-using FiftyOne.Pipeline.Core.Data;
-using System.Net;
 
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controllers
 {

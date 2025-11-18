@@ -225,7 +225,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
                 // project space, or you may specify another file as a command line parameter.
                 //
                 // For testing, contact us to obtain an enterprise data file: https://51degrees.com/contact-us
-                Examples.ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
+                Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
 
             File.WriteAllText("Metadata_DataFileName.txt", dataFile);
 

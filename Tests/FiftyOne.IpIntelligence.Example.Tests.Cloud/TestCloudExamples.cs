@@ -28,7 +28,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -65,7 +64,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             if (string.IsNullOrWhiteSpace(_dataFile))
             {
                 _dataFile = ExampleUtils.FindFile(
-                    Constants.LITE_IPI_DATA_FILE_NAME);
+                    Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
             }
 
             // Write data file path for debugging
@@ -227,8 +226,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 CloudExamplePath,
                 new string[]
                 {
-                    "UNICOM",
-                    "unicom",
+                    "CHINANET-GD",
                 },
                 new string[]
                 {
@@ -238,29 +236,29 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 },
                 new string[]
                 {
-                    "116.128.0.0",
-                    "116.191.255.255",
+                    "1.3.0.0",
+                    "1.3.255.255",
                 },
-                "starting with 116.x",
+                "starting with 1.3.x",
             ],
             [
                 MixedCloudExamplePath,
                 new string[]
                 {
-                    "GOGL",
+                    "CHINANET-GD",
                 },
                 new string[]
                 {
-                    "Brazil",
-                    "BR",
-                    "br",
+                    "China",
+                    "CN",
+                    "cn",
                 },
                 new string[]
                 {
-                    "45.236.48.0",
-                    "45.236.49.215",
+                    "1.3.0.0",
+                    "1.3.255.255",
                 },
-                "starting with 45.236.x",
+                "starting with 1.3.x",
             ],
         ];
 
