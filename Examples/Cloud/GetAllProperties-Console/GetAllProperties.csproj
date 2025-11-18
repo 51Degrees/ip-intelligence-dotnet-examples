@@ -78,7 +78,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.164" />
+    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.171" />
   </ItemGroup>
 
 </Project>
