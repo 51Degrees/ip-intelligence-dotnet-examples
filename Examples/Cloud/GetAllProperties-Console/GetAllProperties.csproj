@@ -79,7 +79,6 @@
 
   <ItemGroup>
     <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.164" />
-    <PackageReference Include="System.Text.Json" Version="8.0.6" />
   </ItemGroup>
 
 </Project>
