@@ -26,7 +26,6 @@ using FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model;
 using Microsoft.Extensions.Logging;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
-using System.Net;
 
 /// @example Cloud/GettingStarted-Web/Controllers/HomeController.cs
 /// 

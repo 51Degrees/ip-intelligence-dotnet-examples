@@ -25,116 +25,160 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
+using System.Threading;
 
-namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise
+namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise;
+
+/// <summary>
+/// This test class ensures that the hash examples execute successfully.
+/// </summary>
+/// <remarks>
+/// Note that these test do not generally ensure the correctness 
+/// of the example, only that the example will run without 
+/// crashing or throwing any unhandled exceptions.
+/// </remarks>
+[TestClass]
+public class TestExamples
 {
+    private string LicenseKey;
+
+    private string DataFile;
+
+    private string EvidenceFile;
+    private string GeoIpTruthEvidenceFile;
+
     /// <summary>
-    /// This test class ensures that the hash examples execute successfully.
+    /// Init method - specify License Key to run examples here or 
+    /// set a License Key in an environment variable called 'ResourceKey'.
+    /// Set data file for hash examples and additionally a User-Agents file
+    /// for the performance example.
     /// </summary>
-    /// <remarks>
-    /// Note that these test do not generally ensure the correctness 
-    /// of the example, only that the example will run without 
-    /// crashing or throwing any unhandled exceptions.
-    /// </remarks>
-    [TestClass]
-    public class TestExamples
+    [TestInitialize]
+    public void Init()
     {
-        private string LicenseKey;
+        // Set license key for autoupdate examples.
+        var licenseKey = Environment.GetEnvironmentVariable(
+            Constants.LICENSE_KEY_ENV_VAR);
+        LicenseKey = string.IsNullOrWhiteSpace(licenseKey) == false ?
+            licenseKey: "!!YOUR_LICENSE_KEY!!";
 
-        private string DataFile;
-
-        private string EvidenceFile;
-
-        /// <summary>
-        /// Init method - specify License Key to run examples here or 
-        /// set a License Key in an environment variable called 'ResourceKey'.
-        /// Set data file for hash examples and additionally a User-Agents file
-        /// for the performance example.
-        /// </summary>
-        [TestInitialize]
-        public void Init()
-        {
-            // Set license key for autoupdate examples.
-            var licenseKey = Environment.GetEnvironmentVariable(
-                Constants.LICENSE_KEY_ENV_VAR);
-            LicenseKey = string.IsNullOrWhiteSpace(licenseKey) == false ?
-                licenseKey: "!!YOUR_LICENSE_KEY!!";
-
-            // Set IP Intelligence Data file
+        // Set IP Intelligence Data file
             DataFile = Environment.GetEnvironmentVariable(
                 Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
-            if (string.IsNullOrWhiteSpace(DataFile))
-            {
-                DataFile = ExampleUtils.FindFile(
-                    Constants.LITE_IPI_DATA_FILE_NAME);
-            }
-
-            File.WriteAllText($"{nameof(TestExamples)}_DataFileName.txt", DataFile);
-
-            // Set evidence file for offline processing example.
-            EvidenceFile = Environment.GetEnvironmentVariable(
-                Constants.EVIDENCE_FILE_ENV_VAR);
-            if (string.IsNullOrWhiteSpace(EvidenceFile))
-            {
-                EvidenceFile = ExampleUtils.FindFile(
-                    Constants.YAML_EVIDENCE_FILE_NAME);
-            }
+        if (string.IsNullOrWhiteSpace(DataFile))
+        {
+            DataFile = ExampleUtils.FindFile(
+                Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
         }
 
-        /// <summary>
-        /// Test the GettingStarted Example
-        /// </summary>
-        [TestMethod]
-        public void Example_OnPremise_GettingStarted()
+        File.WriteAllText($"{nameof(TestExamples)}_DataFileName.txt", DataFile);
+
+        // Set evidence file for offline processing example.
+        EvidenceFile = Environment.GetEnvironmentVariable(
+            Constants.EVIDENCE_FILE_ENV_VAR);
+        if (string.IsNullOrWhiteSpace(EvidenceFile))
         {
-            var example = new Examples.OnPremise.GettingStartedConsole.Program.Example();
-            example.Run(DataFile, new LoggerFactory(), TextWriter.Null);
+            EvidenceFile = ExampleUtils.FindFile(
+                Constants.YAML_EVIDENCE_FILE_NAME);
         }
 
-        /// <summary>
-        /// Test the GettingStarted Example
-        /// </summary>
-        [TestMethod]
-        public void Example_OnPremise_OfflineProcessing()
+        GeoIpTruthEvidenceFile = Environment.GetEnvironmentVariable(
+            Constants.GEOIP_TRUTH_EVIDENCE_FILE_ENV_VAR);
+        if (string.IsNullOrWhiteSpace(GeoIpTruthEvidenceFile))
         {
-            var example = new Examples.OnPremise.OfflineProcessing.Program.Example();
-            using (var reader = new StreamReader(File.OpenRead(EvidenceFile)))
-            {
-                example.Run(DataFile, reader, new LoggerFactory(), TextWriter.Null);
-            }
+            GeoIpTruthEvidenceFile = ExampleUtils.FindFile(
+                Constants.GEOIP_COMPARISON_EVIDENCE_FILE_NAME);
         }
+    }
 
-        /// <summary>
-        /// Test the Metadata Example
-        /// </summary>
-        [TestMethod]
-        public void Example_OnPremise_Metadata()
+    /// <summary>
+    /// Test the GettingStarted Example
+    /// </summary>
+    [TestMethod]
+    public void Example_OnPremise_GettingStarted()
+    {
+        var example = new Examples.OnPremise.GettingStartedConsole.Program.Example();
+        example.Run(DataFile, new LoggerFactory(), TextWriter.Null);
+    }
+
+    /// <summary>
+    /// Test the GettingStarted Example
+    /// </summary>
+    [TestMethod]
+    public void Example_OnPremise_OfflineProcessing()
+    {
+        var example = new Examples.OnPremise.OfflineProcessing.Program.Example();
+        using (var reader = new StreamReader(File.OpenRead(EvidenceFile)))
         {
-            var example = new Examples.OnPremise.Metadata.Program.Example();
-            example.Run(DataFile, new LoggerFactory(), TextWriter.Null);
+            example.Run(DataFile, reader, new LoggerFactory(), TextWriter.Null);
         }
+    }
 
-        /// <summary>
-        /// Test the UpdateDataFile Example
-        /// </summary>
-        [Ignore]
-        [TestMethod]
-        public void Example_OnPremise_UpdateDataFile()
-        {
-            VerifyLicenseKeyAvailable();
-            Examples.OnPremise.UpdateDataFile.Program.Initialize(
-                DataFile, LicenseKey, null, false);
-        }
+    /// <summary>
+    /// Test the Metadata Example
+    /// </summary>
+    [TestMethod]
+    public void Example_OnPremise_Metadata()
+    {
+        var example = new Examples.OnPremise.Metadata.Program.Example();
+        example.Run(DataFile, new LoggerFactory(), TextWriter.Null);
+    }
 
-        private void VerifyLicenseKeyAvailable()
+    /// <summary>
+    /// Test the Comparison Example
+    /// </summary>
+    [TestMethod]
+    public void Example_OnPremise_CompareConsole()
+    {
+        var tempfile = Path.GetTempFileName();
+        using var writer = new StreamWriter(File.Create(tempfile));
+        Examples.OnPremise.Compare.Program.Example.Run(
+            DataFile,
+            GeoIpTruthEvidenceFile,
+            writer, 
+            new LoggerFactory(), 
+            CancellationToken.None).Wait();
+        File.Delete(tempfile);
+    }
+
+    /// <summary>
+    /// Test the Metrics Example
+    /// </summary>
+    [TestMethod]
+    public void Example_OnPremise_MetricsConsole()
+    {
+        var tempfile = Path.GetTempFileName();
+        using var writer = new StreamWriter(File.Create(tempfile));
+        Examples.OnPremise.Metrics.Program.Example.Run(
+            DataFile,
+            new LoggerFactory(),
+            writer,
+            0.0001,
+            CancellationToken.None).Wait();
+        File.Delete(tempfile);
+    }
+
+
+    /// <summary>
+    /// Test the UpdateDataFile Example
+    /// </summary>
+    [Ignore]
+    [TestMethod]
+    public void Example_OnPremise_UpdateDataFile()
+    {
+        VerifyLicenseKeyAvailable();
+        Examples.OnPremise.UpdateDataFile.Program.Initialize(
+            DataFile, LicenseKey, null, false);
+    }
+
+    private void VerifyLicenseKeyAvailable()
+    {
+        if (string.IsNullOrWhiteSpace(LicenseKey) == true ||
+            LicenseKey.StartsWith("!!") == true)
         {
-            if (string.IsNullOrWhiteSpace(LicenseKey) == true ||
-                LicenseKey.StartsWith("!!") == true)
-            {
-                Assert.Inconclusive("This test requires a 51Degrees license key. This can be " +
-                    "specified in the TestHashExamples.Init method or by setting an Environment " +
-                    $"variable called '{Constants.LICENSE_KEY_ENV_VAR}'");
-            }
+            Assert.Inconclusive("This test requires a 51Degrees license key. This can be " +
+                "specified in the TestHashExamples.Init method or by setting an Environment " +
+                $"variable called '{Constants.LICENSE_KEY_ENV_VAR}'");
         }
     }
 }

@@ -1,16 +1,10 @@
 name: Publish IP Tester
 
-on:
-  workflow_dispatch:
-    inputs:
-      dryrun:
-        type: boolean
-        default: true
+on: workflow_dispatch
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
       - name: Placeholder
-        run: echo "Run from ipitester branch"
+        run: echo "Run from ipitester branch"; exit 1

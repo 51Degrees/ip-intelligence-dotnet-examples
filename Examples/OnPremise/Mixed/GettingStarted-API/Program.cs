@@ -26,6 +26,7 @@ using FiftyOne.IpIntelligence.Examples.Mixed.OnPremise;
 using FiftyOne.Pipeline.Core.Configuration;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
+using FiftyOne.Pipeline.Engines.FiftyOne.Data;
 using FiftyOne.Pipeline.Engines.FlowElements;
 using FiftyOne.Pipeline.Engines.Services;
 using FiftyOne.Pipeline.JsonBuilder.Data;
@@ -198,13 +199,73 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
                 .SelectMany(x => x is IAspectEngine eng ? [eng] : (IEnumerable<IAspectEngine>)[])
                 .Select(eng => new KeyValuePair<string, ProductMetaData>(eng.ElementDataKey, new ProductMetaData
                 {
-                    Properties = eng!.Properties.Select(prop => new PropertyMetaData(prop)).ToList(),
+                    Properties = GetEngineProperties(eng).ToList(),
                 })));
 
             return Results.Json(new
             {
                 Products = products,
             });
+        }
+
+        private static IEnumerable<PropertyMetaData> GetEngineProperties(IAspectEngine aspectEngine)
+        {
+            if (aspectEngine is IpiOnPremiseEngine ipiEngine)
+            {
+                return ipiEngine.Components.SelectMany(comp
+                    => comp.Properties.Select(prop => PropMetadataForIpiComponent(prop, comp)));
+            }
+            return aspectEngine.Properties.Select(prop => new PropertyMetaData(prop));
+        }
+
+        private static PropertyMetaData PropMetadataForIpiComponent(
+            IFiftyOneAspectPropertyMetaData property,
+            IComponentMetaData component)
+        {
+            var result = new PropertyMetaData(property)
+            {
+                Category = component.Name
+            };
+            if (GetTypeOverrideForPropertyType(property.Type) is { } typeOverride)
+            {
+                result.Type = typeOverride;
+            }
+            return result;
+        }
+
+        private static string? GetTypeOverrideForPropertyType(Type type)
+        {
+            if (!type.IsGenericType)
+                return null;
+            var enumerableType = type.GetGenericTypeDefinition() == typeof(IWeightedValue<>)
+                ? type
+                : type.GetInterfaces().FirstOrDefault(
+                x => x.IsGenericType
+                && x.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+            if (enumerableType is null)
+                return null;
+            var topTypes = enumerableType.GetGenericArguments();
+            if (topTypes is null)
+                return null;
+            if (topTypes.Length != 1)
+                return null;
+            if (!topTypes[0].IsGenericType)
+                return null;
+            var weightedType = topTypes[0].GetGenericTypeDefinition() == typeof(IWeightedValue<>)
+                ? topTypes[0]
+                : topTypes[0].GetInterfaces().FirstOrDefault(
+                    x => x.IsGenericType
+                    && x.GetGenericTypeDefinition() == typeof(IWeightedValue<>));
+            if (weightedType is null)
+                return null;
+            var deepTypes = weightedType.GetGenericArguments();
+            if (weightedType is null)
+                return null;
+            if (deepTypes.Length != 1)
+                return null;
+            if (deepTypes[0].IsGenericType)
+                return null;
+            return "Weighted" + deepTypes[0].Name;
         }
 
         private static IResult EvidenceKeys(string? resource, HttpContext httpContext, IPipeline pipeline)

@@ -26,7 +26,6 @@ using FiftyOne.Pipeline.Core.Data;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 using FiftyOne.Pipeline.Engines.Data;
 
