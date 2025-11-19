@@ -664,7 +664,9 @@ public class Program
         /// </summary>
         /// <param name="output"></param>
         /// <param name="groups"></param>
-        private static void WriteToCsv(TextWriter output, Dictionary<string, Metric> groups)
+        private static void WriteToCsv(
+            TextWriter output,
+            Dictionary<string, Metric> groups)
         {
             using var writer = new CsvWriter(
                 output,
@@ -742,9 +744,7 @@ public class Program
             var lastLog = DateTime.UtcNow;
             var nextLog = lastLog.Add(_logBuild);
             var lastProcessorTime = process.TotalProcessorTime;
-            foreach (var range in ipiEngine
-                .ValidRanges()
-                .Take(200))
+            foreach (var range in ipiEngine.ValidRanges())
             {
                 try
                 {
