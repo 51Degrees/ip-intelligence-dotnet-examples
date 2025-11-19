@@ -551,6 +551,7 @@ public class Program
             ILogger logger = null)
         {
             logger ??= loggerFactory.CreateLogger<Example>();
+
             // Ensure that batch latency mode is always enabled.
             GCSettings.LatencyMode = GCLatencyMode.Batch;
 

@@ -18,10 +18,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.164" />
-    <PackageReference Include="FiftyOne.Pipeline.CloudRequestEngine" Version="4.5.0-alpha.40" />
-    <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.40" />
-    <PackageReference Include="FiftyOne.Pipeline.JsonBuilder" Version="4.5.0-alpha.40" />
+    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.174" />
+    <PackageReference Include="FiftyOne.Pipeline.CloudRequestEngine" Version="4.5.0-alpha.41" />
+    <PackageReference Include="FiftyOne.Pipeline.Core" Version="4.5.0-alpha.41" />
+    <PackageReference Include="FiftyOne.Pipeline.JsonBuilder" Version="4.5.0-alpha.41" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.11" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
@@ -29,7 +29,6 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.6.4" />
     <PackageReference Include="MSTest.TestFramework" Version="3.6.4" />
-    <PackageReference Include="System.Text.Json" Version="8.0.6" />
   </ItemGroup>
 
   <ItemGroup>
