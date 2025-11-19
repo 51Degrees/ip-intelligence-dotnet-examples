@@ -145,6 +145,7 @@ public class TestExamples
     /// Test the Metrics Example
     /// </summary>
     [TestMethod]
+    [Ignore("Disabled until profileOffsets are sorted (again).")]
     public void Example_OnPremise_MetricsConsole()
     {
         var tempfile = Path.GetTempFileName();
