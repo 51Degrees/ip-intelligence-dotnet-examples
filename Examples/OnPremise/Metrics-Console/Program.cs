@@ -547,8 +547,10 @@ public class Program
             ILoggerFactory loggerFactory,
             TextWriter output,
             double samplePercentage,
-            CancellationToken stoppingToken)
+            CancellationToken stoppingToken,
+            ILogger logger = null)
         {
+            logger ??= loggerFactory.CreateLogger<Example>();
             // Ensure that batch latency mode is always enabled.
             GCSettings.LatencyMode = GCLatencyMode.Batch;
 
@@ -574,7 +576,6 @@ public class Program
                 .AddFlowElement(ipiEngine)
                 .SetAutoDisposeElements(false)
                 .Build();
-            var logger = loggerFactory.CreateLogger<Example>();
 
             // Log data file information
             var dataFilePublishDate = ipiEngine.DataFiles[0].DataPublishedDateTime;
@@ -731,20 +732,18 @@ public class Program
 
         private static void AddRanges(
             IpiOnPremiseEngine ipiEngine,
-            ILogger<Example> logger,
+            ILogger logger,
             BlockingCollection<(string, string)> ranges,
             Consumer[] consumers,
             CancellationToken stoppingToken)
         {
-            var random = new Random();
             var process = Process.GetCurrentProcess();
             var added = 0;
             var lastLog = DateTime.UtcNow;
             var nextLog = lastLog.Add(_logBuild);
             var lastProcessorTime = process.TotalProcessorTime;
             foreach (var range in ipiEngine
-                .ValidRanges()
-                .Take(200))
+                .ValidRanges())
             {
                 try
                 {
@@ -774,13 +773,13 @@ public class Program
         }
 
         private static DateTime Log(
-            ILogger<Example> logger,
+            ILogger logger,
             BlockingCollection<(string, string)> ranges,
-            Consumer[] consumers, 
-            Process process, 
-            int added, 
-            ref DateTime lastLog, 
-            ref TimeSpan lastProcessorTime, 
+            Consumer[] consumers,
+            Process process,
+            int added,
+            ref DateTime lastLog,
+            ref TimeSpan lastProcessorTime,
             (string, string) range)
         {
             // Log the ranges and other telemetry.
