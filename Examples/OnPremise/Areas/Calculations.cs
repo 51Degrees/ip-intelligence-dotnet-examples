@@ -27,7 +27,6 @@ using NetTopologySuite.IO;
 using ProjNet.CoordinateSystems.Transformations;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 
 namespace Examples.OnPremise.Areas;
 
@@ -104,8 +103,7 @@ public static class Calculations
         // True if the area contains the point. This must be done before
         // the geo instance is manipulated by GetAreas and converted to
         // different coordinate units.
-        var contains = geo.Contains(new 
-            NetTopologySuite.Geometries.Point(longitude, latitude));
+        var contains = geo.Contains(new Point(longitude, latitude));
         var area = GetAreas(geo);
         return new(
             // The total area in square kms.
