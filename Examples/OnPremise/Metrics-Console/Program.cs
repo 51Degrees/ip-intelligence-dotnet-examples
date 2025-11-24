@@ -20,7 +20,6 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-
 // Ignore Spelling: Wkt
 
 using CsvHelper;
@@ -36,7 +35,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Concurrent;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -46,8 +45,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 
 /// <summary>
 /// @example OnPremise/Metrics-Console/Program.cs
@@ -103,25 +102,46 @@ public static class Extensions
         IProfileMetaData profile)
     {
         if (network.Equals(profile.Component) &&
-            profile.GetValue("RegisteredCountry", "Unknown") == null)
+            IsRegisteredCountryValid(profile))
         {
             return GetRange(profile);
         }
         return default;
     }
 
+    private static bool IsRegisteredCountryValid(IProfileMetaData profile)
+    {
+        var value = profile.GetValue("RegisteredCountry", "Unknown");
+        if (value == null) return true;
+        value.Dispose();
+        return false;
+    }
+
     private static (string, string) GetRange(IProfileMetaData profile)
     {
-        var start = profile.GetValues("IpRangeStart").Single();
-        var end = profile.GetValues("IpRangeEnd").Single();
-        return new(start.Name, end.Name);
+        return new(
+            GetValue(profile, "IpRangeStart"), 
+            GetValue(profile, "IpRangeEnd"));
+    }
+
+    private static string GetValue(IProfileMetaData profile, string name)
+    {
+        foreach(var value in profile.GetValues(name))
+        {
+            var result = value.Name;
+            value.Dispose();
+            return result;
+        }
+        return null;
     }
 
     /// <summary>
     /// Increments the IP address in the buffer by 1.
     /// </summary>
     /// <param name="buffer">The IP address bytes to increment</param>
-    /// <returns>True if successful, false if overflow (address was max value)</returns>
+    /// <returns>
+    /// True if successful, false if overflow (address was max value)
+    /// </returns>
     public static bool TryGetNextAddress(Span<byte> buffer)
     {
         for (int i = buffer.Length - 1; i >= 0; i--)
@@ -449,11 +469,12 @@ public class Program
             var wktAreas = new Dictionary<string, Result>();
             var nextLog = DateTime.UtcNow.Add(_logBuild);
             Parallel.ForEach(
-                property.GetValues().Select(i => i.Name),
+                property.GetValues(),
                 () => new Dictionary<string, Result>(),
                 (wkt, state, local) =>
                 {
-                    local.Add(wkt, Calculations.GetAreas(wkt, 0, 0));
+                    local.Add(wkt.Name, Calculations.GetAreas(wkt.Name, 0, 0));
+                    wkt.Dispose();
                     return local;
                 },
                 local =>
@@ -588,8 +609,11 @@ public class Program
             // Create a collection of ranges to ensure that there are always
             // items available for the consumers.
             var ranges =
-                new BlockingCollection<(string, string)>(
-                Environment.ProcessorCount);
+                Channel.CreateBounded<(string, string)>(
+                new BoundedChannelOptions(Environment.ProcessorCount) 
+                {  
+                    SingleWriter = true
+                });
             var consumers = CreateConsumers(
                 pipeline,
                 areaIndex,
@@ -688,7 +712,7 @@ public class Program
                 IPipeline pipeline,
                 AreaIndex areaIndex,
                 KeyFactory factory,
-                BlockingCollection<(string, string)> ranges,
+                Channel<(string, string)> ranges,
                 double samplePercentage,
                 CancellationToken stoppingToken)
         {
@@ -697,24 +721,22 @@ public class Program
                 Environment.ProcessorCount).Select(_ =>
                 {
                     var consumer = new Consumer();
-                    consumer.Task = Task.Factory.StartNew(() =>
-                        ProcessRange(
-                            pipeline,
-                            areaIndex,
-                            factory,
-                            ranges,
-                            consumer,
-                            samplePercentage,
-                            stoppingToken),
-                        TaskCreationOptions.LongRunning);
+                    consumer.Task = ProcessRange(
+                        pipeline,
+                        areaIndex,
+                        factory,
+                        ranges,
+                        consumer,
+                        samplePercentage,
+                        stoppingToken);
                     return consumer;
                 }).ToArray();
         }
 
-        private static void AddRanges(
+        private async static void AddRanges(
             IpiOnPremiseEngine ipiEngine,
             ILogger logger,
-            BlockingCollection<(string, string)> ranges,
+            Channel<(string, string)> ranges,
             Consumer[] consumers,
             CancellationToken stoppingToken)
         {
@@ -723,11 +745,13 @@ public class Program
             var lastLog = DateTime.UtcNow;
             var nextLog = lastLog.Add(_logBuild);
             var lastProcessorTime = process.TotalProcessorTime;
-            foreach (var range in ipiEngine.ValidRanges())
+            foreach (var range in ipiEngine.ValidRanges().TakeWhile(_ => 
+                stoppingToken.IsCancellationRequested == false))
             {
                 try
                 {
-                    ranges.TryAdd(range, -1, stoppingToken);
+                    await ranges.Writer.WaitToWriteAsync(stoppingToken);
+                    await ranges.Writer.WriteAsync(range, stoppingToken);
                     added++;
                     if (DateTime.UtcNow >= nextLog)
                     {
@@ -748,13 +772,13 @@ public class Program
                     // consumed.
                 }
             }
-            ranges.CompleteAdding();
+            ranges.Writer.Complete();
             logger.LogInformation("Finished adding '{0}' ranges", added);
         }
 
         private static DateTime Log(
             ILogger logger,
-            BlockingCollection<(string, string)> ranges,
+            Channel<(string, string)> ranges,
             Consumer[] consumers,
             Process process,
             int added,
@@ -768,7 +792,7 @@ public class Program
                 "queue, most recent '{2}', and '{3}' " +
                 "consumers",
                 added,
-                ranges.Count,
+                ranges.Reader.Count,
                 range.Item1,
                 consumers.Count(i => i.Task.IsCompleted == false));
 
@@ -809,78 +833,71 @@ public class Program
             return DateTime.UtcNow.Add(_logBuild);
         }
 
-        private static IReadOnlyDictionary<string, Metric> ProcessRange(
-            IPipeline pipeline,
-            AreaIndex dataSet,
-            KeyFactory factory,
-            BlockingCollection<(string, string)> ranges,
-            Consumer consumer,
-            double samplePercentage,
-            CancellationToken stoppingToken)
+        private async static Task<IReadOnlyDictionary<string, Metric>> 
+            ProcessRange(
+                IPipeline pipeline,
+                AreaIndex dataSet,
+                KeyFactory factory,
+                Channel<(string, string)> ranges,
+                Consumer consumer,
+                double samplePercentage,
+                CancellationToken stoppingToken)
         {
             var random = new Random();
             var groups = new Dictionary<string, Metric>();
-
-            // Allocate buffers outside the loop to avoid stack overflow warnings
-            Span<byte> ipBuffer = stackalloc byte[16]; // Max size for IPv6
-            Span<byte> endBuffer = stackalloc byte[16];
-
-            while (ranges.IsCompleted == false &&
-                stoppingToken.IsCancellationRequested == false)
+            var buffer4a = new byte[4];
+            var buffer4b = new byte[4];
+            var buffer6a = new byte[16];
+            var buffer6b = new byte[16];
+            byte[] currentIpBuffer;
+            byte[] currentEndBuffer;
+            await foreach(var range in ranges.Reader.ReadAllAsync(
+                stoppingToken))
             {
-                try
+                // Get the next range.
+                var startIp = IPAddress.Parse(range.Item1);
+                var endIp = IPAddress.Parse(range.Item2);
+
+                // Get a previously allocated byte array for this family.
+                switch(startIp.AddressFamily)
                 {
-                    if (ranges.TryTake(out var range, -1, stoppingToken))
-                    {
-                        var startIp = IPAddress.Parse(range.Item1);
-                        var endIp = IPAddress.Parse(range.Item2);
-
-                        // Determine buffer size based on address family
-                        int bufferSize = 
-                            startIp.AddressFamily == 
-                            AddressFamily.InterNetwork ? 4 : 16;
-
-                        // Get the relevant slice of the buffer for this
-                        // address family
-                        var currentIpBuffer = ipBuffer.Slice(
-                            0, 
-                            bufferSize);
-                        var currentEndBuffer = endBuffer.Slice(
-                            0, 
-                            bufferSize);
-
-                        startIp.TryWriteBytes(currentIpBuffer, out _);
-                        endIp.TryWriteBytes(currentEndBuffer, out _);
-
-                        while (!Extensions.IpEquals(
-                            currentIpBuffer, 
-                            currentEndBuffer) &&
-                            stoppingToken.IsCancellationRequested == false)
-                        {
-                            if (random.NextDouble() <= samplePercentage)
-                            {
-                                // Only allocate IPAddress object when we
-                                // actually need to process it
-                                var ip = new IPAddress(currentIpBuffer);
-                                ProcessIp(
-                                    pipeline,
-                                    dataSet,
-                                    groups,
-                                    factory,
-                                    ip);
-                                consumer.Count++;
-                            }
-
-                            // Increment to next IP address (operates on stack
-                            // buffer, no allocation)
-                            if (!Extensions.TryGetNextAddress(currentIpBuffer))
-                                break; // Overflow, reached maximum IP
-                        }
-                    }
+                    case AddressFamily.InterNetwork:
+                        currentIpBuffer = buffer4a;
+                        currentEndBuffer = buffer4b;
+                        break;
+                    default:
+                        currentIpBuffer = buffer6a;
+                        currentEndBuffer = buffer6b;
+                        break;
                 }
-                catch (OperationCanceledException)
+                
+                // Add the current range bytes to these buffers.
+                startIp.TryWriteBytes(currentIpBuffer, out _);
+                endIp.TryWriteBytes(currentEndBuffer, out _);
+
+                while (!Extensions.IpEquals(
+                    currentIpBuffer, 
+                    currentEndBuffer) &&
+                    stoppingToken.IsCancellationRequested == false)
                 {
-                    // Do nothing and exit the consumer.
+                    if (random.NextDouble() <= samplePercentage)
+                    {
+                        // Only allocate IPAddress object when we
+                        // actually need to process it
+                        var ip = new IPAddress(currentIpBuffer);
+                        ProcessIp(
+                            pipeline,
+                            dataSet,
+                            groups,
+                            factory,
+                            ip);
+                        consumer.Count++;
+                    }
+
+                    // Increment to next IP address (operates on stack
+                    // buffer, no allocation)
+                    if (!Extensions.TryGetNextAddress(currentIpBuffer))
+                        break; // Overflow, reached maximum IP
                 }
             }
             return groups;
