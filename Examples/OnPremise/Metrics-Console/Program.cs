@@ -20,6 +20,9 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+
+// Ignore Spelling: Wkt
+
 using CsvHelper;
 using CsvHelper.Configuration;
 using Examples.OnPremise.Areas;
@@ -282,8 +285,6 @@ public class Program
         /// Key is the number of areas, and the value the number of IPs that
         /// contain the areas.
         /// </summary>
-        public IReadOnlyDictionary<int, int> Polygons =>
-            _polygons.ToDictionary(k => k.Key, v => v.Value.Value);
         private Dictionary<int, Counter> _polygons = [];
 
         /// <summary>
@@ -293,12 +294,12 @@ public class Program
         {
             get
             {
-                if (Polygons.Count == 0)
+                if (_polygons.Count == 0)
                 {
                     return 0;
                 }
-                var weightedSum = Polygons.Sum(i => i.Key * i.Value);
-                var total = Polygons.Sum(i => i.Value);
+                var weightedSum = _polygons.Sum(i => i.Key * i.Value.Value);
+                var total = _polygons.Sum(i => i.Value.Value);
                 return (double)weightedSum / total;
             }
         }
@@ -445,57 +446,34 @@ public class Program
             ILogger logger,
             CancellationToken stoppingToken)
         {
-            var wktAreas = new ConcurrentDictionary<string, Result>();
-            var wktAreasTasks = new BlockingCollection<Task>(
-                Environment.ProcessorCount);
-
-            var producer = Task.Run(() =>
-                AddAreas(
-                    property,
-                    wktAreas,
-                    wktAreasTasks,
-                    stoppingToken),
-                stoppingToken);
-
+            var wktAreas = new Dictionary<string, Result>();
             var nextLog = DateTime.UtcNow.Add(_logBuild);
-            while (wktAreasTasks.IsCompleted == false &&
-                wktAreasTasks.TryTake(out var task, -1, stoppingToken))
-            {
-                task.Wait(stoppingToken);
-                if (DateTime.UtcNow >= nextLog)
+            Parallel.ForEach(
+                property.GetValues().Select(i => i.Name),
+                () => new Dictionary<string, Result>(),
+                (wkt, state, local) =>
                 {
-                    logger.LogInformation(
-                        "Mapped '{0}' areas",
-                        wktAreas.Count);
-                    nextLog = DateTime.UtcNow.Add(_logBuild);
-                }
-            }
-
-            producer.Wait(stoppingToken);
-
+                    local.Add(wkt, Calculations.GetAreas(wkt, 0, 0));
+                    return local;
+                },
+                local =>
+                {
+                    lock (wktAreas)
+                    {
+                        foreach (var pair in local)
+                        {
+                            wktAreas.Add(pair.Key, pair.Value);
+                        }
+                        if (DateTime.UtcNow >= nextLog)
+                        {
+                            logger.LogInformation(
+                                "Mapped '{0}' areas",
+                                wktAreas.Count);
+                            nextLog = DateTime.UtcNow.Add(_logBuild);
+                        }
+                    }
+                });
             return wktAreas;
-        }
-
-        private static void AddAreas(
-            IFiftyOneAspectPropertyMetaData property,
-            ConcurrentDictionary<string, Result> wktAreas,
-            BlockingCollection<Task> wktAreasTasks,
-            CancellationToken stoppingToken)
-        {
-            foreach (var area in property.GetValues())
-            {
-                wktAreasTasks.TryAdd(Task.Run(() =>
-                    AddAreas(wktAreas, area.Name), stoppingToken),
-                    -1, stoppingToken);
-            }
-            wktAreasTasks.CompleteAdding();
-        }
-
-        private static void AddAreas(
-            ConcurrentDictionary<string, Result> areas,
-            string wkt)
-        {
-            areas.GetOrAdd(wkt, (_) => Calculations.GetAreas(wkt, 0, 0));
         }
     }
 
