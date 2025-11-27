@@ -20,6 +20,9 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+
+// Ignore Spelling: Metadata
+
 using FiftyOne.IpIntelligence.Examples;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -154,7 +157,10 @@ public class TestExamples
             DataFile,
             new LoggerFactory(),
             writer,
+            // Sample 0.1% of possible IP addresses.
             0.0001,
+            // Include all the possible IP ranges.
+            (_) => true,
             CancellationToken.None).Wait();
         File.Delete(tempfile);
     }
