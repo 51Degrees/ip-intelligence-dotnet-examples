@@ -20,6 +20,9 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+
+// Ignore Spelling: ip API
+
 using FiftyOne.IpIntelligence.Examples;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -31,6 +34,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+[assembly: Parallelize]
 namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
 {
     /// <summary>
@@ -171,7 +175,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             await WaitForApiToBeReady();
         }
 
-        private async Task WaitForApiToBeReady()
+        private static async Task WaitForApiToBeReady()
         {
             using var client = new HttpClient();
             var stopwatch = Stopwatch.StartNew();
@@ -332,8 +336,8 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 Assert.AreEqual(0, process.ExitCode, $"Cloud example should exit successfully. Error output: {errorOutput}");
                 
                 // Verify the example produced IP intelligence results
-                Assert.IsTrue(result.Contains("Input values:"), "Output should contain input values section");
-                Assert.IsTrue(result.Contains("Results:"), "Output should contain results section");
+                Assert.Contains("Input values:", result, "Output should contain input values section");
+                Assert.Contains("Results:", result, "Output should contain results section");
                 
                 // Check for actual IP intelligence data values (not just field names)
                 // Based on the actual output, verify we get real IP intelligence data
@@ -353,8 +357,8 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                     "Output should contain numeric values (coordinates, ranges, etc.)");
                     
                 // Ensure no errors occurred
-                Assert.IsFalse(result.Contains("Exception"), "Output should not contain exceptions");
-                Assert.IsFalse(result.Contains("Error"), "Output should not contain errors");
+                Assert.DoesNotContain("Exception", result, "Output should not contain exceptions");
+                Assert.DoesNotContain("Error", result, "Output should not contain errors");
             }
         }
 
@@ -374,7 +378,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             Assert.IsTrue(response.IsSuccessStatusCode, "API evidencekeys endpoint should respond successfully");
             
             var content = await response.Content.ReadAsStringAsync();
-            Assert.IsTrue(content.Contains("query.client-ip"), "Response should contain expected evidence keys");
+            Assert.Contains("query.client-ip", content, "Response should contain expected evidence keys");
         }
     }
 }

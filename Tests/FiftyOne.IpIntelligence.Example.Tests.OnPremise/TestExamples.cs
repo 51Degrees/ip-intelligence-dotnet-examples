@@ -30,6 +30,7 @@ using System;
 using System.IO;
 using System.Threading;
 
+[assembly: Parallelize]
 namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise;
 
 /// <summary>
