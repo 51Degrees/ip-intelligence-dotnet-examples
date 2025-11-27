@@ -603,13 +603,13 @@ public class Program
                 truth.Latitude, 
                 truth.Longitude);
             var resultPoint = new GeoCoordinate(
-                GetValue(data.Latitude), 
-                GetValue(data.Longitude));
+                data.Latitude.Value,
+                data.Longitude.Value);
 
             // Get the area result for the returned data and the true latitude
             // and longitude.
             var area = Calculations.GetAreas(
-                GetValue(data.Areas), 
+                data.Areas.Value.Value,
                 truth.Latitude,
                 truth.Longitude);
 
@@ -619,23 +619,12 @@ public class Program
             {
                 Latitude = resultPoint.Latitude,
                 Longitude = resultPoint.Longitude,
-                Confidence = GetValue(data.LocationConfidence),
+                Confidence = data.LocationConfidence.Value,
                 DistanceKms = truthPoint.GetDistanceTo(resultPoint) / 1000,
                 SquareKms = area.SquareKms,
                 Geometries = area.Geometries,
                 Contains = area.Contains
             };
-        }
-
-        private static T GetValue<T>(
-            IAspectPropertyValue<T> 
-            value)
-        {
-            if (value.HasValue)
-            {
-                return value.Value;
-            }
-            return default;
         }
     }
 
