@@ -322,7 +322,7 @@ public class Program
         /// Key is the number of areas, and the value the number of IPs that
         /// contain the areas.
         /// </summary>
-        private Dictionary<int, Counter> _polygons = [];
+        private readonly Dictionary<int, Counter> _polygons = [];
 
         public Metric(Key key) : base(
             key.ContinentName,
@@ -565,6 +565,7 @@ public class Program
             var nextLog = DateTime.UtcNow.Add(_logBuild);
             Parallel.ForEach(
                 property.GetValues(),
+                new ParallelOptions() { CancellationToken = stoppingToken },
                 () => new Dictionary<string, Result>(),
                 (wkt, state, local) =>
                 {

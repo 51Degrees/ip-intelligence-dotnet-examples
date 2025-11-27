@@ -21,7 +21,7 @@
  * ********************************************************************* */
 
 
-// Ignore Spelling: Metadata
+// Ignore Spelling: Metadata Offline
 
 using FiftyOne.IpIntelligence.Examples;
 using Microsoft.Extensions.Logging;

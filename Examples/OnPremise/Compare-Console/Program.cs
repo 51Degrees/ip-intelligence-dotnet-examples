@@ -413,7 +413,6 @@ public class Program
                         ProcessTruth(
                             pipeline,
                             truth,
-                            consumer,
                             stoppingToken),
                         TaskCreationOptions.LongRunning);
                     return consumer;
@@ -543,7 +542,6 @@ public class Program
         /// </summary>
         /// <param name="pipeline"></param>
         /// <param name="source"></param>
-        /// <param name="consumer"></param>
         /// <param name="stoppingToken"></param>
         /// <returns>
         /// A list of the output results.
@@ -551,7 +549,6 @@ public class Program
         private static IReadOnlyList<Output> ProcessTruth(
             IPipeline pipeline,
             BlockingCollection<Truth> source,
-            Consumer consumer,
             CancellationToken stoppingToken)
         {
             var output = new List<Output>();
