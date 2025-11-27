@@ -27,7 +27,6 @@ using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using Examples.OnPremise.Areas;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
-using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines;
 using FiftyOne.Pipeline.Engines.Data;
@@ -35,11 +34,8 @@ using FiftyOne.Pipeline.Engines.FiftyOne.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NetTopologySuite.Algorithm;
 using System;
-using System.Buffers;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -834,7 +830,7 @@ public class Program
                 double samplePercentage,
                 CancellationToken stoppingToken)
         {
-            return Enumerable.Range(
+            return [.. Enumerable.Range(
                 0,
                 Environment.ProcessorCount).Select(_ =>
                 {
@@ -848,7 +844,7 @@ public class Program
                         samplePercentage,
                         stoppingToken);
                     return consumer;
-                }).ToArray();
+                })];
         }
 
         private async static void AddRanges(
