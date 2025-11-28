@@ -20,11 +20,13 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+// Ignore Spelling: Wkt Ip
+
 using CsvHelper;
 using CsvHelper.Configuration;
+using CsvHelper.Configuration.Attributes;
 using Examples.OnPremise.Areas;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
-using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines;
 using FiftyOne.Pipeline.Engines.Data;
@@ -33,7 +35,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -43,8 +44,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 
 /// <summary>
 /// @example OnPremise/Metrics-Console/Program.cs
@@ -100,25 +101,46 @@ public static class Extensions
         IProfileMetaData profile)
     {
         if (network.Equals(profile.Component) &&
-            profile.GetValue("RegisteredCountry", "Unknown") == null)
+            IsRegisteredCountryValid(profile))
         {
             return GetRange(profile);
         }
         return default;
     }
 
+    private static bool IsRegisteredCountryValid(IProfileMetaData profile)
+    {
+        var value = profile.GetValue("RegisteredCountry", "Unknown");
+        if (value == null) return true;
+        value.Dispose();
+        return false;
+    }
+
     private static (string, string) GetRange(IProfileMetaData profile)
     {
-        var start = profile.GetValues("IpRangeStart").Single();
-        var end = profile.GetValues("IpRangeEnd").Single();
-        return new(start.Name, end.Name);
+        return new(
+            GetValue(profile, "IpRangeStart"), 
+            GetValue(profile, "IpRangeEnd"));
+    }
+
+    private static string GetValue(IProfileMetaData profile, string name)
+    {
+        foreach(var value in profile.GetValues(name))
+        {
+            var result = value.Name;
+            value.Dispose();
+            return result;
+        }
+        return null;
     }
 
     /// <summary>
     /// Increments the IP address in the buffer by 1.
     /// </summary>
     /// <param name="buffer">The IP address bytes to increment</param>
-    /// <returns>True if successful, false if overflow (address was max value)</returns>
+    /// <returns>
+    /// True if successful, false if overflow (address was max value)
+    /// </returns>
     public static bool TryGetNextAddress(Span<byte> buffer)
     {
         for (int i = buffer.Length - 1; i >= 0; i--)
@@ -238,36 +260,31 @@ public class Program
         public int Value = 1;
     }
 
-    public class Metric
+    public class Metric : Key
     {
         /// <summary>
-        /// Properties for the fields returned in the ToString method.
+        /// Number of IP addresses that relate to this metric.
         /// </summary>
-        public static readonly string[] Properties = [
-            "IpCount",
-            "AverageAreaKm",
-            "EquivalentRadiusKm",
-            "AveragePolygons"];
+        [Index(9)]
+        public int IpCount { get; set; } = 0;
 
         /// <summary>
         /// The total area in km squared of all IPs.
         /// </summary>
-        public long TotalAreaKm = 0;
+        [Ignore]
+        public long TotalAreaKm { get; set; } = 0;
 
         /// <summary>
         /// Number of areas included.
         /// </summary>
-        public int AreaCount = 0;
-
-        /// <summary>
-        /// Number of IP addresses that relate to this metric.
-        /// </summary>
-        public int IpCount = 0;
+        [Index(10)]
+        public int AreaCount { get; set; } = 0;
 
         /// <summary>
         /// Average area in km squared for the IPs, or 0 if there is no area
         /// available.
         /// </summary>
+        [Index(11)]
         public long AverageAreaKm =>
             AreaCount > 0 ? TotalAreaKm / AreaCount : 0;
 
@@ -275,37 +292,48 @@ public class Program
         /// The radius that a circle would need to so that it covered the same
         /// area as the <see cref="AverageAreaKm"/>.
         /// </summary>
+        [Index(12)]
         public int EquivalentRadiusKm =>
             (int)Math.Sqrt(AverageAreaKm / Math.PI);
+
+        /// <summary>
+        /// Average number of polygons for the metric.
+        /// </summary>
+        [Index(14)]
+        public double AveragePolygons
+        {
+            get
+            {
+                if (_polygons.Count == 0)
+                {
+                    return 0;
+                }
+                var weightedSum = _polygons.Sum(i => i.Key * i.Value.Value);
+                var total = _polygons.Sum(i => i.Value.Value);
+                return (double)weightedSum / total;
+            }
+        }
 
         /// <summary>
         /// Key is the number of areas, and the value the number of IPs that
         /// contain the areas.
         /// </summary>
-        public IReadOnlyDictionary<int, int> Polygons =>
-            _polygons.ToDictionary(k => k.Key, v => v.Value.Value);
-        private Dictionary<int, Counter> _polygons = [];
+        private readonly Dictionary<int, Counter> _polygons = [];
 
-        /// <summary>
-        /// Average number of polygons for the metric.
-        /// </summary>
-        public double AveragePolygons
-        {
-            get
-            {
-                if (Polygons.Count == 0)
-                {
-                    return 0;
-                }
-                var weightedSum = Polygons.Sum(i => i.Key * i.Value);
-                var total = Polygons.Sum(i => i.Value);
-                return (double)weightedSum / total;
-            }
-        }
+        public Metric(Key key) : base(
+            key.ContinentName,
+            key.Country,
+            key.LocationConfidence,
+            key.ConnectionType,
+            key.IsVPN,
+            key.IsProxy,
+            key.IsTor,
+            key.IsPublicRouter)
+        { }
 
         public override string ToString() =>
-            $"{IpCount},{AverageAreaKm},{EquivalentRadiusKm}," +
-            $"{AveragePolygons.ToString("0.##")}";
+            $"{base.ToString()}{IpCount},{AverageAreaKm}," +
+            $"{EquivalentRadiusKm},{AveragePolygons.ToString("0.##")}";
 
         /// <summary>
         /// Increase the count of IP addresses with the number of polygons
@@ -347,61 +375,145 @@ public class Program
         }
     }
 
+    /// <summary>
+    /// Key used for each metric.
+    /// </summary>
+    public class Key : IEquatable<Key>, IComparable<Key>
+    {
+        public Key(
+            string continentName,
+            string country, 
+            string locationConfidence,
+            string connectionType,
+            string isVPN,
+            string isProxy,
+            string isTor,
+            string isPublicRouter)
+        {
+            ContinentName = continentName;
+            Country = country;
+            LocationConfidence = locationConfidence;
+            ConnectionType = connectionType;
+            IsVPN = isVPN;
+            IsProxy = isProxy;
+            IsTor = isTor;
+            IsPublicRouter = isPublicRouter;
+            _hashCode = HashCode.Combine(
+                continentName,
+                country,
+                locationConfidence,
+                connectionType,
+                isVPN,
+                isProxy,
+                isTor,
+                isPublicRouter);
+        }
+
+        [Index(1)]
+        public string ContinentName { get; set; }
+
+        [Index(2)]
+        public string Country { get; set; }
+
+        [Index(3)]
+        public string LocationConfidence { get; set; }
+
+        [Index(4)]
+        public string ConnectionType { get; set; }
+
+        [Index(5)]
+        public string IsVPN { get; set; }
+
+        [Index(6)]
+        public string IsProxy { get; set; }
+
+        [Index(7)]
+        public string IsTor { get; set; }
+
+        [Index(8)]
+        public string IsPublicRouter { get; set; }
+
+        private readonly int _hashCode;
+
+        public bool Equals(Key other)
+        {
+            return ContinentName.Equals(other.ContinentName) &&
+                Country.Equals(other.Country) &&
+                LocationConfidence.Equals(other.LocationConfidence) &&
+                ConnectionType.Equals(other.ConnectionType) &&
+                IsVPN.Equals(other.IsVPN) &&
+                IsProxy.Equals(other.IsProxy) &&
+                IsTor.Equals(other.IsTor) &&
+                IsPublicRouter.Equals(other.IsPublicRouter);
+        }
+
+        public int CompareTo(Key other)
+        {
+            var difference = ContinentName.CompareTo(other.ContinentName);
+            if (difference != 0) return difference;
+            difference = Country.CompareTo(other.Country);
+            if (difference != 0) return difference;
+            difference = LocationConfidence.CompareTo(other.LocationConfidence);
+            if (difference != 0) return difference;
+            difference = ConnectionType.CompareTo(other.ConnectionType);
+            if (difference != 0) return difference;
+            difference = IsVPN.CompareTo(other.IsVPN);
+            if (difference != 0) return difference;
+            difference = IsProxy.CompareTo(other.IsProxy);
+            if (difference != 0) return difference;
+            difference = IsTor.CompareTo(other.IsTor);
+            if (difference != 0) return difference;
+            difference = IsPublicRouter.CompareTo(other.IsPublicRouter);
+            if (difference != 0) return difference;
+            return 0;
+        }
+
+        public override int GetHashCode() => _hashCode;
+    }
+
+    /// <summary>
+    /// Factory used to create <see cref="Key"/>.
+    /// </summary>
     public class KeyFactory
     {
-        /// <summary>
-        /// The properties used to form the key.
-        /// </summary>
-        public static readonly string[] Keys = [
-            "ContinentName",
-            "Country",
-            "LocationConfidence",
-            "ConnectionType",
-            "IsVPN",
-            "IsProxy",
-            "IsTor",
-            "IsPublicRouter"];
-
         /// <summary>
         /// Returns the key for the data instance provided.
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public string Create(IIpIntelligenceData data)
+        public Key Create(IIpIntelligenceData data)
         {
-            return string.Join(
-                ",",
-                Keys.Select(i => GetValue(data[i])));
+            return new Key(
+                GetValue(data.ContinentName),
+                GetValue(data.Country),
+                GetValue(data.LocationConfidence),
+                GetValue(data.ConnectionType),
+                GetValue(data.IsVPN),
+                GetValue(data.IsProxy),
+                GetValue(data.IsTor),
+                GetValue(data.IsPublicRouter));
         }
 
         /// <summary>
-        /// Use pattern matching to return the value as a string 
-        /// for inclusion in the key, or "Missing" if the value can't be
-        /// turned into a string.
-        /// </summary>
-        /// <param name="obj"></param>
+        /// Returns the string value or the no value message.
+        /// <param name="value"></param>
         /// <returns></returns>
-        private static string GetValue(object obj)
+        private static string GetValue(IAspectPropertyValue<string> value)
         {
-            return obj switch
-            {
-                // Single value
-                IAspectPropertyValue<string> 
-                { HasValue: true, Value: var str } => str,
+            if (value.HasValue)
+                return value.Value;
+            return value.NoValueMessage;
+        }
 
-                // weighted string 
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> 
-                { HasValue: true, Value: { Count: 1 } list }
-                    => list[0].Value,
-
-                // weighted bool
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<bool>>> 
-                { HasValue: true, Value: { Count: 1 } list }
-                    => list[0].Value.ToString(),
-
-                // default
-                _ => "Missing"
-            };
+        /// <summary>
+        /// Returns the string value or the no value message.
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private static string GetValue(IAspectPropertyValue<bool> value)
+        {
+            if (value.HasValue)
+                return value.Value.ToString();
+            return value.NoValueMessage;
         }
     }
 
@@ -410,7 +522,7 @@ public class Program
         /// <summary>
         /// The task associated with the consumer.
         /// </summary>
-        public Task<IReadOnlyDictionary<string, Metric>> Task;
+        public Task<IReadOnlyDictionary<Key, Metric>> Task;
 
         /// <summary>
         /// The number of IP pipeline processes that have been completed in
@@ -445,57 +557,36 @@ public class Program
             ILogger logger,
             CancellationToken stoppingToken)
         {
-            var wktAreas = new ConcurrentDictionary<string, Result>();
-            var wktAreasTasks = new BlockingCollection<Task>(
-                Environment.ProcessorCount);
-
-            var producer = Task.Run(() =>
-                AddAreas(
-                    property,
-                    wktAreas,
-                    wktAreasTasks,
-                    stoppingToken),
-                stoppingToken);
-
+            var wktAreas = new Dictionary<string, Result>();
             var nextLog = DateTime.UtcNow.Add(_logBuild);
-            while (wktAreasTasks.IsCompleted == false &&
-                wktAreasTasks.TryTake(out var task, -1, stoppingToken))
-            {
-                task.Wait(stoppingToken);
-                if (DateTime.UtcNow >= nextLog)
+            Parallel.ForEach(
+                property.GetValues(),
+                new ParallelOptions() { CancellationToken = stoppingToken },
+                () => new Dictionary<string, Result>(),
+                (wkt, state, local) =>
                 {
-                    logger.LogInformation(
-                        "Mapped '{0}' areas",
-                        wktAreas.Count);
-                    nextLog = DateTime.UtcNow.Add(_logBuild);
-                }
-            }
-
-            producer.Wait(stoppingToken);
-
+                    local.Add(wkt.Name, Calculations.GetAreas(wkt.Name, 0, 0));
+                    wkt.Dispose();
+                    return local;
+                },
+                local =>
+                {
+                    lock (wktAreas)
+                    {
+                        foreach (var pair in local)
+                        {
+                            wktAreas.Add(pair.Key, pair.Value);
+                        }
+                        if (DateTime.UtcNow >= nextLog)
+                        {
+                            logger.LogInformation(
+                                "Mapped '{0}' areas",
+                                wktAreas.Count);
+                            nextLog = DateTime.UtcNow.Add(_logBuild);
+                        }
+                    }
+                });
             return wktAreas;
-        }
-
-        private static void AddAreas(
-            IFiftyOneAspectPropertyMetaData property,
-            ConcurrentDictionary<string, Result> wktAreas,
-            BlockingCollection<Task> wktAreasTasks,
-            CancellationToken stoppingToken)
-        {
-            foreach (var area in property.GetValues())
-            {
-                wktAreasTasks.TryAdd(Task.Run(() =>
-                    AddAreas(wktAreas, area.Name), stoppingToken),
-                    -1, stoppingToken);
-            }
-            wktAreasTasks.CompleteAdding();
-        }
-
-        private static void AddAreas(
-            ConcurrentDictionary<string, Result> areas,
-            string wkt)
-        {
-            areas.GetOrAdd(wkt, (_) => Calculations.GetAreas(wkt, 0, 0));
         }
     }
 
@@ -520,6 +611,12 @@ public class Program
         /// Logger factory for reporting progress.
         /// </summary>
         public ILoggerFactory LoggerFactory;
+
+        /// <summary>
+        /// Function used to determine if an IP address range should be
+        /// included.
+        /// </summary>
+        public Func<(string, string), bool> Condition;
     }
 
     public sealed class Worker(
@@ -535,6 +632,7 @@ public class Program
                 configuration.LoggerFactory,
                 configuration.Output,
                 configuration.SamplePercentage,
+                configuration.Condition,
                 stoppingToken);
             hostApplicationLifetime.StopApplication();
         }
@@ -542,11 +640,35 @@ public class Program
 
     public class Example : ExampleBase
     {
+        /// <summary>
+        /// Runs the example as a task.
+        /// </summary>
+        /// <param name="dataFile">
+        /// IP Intelligence data file to compile metrics for.
+        /// </param>
+        /// <param name="loggerFactory"></param>
+        /// <param name="output">
+        /// Output CSV writer for the metrics.
+        /// </param>
+        /// <param name="samplePercentage">
+        /// Percentage of possible IP addresses to include in the metric.
+        /// </param>
+        /// <param name="condition">
+        /// Function used to determine if an IP address range should be
+        /// included.
+        /// </param>
+        /// <param name="stoppingToken">
+        /// Cancellation token that when fired will gracefully stop the example
+        /// and write the output metrics from the data processed to date.
+        /// </param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
         public static async Task Run(
             string dataFile,
             ILoggerFactory loggerFactory,
             TextWriter output,
             double samplePercentage,
+            Func<(string, string), bool> condition,
             CancellationToken stoppingToken,
             ILogger logger = null)
         {
@@ -569,7 +691,8 @@ public class Program
                 .SetDataUpdateOnStartup(false)
                 // Set to only return from processing the properties needed.
                 .SetProperties(
-                    KeyFactory.Keys.Concat(AreaIndex.Properties).ToList())
+                    typeof(Key).GetProperties().Select(i => i.Name).Concat(
+                        AreaIndex.Properties).ToList())
                 // Optimize for the expected parallel workload.
                 .SetConcurrency((ushort)Environment.ProcessorCount)
                 .Build(dataFile, false);
@@ -610,8 +733,11 @@ public class Program
             // Create a collection of ranges to ensure that there are always
             // items available for the consumers.
             var ranges =
-                new BlockingCollection<(string, string)>(
-                Environment.ProcessorCount);
+                Channel.CreateBounded<(string, string)>(
+                new BoundedChannelOptions(Environment.ProcessorCount) 
+                {  
+                    SingleWriter = true
+                });
             var consumers = CreateConsumers(
                 pipeline,
                 areaIndex,
@@ -630,11 +756,12 @@ public class Program
                 ipiEngine,
                 logger, 
                 ranges,
+                condition,
                 consumers,
                 stoppingToken);
 
             // Combine all the consumer groups into the main groups.
-            var groups = new Dictionary<string, Metric>();
+            var groups = new Dictionary<Key, Metric>();
             foreach (var consumer in consumers)
             {
                 await consumer.Task;
@@ -654,7 +781,7 @@ public class Program
                 }
             }
 
-            WriteToCsv(output, groups);
+            WriteToCsv(output, groups.Values);
 
             ExampleUtils.CheckDataFile(
                 ipiEngine,
@@ -665,31 +792,20 @@ public class Program
         /// Write the metrics to the provided output in CSV format.
         /// </summary>
         /// <param name="output"></param>
-        /// <param name="groups"></param>
+        /// <param name="metrics"></param>
         private static void WriteToCsv(
             TextWriter output,
-            Dictionary<string, Metric> groups)
+            IEnumerable<Metric> metrics)
         {
             using var writer = new CsvWriter(
                 output,
                 new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                    Delimiter = ","
+                    Delimiter = ",",
                 });
 
-            // Write Header
-            foreach(var header in KeyFactory.Keys.Concat(Metric.Properties))
-                writer.WriteField(header);
-            writer.NextRecord();
-
             // Write Records
-            foreach (var record in groups.OrderBy(i => i.Key))
-            {
-                var values = (record.Key + record.Value.ToString())
-                    .Split(',');
-                writer.WriteField(values);
-                writer.NextRecord();
-            }
+            writer.WriteRecords(metrics.OrderBy(i => i));
 
             writer.Flush();
         }
@@ -710,33 +826,32 @@ public class Program
                 IPipeline pipeline,
                 AreaIndex areaIndex,
                 KeyFactory factory,
-                BlockingCollection<(string, string)> ranges,
+                Channel<(string, string)> ranges,
                 double samplePercentage,
                 CancellationToken stoppingToken)
         {
-            return Enumerable.Range(
+            return [.. Enumerable.Range(
                 0,
                 Environment.ProcessorCount).Select(_ =>
                 {
                     var consumer = new Consumer();
-                    consumer.Task = Task.Factory.StartNew(() =>
-                        ProcessRange(
-                            pipeline,
-                            areaIndex,
-                            factory,
-                            ranges,
-                            consumer,
-                            samplePercentage,
-                            stoppingToken),
-                        TaskCreationOptions.LongRunning);
+                    consumer.Task = ProcessRange(
+                        pipeline,
+                        areaIndex,
+                        factory,
+                        ranges,
+                        consumer,
+                        samplePercentage,
+                        stoppingToken);
                     return consumer;
-                }).ToArray();
+                })];
         }
 
-        private static void AddRanges(
+        private async static void AddRanges(
             IpiOnPremiseEngine ipiEngine,
             ILogger logger,
-            BlockingCollection<(string, string)> ranges,
+            Channel<(string, string)> ranges,
+            Func<(string, string), bool> condition,
             Consumer[] consumers,
             CancellationToken stoppingToken)
         {
@@ -745,11 +860,16 @@ public class Program
             var lastLog = DateTime.UtcNow;
             var nextLog = lastLog.Add(_logBuild);
             var lastProcessorTime = process.TotalProcessorTime;
-            foreach (var range in ipiEngine.ValidRanges())
+            var source = condition == null ?
+                ipiEngine.ValidRanges() :
+                ipiEngine.ValidRanges().Where(i => condition(i));
+            foreach (var range in source.TakeWhile(_ => 
+                stoppingToken.IsCancellationRequested == false))
             {
                 try
                 {
-                    ranges.TryAdd(range, -1, stoppingToken);
+                    await ranges.Writer.WaitToWriteAsync(stoppingToken);
+                    await ranges.Writer.WriteAsync(range, stoppingToken);
                     added++;
                     if (DateTime.UtcNow >= nextLog)
                     {
@@ -770,13 +890,13 @@ public class Program
                     // consumed.
                 }
             }
-            ranges.CompleteAdding();
+            ranges.Writer.Complete();
             logger.LogInformation("Finished adding '{0}' ranges", added);
         }
 
         private static DateTime Log(
             ILogger logger,
-            BlockingCollection<(string, string)> ranges,
+            Channel<(string, string)> ranges,
             Consumer[] consumers,
             Process process,
             int added,
@@ -790,7 +910,7 @@ public class Program
                 "queue, most recent '{2}', and '{3}' " +
                 "consumers",
                 added,
-                ranges.Count,
+                ranges.Reader.Count,
                 range.Item1,
                 consumers.Count(i => i.Task.IsCompleted == false));
 
@@ -831,79 +951,79 @@ public class Program
             return DateTime.UtcNow.Add(_logBuild);
         }
 
-        private static IReadOnlyDictionary<string, Metric> ProcessRange(
-            IPipeline pipeline,
-            AreaIndex dataSet,
-            KeyFactory factory,
-            BlockingCollection<(string, string)> ranges,
-            Consumer consumer,
-            double samplePercentage,
-            CancellationToken stoppingToken)
+        private async static Task<IReadOnlyDictionary<Key, Metric>> 
+            ProcessRange(
+                IPipeline pipeline,
+                AreaIndex dataSet,
+                KeyFactory factory,
+                Channel<(string, string)> ranges,
+                Consumer consumer,
+                double samplePercentage,
+                CancellationToken stoppingToken)
         {
             var random = new Random();
-            var groups = new Dictionary<string, Metric>();
-
-            // Allocate buffers outside the loop to avoid stack overflow warnings
-            Span<byte> ipBuffer = stackalloc byte[16]; // Max size for IPv6
-            Span<byte> endBuffer = stackalloc byte[16];
-
-            while (ranges.IsCompleted == false &&
-                stoppingToken.IsCancellationRequested == false)
+            var groups = new Dictionary<Key, Metric>();
+            var buffer4a = new byte[4];
+            var buffer4b = new byte[4];
+            var buffer6a = new byte[16];
+            var buffer6b = new byte[16];
+            byte[] currentIpBuffer;
+            byte[] currentEndBuffer;
+            try
             {
-                try
+                await foreach (var range in ranges.Reader.ReadAllAsync(
+                    stoppingToken))
                 {
-                    if (ranges.TryTake(out var range, -1, stoppingToken))
+                    // Get the next range.
+                    var startIp = IPAddress.Parse(range.Item1);
+                    var endIp = IPAddress.Parse(range.Item2);
+
+                    // Get a previously allocated byte array for this family.
+                    switch (startIp.AddressFamily)
                     {
-                        var startIp = IPAddress.Parse(range.Item1);
-                        var endIp = IPAddress.Parse(range.Item2);
+                        case AddressFamily.InterNetwork:
+                            currentIpBuffer = buffer4a;
+                            currentEndBuffer = buffer4b;
+                            break;
+                        default:
+                            currentIpBuffer = buffer6a;
+                            currentEndBuffer = buffer6b;
+                            break;
+                    }
 
-                        // Determine buffer size based on address family
-                        int bufferSize = 
-                            startIp.AddressFamily == 
-                            AddressFamily.InterNetwork ? 4 : 16;
+                    // Add the current range bytes to these buffers.
+                    startIp.TryWriteBytes(currentIpBuffer, out _);
+                    endIp.TryWriteBytes(currentEndBuffer, out _);
 
-                        // Get the relevant slice of the buffer for this
-                        // address family
-                        var currentIpBuffer = ipBuffer.Slice(
-                            0, 
-                            bufferSize);
-                        var currentEndBuffer = endBuffer.Slice(
-                            0, 
-                            bufferSize);
-
-                        startIp.TryWriteBytes(currentIpBuffer, out _);
-                        endIp.TryWriteBytes(currentEndBuffer, out _);
-
-                        while (!Extensions.IpEquals(
-                            currentIpBuffer, 
-                            currentEndBuffer) &&
-                            stoppingToken.IsCancellationRequested == false)
+                    while (!Extensions.IpEquals(
+                        currentIpBuffer,
+                        currentEndBuffer) &&
+                        stoppingToken.IsCancellationRequested == false)
+                    {
+                        if (random.NextDouble() <= samplePercentage)
                         {
-                            if (random.NextDouble() <= samplePercentage)
-                            {
-                                // Only allocate IPAddress object when we
-                                // actually need to process it
-                                var ip = new IPAddress(currentIpBuffer);
-                                ProcessIp(
-                                    pipeline,
-                                    dataSet,
-                                    groups,
-                                    factory,
-                                    ip);
-                                consumer.Count++;
-                            }
-
-                            // Increment to next IP address (operates on stack
-                            // buffer, no allocation)
-                            if (!Extensions.TryGetNextAddress(currentIpBuffer))
-                                break; // Overflow, reached maximum IP
+                            // Only allocate IPAddress object when we
+                            // actually need to process it
+                            var ip = new IPAddress(currentIpBuffer);
+                            ProcessIp(
+                                pipeline,
+                                dataSet,
+                                groups,
+                                factory,
+                                ip);
+                            consumer.Count++;
                         }
+
+                        // Increment to next IP address (operates on stack
+                        // buffer, no allocation)
+                        if (!Extensions.TryGetNextAddress(currentIpBuffer))
+                            break; // Overflow, reached maximum IP
                     }
                 }
-                catch (OperationCanceledException)
-                {
-                    // Do nothing and exit the consumer.
-                }
+            }
+            catch (OperationCanceledException) 
+            { 
+                // Do nothing.
             }
             return groups;
         }
@@ -911,7 +1031,7 @@ public class Program
         private static void ProcessIp(
             IPipeline pipeline,
             AreaIndex dataSet,
-            Dictionary<string, Metric> groups,
+            Dictionary<Key, Metric> groups,
             KeyFactory factory,
             IPAddress ipAddress)
         {
@@ -925,7 +1045,7 @@ public class Program
             var key = factory.Create(data);
             if (groups.TryGetValue(key, out var metric) == false)
             {
-                metric = new Metric();
+                metric = new Metric(key);
                 groups.Add(key, metric);
             }
 
@@ -936,7 +1056,7 @@ public class Program
             // where a non zero area is available.
             if (data.Areas.HasValue && 
                 dataSet.WktAreas.TryGetValue(
-                    data.Areas.Value,
+                    data.Areas.Value.Value,
                     out var value) && 
                 value != null)
             {
@@ -970,6 +1090,11 @@ public class Program
         configuration.SamplePercentage = args.Length > 2 ?
             double.Parse(args[2]) :
             DEFAULT_SAMPLE_PERCENTAGE;
+
+        // Only include IP addresses with periods in them. i.e. IPv4. There are
+        // too many IPv6 addresses for the metrics example to complete in a 
+        // short time frame.
+        // configuration.Condition = (i) => i.Item1.Contains(".");
 
         File.WriteAllText("Metrics_DataFileName.txt", configuration.DataFile);
 

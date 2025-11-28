@@ -25,10 +25,8 @@ using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using Examples.OnPremise.Areas;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
-using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines;
-using FiftyOne.Pipeline.Engines.Data;
 using GeoCoordinatePortable;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -413,7 +411,6 @@ public class Program
                         ProcessTruth(
                             pipeline,
                             truth,
-                            consumer,
                             stoppingToken),
                         TaskCreationOptions.LongRunning);
                     return consumer;
@@ -543,7 +540,6 @@ public class Program
         /// </summary>
         /// <param name="pipeline"></param>
         /// <param name="source"></param>
-        /// <param name="consumer"></param>
         /// <param name="stoppingToken"></param>
         /// <returns>
         /// A list of the output results.
@@ -551,7 +547,6 @@ public class Program
         private static IReadOnlyList<Output> ProcessTruth(
             IPipeline pipeline,
             BlockingCollection<Truth> source,
-            Consumer consumer,
             CancellationToken stoppingToken)
         {
             var output = new List<Output>();
@@ -591,6 +586,15 @@ public class Program
             flowData.Process();
             var data = flowData.Get<IIpIntelligenceData>();
 
+            // Check if the required properties have values. If not, skip this
+            // record as the IP address was not found in the database.
+            if (data.Latitude.HasValue == false ||
+                data.Longitude.HasValue == false ||
+                data.Areas.HasValue == false)
+            {
+                return null;
+            }
+
             // Set the address family of the source truth does not provide it.
             if (String.IsNullOrEmpty(truth.AddressFamily))
             {
@@ -600,16 +604,16 @@ public class Program
 
             // Get the truth and result as points.
             var truthPoint = new GeoCoordinate(
-                truth.Latitude, 
+                truth.Latitude,
                 truth.Longitude);
             var resultPoint = new GeoCoordinate(
-                GetValue(data.Latitude), 
-                GetValue(data.Longitude));
+                data.Latitude.Value,
+                data.Longitude.Value);
 
             // Get the area result for the returned data and the true latitude
             // and longitude.
             var area = Calculations.GetAreas(
-                GetValue(data.Areas), 
+                data.Areas.Value.Value,
                 truth.Latitude,
                 truth.Longitude);
 
@@ -619,23 +623,14 @@ public class Program
             {
                 Latitude = resultPoint.Latitude,
                 Longitude = resultPoint.Longitude,
-                Confidence = GetValue(data.LocationConfidence),
+                Confidence = data.LocationConfidence.HasValue
+                    ? data.LocationConfidence.Value
+                    : null,
                 DistanceKms = truthPoint.GetDistanceTo(resultPoint) / 1000,
                 SquareKms = area.SquareKms,
                 Geometries = area.Geometries,
                 Contains = area.Contains
             };
-        }
-
-        private static T GetValue<T>(
-            IAspectPropertyValue<T> 
-            value)
-        {
-            if (value.HasValue)
-            {
-                return value.Value;
-            }
-            return default;
         }
     }
 
