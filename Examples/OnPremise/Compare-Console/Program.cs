@@ -586,6 +586,15 @@ public class Program
             flowData.Process();
             var data = flowData.Get<IIpIntelligenceData>();
 
+            // Check if the required properties have values. If not, skip this
+            // record as the IP address was not found in the database.
+            if (data.Latitude.HasValue == false ||
+                data.Longitude.HasValue == false ||
+                data.Areas.HasValue == false)
+            {
+                return null;
+            }
+
             // Set the address family of the source truth does not provide it.
             if (String.IsNullOrEmpty(truth.AddressFamily))
             {
@@ -595,7 +604,7 @@ public class Program
 
             // Get the truth and result as points.
             var truthPoint = new GeoCoordinate(
-                truth.Latitude, 
+                truth.Latitude,
                 truth.Longitude);
             var resultPoint = new GeoCoordinate(
                 data.Latitude.Value,
@@ -614,7 +623,9 @@ public class Program
             {
                 Latitude = resultPoint.Latitude,
                 Longitude = resultPoint.Longitude,
-                Confidence = data.LocationConfidence.Value,
+                Confidence = data.LocationConfidence.HasValue
+                    ? data.LocationConfidence.Value
+                    : null,
                 DistanceKms = truthPoint.GetDistanceTo(resultPoint) / 1000,
                 SquareKms = area.SquareKms,
                 Geometries = area.Geometries,
