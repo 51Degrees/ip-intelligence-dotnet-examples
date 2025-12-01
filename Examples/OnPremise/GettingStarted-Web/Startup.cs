@@ -123,14 +123,16 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
             app.UseDeveloperExceptionPage();
 
             // Configure forwarded headers for Azure App Service
-            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            // Must explicitly clear KnownProxies/KnownNetworks and set ForwardLimit=null
+            // to trust all proxies (Azure uses 169.254.x.x range for its load balancers)
+            var forwardedHeadersOptions = new ForwardedHeadersOptions
             {
-                ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
-                                  Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto,
-                // Trust all proxies for Azure App Service
-                KnownProxies = { },
-                KnownNetworks = { }
-            });
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+                ForwardLimit = null  // Process all X-Forwarded-For entries
+            };
+            forwardedHeadersOptions.KnownNetworks.Clear();
+            forwardedHeadersOptions.KnownProxies.Clear();
+            app.UseForwardedHeaders(forwardedHeadersOptions);
 
             // This is only needed when running under an ASP.NET test server.
             app.UseMiddleware<UserAgentCorrectionMiddleware>();

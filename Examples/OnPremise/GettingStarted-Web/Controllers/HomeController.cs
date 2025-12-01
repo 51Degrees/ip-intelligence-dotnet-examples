@@ -117,9 +117,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Controlle
             // But we'll also check X-Forwarded-For as a backup
             var remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString();
             
-            // If RemoteIpAddress is still an internal IP, check X-Forwarded-For directly
-            if (remoteIp == "169.254.130.1" || remoteIp == "::1" || remoteIp == "127.0.0.1" || 
-                (remoteIp != null && (remoteIp.StartsWith("172.") || remoteIp.StartsWith("10.") || remoteIp.StartsWith("192.168."))))
+            // If RemoteIpAddress is still an internal/proxy IP, check X-Forwarded-For directly
+            // Azure App Service uses 169.254.x.x range for its load balancers (link-local addresses)
+            if (remoteIp == "::1" || remoteIp == "127.0.0.1" ||
+                (remoteIp != null && (remoteIp.StartsWith("169.254.") || remoteIp.StartsWith("172.") ||
+                remoteIp.StartsWith("10.") || remoteIp.StartsWith("192.168."))))
             {
                 var forwardedFor = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
                 if (!string.IsNullOrEmpty(forwardedFor))
