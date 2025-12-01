@@ -222,10 +222,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             IFiftyOneAspectPropertyMetaData property,
             IComponentMetaData component)
         {
-            var result = new PropertyMetaData(property)
-            {
-                Category = component.Name
-            };
+            var result = new PropertyMetaData(property);
             if (GetTypeOverrideForPropertyType(property.Type) is { } typeOverride)
             {
                 result.Type = typeOverride;
