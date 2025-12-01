@@ -25,16 +25,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Metadata-Console", "Example
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GettingStarted-Web", "Examples\OnPremise\GettingStarted-Web\GettingStarted-Web.csproj", "{3F6EF5A7-9C6E-4695-9B7B-30324CDC4066}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ip-intelligence-dotnet", "ip-intelligence-dotnet", "{106E86A2-3725-4D12-A986-247EA6AD6D86}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FiftyOne.IpIntelligence", "Examples\ip-intelligence-dotnet\FiftyOne.IpIntelligence\FiftyOne.IpIntelligence.csproj", "{E4AEBB46-716E-42B0-BA1A-8C92BE095E18}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FiftyOne.IpIntelligence.Cloud", "Examples\ip-intelligence-dotnet\FiftyOne.IpIntelligence.Cloud\FiftyOne.IpIntelligence.Cloud.csproj", "{3CA8A185-8984-41EA-8443-97CC37E3092B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FiftyOne.IpIntelligence.Engine.OnPremise", "Examples\ip-intelligence-dotnet\FiftyOne.IpIntelligence.Engine.OnPremise\FiftyOne.IpIntelligence.Engine.OnPremise.csproj", "{4BB01E7D-E4AE-472D-AA6E-08CC97C2F36E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FiftyOne.IpIntelligence.Shared", "Examples\ip-intelligence-dotnet\FiftyOne.IpIntelligence.Shared\FiftyOne.IpIntelligence.Shared.csproj", "{4F040067-5CEB-4D70-85D7-C71ABBCC6092}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FiftyOne.IpIntelligence.Example.Tests.Cloud", "Tests\FiftyOne.IpIntelligence.Example.Tests.Cloud\FiftyOne.IpIntelligence.Example.Tests.Cloud.csproj", "{A7B8C9D2-E3F4-5A6B-7C8D-9E0F1A2B3C4D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Cloud", "Cloud", "{CA60EA6E-1E38-462D-A4A9-02DD86E92784}"
