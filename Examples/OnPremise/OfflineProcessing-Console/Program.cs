@@ -20,13 +20,11 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using YamlDotNet.Serialization;
 
 /// <summary>
@@ -187,9 +185,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
                         }
                         else
                         {
-                            var nameValues = string.Join(", ", name.Value.Select(x => $"('{x.Value}' @ {x.Weighting()})"));
                             output.Add(nameof(ipData.RegisteredName), 
-                                $"\t{nameof(ipData.RegisteredName)}  ({name.Value.Count}): {nameValues}");
+                                $"\t{nameof(ipData.RegisteredName)}  : {name.Value}");
                         }
                     }
                     // Our IP Intelligence solution uses machine learning to find the optimal
@@ -213,7 +210,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
                 // Note that the Lite data file is only used for illustration, and has limited accuracy
                 // and capabilities. Find out about the Enterprise data file on our pricing page:
                 // https://51degrees.com/pricing
-                Examples.ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
+                Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
 
             File.WriteAllText("OfflineProcessing_DataFileName.txt", dataFile);
 

@@ -20,6 +20,9 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+
+// Ignore Spelling: ip API
+
 using FiftyOne.IpIntelligence.Examples;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -28,10 +31,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
+[assembly: Parallelize]
 namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
 {
     /// <summary>
@@ -65,7 +68,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             if (string.IsNullOrWhiteSpace(_dataFile))
             {
                 _dataFile = ExampleUtils.FindFile(
-                    Constants.LITE_IPI_DATA_FILE_NAME);
+                    Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
             }
 
             // Write data file path for debugging
@@ -172,7 +175,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             await WaitForApiToBeReady();
         }
 
-        private async Task WaitForApiToBeReady()
+        private static async Task WaitForApiToBeReady()
         {
             using var client = new HttpClient();
             var stopwatch = Stopwatch.StartNew();
@@ -227,8 +230,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 CloudExamplePath,
                 new string[]
                 {
-                    "UNICOM",
-                    "unicom",
+                    "CHINANET-GD",
                 },
                 new string[]
                 {
@@ -238,29 +240,29 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 },
                 new string[]
                 {
-                    "116.128.0.0",
-                    "116.191.255.255",
+                    "1.3.0.0",
+                    "1.3.255.255",
                 },
-                "starting with 116.x",
+                "starting with 1.3.x",
             ],
             [
                 MixedCloudExamplePath,
                 new string[]
                 {
-                    "GOGL",
+                    "CHINANET-GD",
                 },
                 new string[]
                 {
-                    "Brazil",
-                    "BR",
-                    "br",
+                    "China",
+                    "CN",
+                    "cn",
                 },
                 new string[]
                 {
-                    "45.236.48.0",
-                    "45.236.49.215",
+                    "1.3.0.0",
+                    "1.3.255.255",
                 },
-                "starting with 45.236.x",
+                "starting with 1.3.x",
             ],
         ];
 
@@ -334,8 +336,8 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 Assert.AreEqual(0, process.ExitCode, $"Cloud example should exit successfully. Error output: {errorOutput}");
                 
                 // Verify the example produced IP intelligence results
-                Assert.IsTrue(result.Contains("Input values:"), "Output should contain input values section");
-                Assert.IsTrue(result.Contains("Results:"), "Output should contain results section");
+                Assert.Contains("Input values:", result, "Output should contain input values section");
+                Assert.Contains("Results:", result, "Output should contain results section");
                 
                 // Check for actual IP intelligence data values (not just field names)
                 // Based on the actual output, verify we get real IP intelligence data
@@ -355,8 +357,8 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                     "Output should contain numeric values (coordinates, ranges, etc.)");
                     
                 // Ensure no errors occurred
-                Assert.IsFalse(result.Contains("Exception"), "Output should not contain exceptions");
-                Assert.IsFalse(result.Contains("Error"), "Output should not contain errors");
+                Assert.DoesNotContain("Exception", result, "Output should not contain exceptions");
+                Assert.DoesNotContain("Error", result, "Output should not contain errors");
             }
         }
 
@@ -376,7 +378,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             Assert.IsTrue(response.IsSuccessStatusCode, "API evidencekeys endpoint should respond successfully");
             
             var content = await response.Content.ReadAsStringAsync();
-            Assert.IsTrue(content.Contains("query.client-ip"), "Response should contain expected evidence keys");
+            Assert.Contains("query.client-ip", content, "Response should contain expected evidence keys");
         }
     }
 }

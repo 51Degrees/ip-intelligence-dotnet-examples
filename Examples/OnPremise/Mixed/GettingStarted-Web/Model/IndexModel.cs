@@ -21,7 +21,6 @@
  * ********************************************************************* */
 
 using FiftyOne.DeviceDetection;
-using FiftyOne.IpIntelligence;
 using System.Collections.Generic;
 
 namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Model

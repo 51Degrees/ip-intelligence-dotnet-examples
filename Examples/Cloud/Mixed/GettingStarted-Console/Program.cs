@@ -23,7 +23,6 @@
 using FiftyOne.IpIntelligence.Cloud.FlowElements;
 using FiftyOne.Pipeline.CloudRequestEngine.FlowElements;
 using FiftyOne.Pipeline.Core.Configuration;
-using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines.Data;
 using FiftyOne.Pipeline.Engines.FiftyOne.FlowElements;
@@ -33,7 +32,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using FiftyOne.DeviceDetection;
@@ -97,6 +95,15 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
                         "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Mobile/15E148 Safari/604.1" 
                     },
                     { "query.client-ip", "62.61.32.31" }
+                },
+                // Mobile device from China 2
+                new()
+                {
+                    {
+                        "header.user-agent",
+                        "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Mobile/15E148 Safari/604.1" 
+                    },
+                    { "query.client-ip", "1.3.32.31" }
                 },
                 // Desktop from Chile
                 new()
@@ -172,47 +179,38 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
 
             private void OutputDeviceData(IDeviceData device, StringBuilder message)
             {
-                OutputValue("Mobile Device", device.IsMobile, message);
-                OutputValue("Platform Name", device.PlatformName, message);
-                OutputValue("Platform Version", device.PlatformVersion, message);
-                OutputValue("Browser Name", device.BrowserName, message);
-                OutputValue("Browser Version", device.BrowserVersion, message);
-                OutputListValue("Hardware Name", device.HardwareName, message);
-                OutputValue("Hardware Vendor", device.HardwareVendor, message);
-                OutputValue("Device Type", device.DeviceType, message);
-                OutputValue("Screen Width", device.ScreenPixelsWidth, message);
-                OutputValue("Screen Height", device.ScreenPixelsHeight, message);
+                OutputProperty("Mobile Device", device.IsMobile, message);
+                OutputProperty("Platform Name", device.PlatformName, message);
+                OutputProperty("Platform Version", device.PlatformVersion, message);
+                OutputProperty("Browser Name", device.BrowserName, message);
+                OutputProperty("Browser Version", device.BrowserVersion, message);
+                OutputProperty("Hardware Name", device.HardwareName, message);
+                OutputProperty("Hardware Vendor", device.HardwareVendor, message);
+                OutputProperty("Device Type", device.DeviceType, message);
+                OutputProperty("Screen Width", device.ScreenPixelsWidth, message);
+                OutputProperty("Screen Height", device.ScreenPixelsHeight, message);
             }
 
             private void OutputIpData(IIpIntelligenceData ipData, StringBuilder message)
             {
-                OutputWeightedStringProperty("Country", ipData.Country, message);
-                OutputWeightedStringProperty("Country Code", ipData.CountryCode, message);
-                OutputWeightedStringProperty("Region", ipData.Region, message);
-                OutputWeightedStringProperty("State", ipData.State, message);
-                OutputWeightedStringProperty("Town", ipData.Town, message);
-                OutputWeightedFloatValues("Latitude", ipData.Latitude, message);
-                OutputWeightedFloatValues("Longitude", ipData.Longitude, message);
-                OutputWeightedStringProperty("Registered Name", ipData.RegisteredName, message);
-                OutputWeightedStringProperty("Registered Owner", ipData.RegisteredOwner, message);
-                OutputWeightedStringProperty("Registered Country", ipData.RegisteredCountry, message);
-                OutputWeightedIPAddressValues("IP Range Start", ipData.IpRangeStart, message);
-                OutputWeightedIPAddressValues("IP Range End", ipData.IpRangeEnd, message);
-                OutputWeightedIntValues("Accuracy Radius", ipData.AccuracyRadius, message);
-                OutputWeightedIntValues("Time Zone Offset", ipData.TimeZoneOffset, message);
+                OutputProperty("Country", ipData.Country, message);
+                OutputProperty("Country Code", ipData.CountryCode, message);
+                OutputProperty("Region", ipData.Region, message);
+                OutputProperty("State", ipData.State, message);
+                OutputProperty("Town", ipData.Town, message);
+                OutputProperty("Latitude", ipData.Latitude, message);
+                OutputProperty("Longitude", ipData.Longitude, message);
+                OutputProperty("Registered Name", ipData.RegisteredName, message);
+                OutputProperty("Registered Owner", ipData.RegisteredOwner, message);
+                OutputProperty("Registered Country", ipData.RegisteredCountry, message);
+                OutputProperty("IP Range Start", ipData.IpRangeStart, message);
+                OutputProperty("IP Range End", ipData.IpRangeEnd, message);
+                OutputProperty("Accuracy Radius", ipData.AccuracyRadiusMin, message);
+                OutputProperty("Time Zone Offset", ipData.TimeZoneOffset, message);
             }
 
-            private void OutputValue(string name, 
-                IAspectPropertyValue value,
-                StringBuilder message)
-            {
-                message.AppendLine(value.HasValue ?
-                    $"\t{name}: {value.Value}" :
-                    $"\t{name}: {value.NoValueMessage}");
-            }
-
-            private void OutputListValue(string name,
-                IAspectPropertyValue<IReadOnlyList<string>> property,
+            private void OutputProperty<T>(string name,
+                IAspectPropertyValue<T> property,
                 StringBuilder message)
             {
                 if (!property.HasValue)
@@ -221,72 +219,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
                 }
                 else
                 {
-                    var values = string.Join(", ", property.Value.Select(v => $"'{v}'"));
-                    message.AppendLine($"\t{name}: {values}");
-                }
-            }
-
-            private void OutputWeightedStringProperty(string name, 
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> property,
-                StringBuilder message)
-            {
-                if (!property.HasValue)
-                {
-                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
-                }
-                else
-                {
-                    var values = string.Join(", ", property.Value.Select(x => 
-                        x.Weighting() == 1 ? $"'{x.Value}'" : $"('{x.Value}' @ {x.Weighting()})"));
-                    message.AppendLine($"\t{name}: {values}");
-                }
-            }
-
-            private void OutputWeightedIntValues(string name, 
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<int>>> property,
-                StringBuilder message)
-            {
-                if (!property.HasValue)
-                {
-                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
-                }
-                else
-                {
-                    var values = property.Value.Select(x => 
-                        Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString() : $"({x.Value} @ {x.Weighting():F4})");
-                    message.AppendLine($"\t{name}: {string.Join(", ", values)}");
-                }
-            }
-
-            private void OutputWeightedFloatValues(string name, 
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<float>>> property,
-                StringBuilder message)
-            {
-                if (!property.HasValue)
-                {
-                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
-                }
-                else
-                {
-                    var values = property.Value.Select(x => 
-                        Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString("F6") : $"({x.Value:F6} @ {x.Weighting():F4})");
-                    message.AppendLine($"\t{name}: {string.Join(", ", values)}");
-                }
-            }
-
-            private void OutputWeightedIPAddressValues(string name, 
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<System.Net.IPAddress>>> property,
-                StringBuilder message)
-            {
-                if (!property.HasValue)
-                {
-                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
-                }
-                else
-                {
-                    var values = property.Value.Select(x => 
-                        Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString() : $"({x.Value} @ {x.Weighting():F4})");
-                    message.AppendLine($"\t{name}: {string.Join(", ", values)}");
+                    message.AppendLine($"\t{name}: {property.Value}");
                 }
             }
 
