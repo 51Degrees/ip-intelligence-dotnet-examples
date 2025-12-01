@@ -29,17 +29,17 @@ namespace FiftyOne.IpIntelligence.Examples
         /// <summary>
         /// The default name of the paid-for enterprise IP Intelligence data file.
         /// </summary>
-        public const string ENTERPRISE_IPI_DATA_FILE_NAME = "Enterprise-IpiV41.ipi";
-
-        /// <summary>
-        /// The default name of the free 'lite' IP Intelligence data file.
-        /// </summary>
-        public const string LITE_IPI_DATA_FILE_NAME = "51Degrees-LiteV41.ipi";
+        public const string ENTERPRISE_IPI_DATA_FILE_NAME = "51Degrees-EnterpriseIpiV41.ipi";
 
         /// <summary>
         /// Name of the file to use for the test evidence.
         /// </summary>
         public const string YAML_EVIDENCE_FILE_NAME = "evidence.yml";
+
+        /// <summary>
+        /// Name of the file to use for the test evidence.
+        /// </summary>
+        public const string GEOIP_COMPARISON_EVIDENCE_FILE_NAME = "geoip_comparison_evidence.csv";
 
         /// <summary>
         /// Environment variable key for the license key file to use for the 
@@ -56,6 +56,12 @@ namespace FiftyOne.IpIntelligence.Examples
         /// Environment variable key for the evidence file to use for the tests.
         /// </summary>
         public const string EVIDENCE_FILE_ENV_VAR = "EVIDENCEFILE";
+
+        /// <summary>
+        /// Environment variable key for the geo ip truth 
+        /// evidence file to use for the tests.
+        /// </summary>
+        public const string GEOIP_TRUTH_EVIDENCE_FILE_ENV_VAR = "GEOIPEVIDENCEFILE";
 
         /// <summary>
         /// Ports used for running web examples and their tests.

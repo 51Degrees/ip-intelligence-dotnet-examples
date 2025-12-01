@@ -1,0 +1,298 @@
+@* *********************************************************************
+ * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
+ * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
+ * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
+ *
+ * This Original Work is licensed under the European Union Public Licence
+ * (EUPL) v.1.2 and is subject to its terms as set out below.
+ *
+ * If a copy of the EUPL was not distributed with this file, You can obtain
+ * one at https://opensource.org/licenses/EUPL-1.2.
+ *
+ * The 'Compatible Licences' set out in the Appendix to the EUPL (as may be
+ * amended by the European Commission) shall be deemed incompatible for
+ * the purposes of the Work and the provisions of the compatibility
+ * clause in Article 5 of the EUPL shall not apply.
+ *
+ * If using the Work as, or as part of, a network application, by
+ * including the attribution notice(s) required under Article 5 of the EUPL
+ * in the end user terms of the application under an appropriate heading,
+ * such notice(s) shall fulfill the requirements of that article.
+ * ********************************************************************* *@
+
+@model FiftyOne.IpIntelligence.Examples.Mixed.Cloud.GettingStartedWeb.Model.IndexModel
+@{
+    ViewData["Title"] = "Device Detection + IP Intelligence Example";
+}
+
+<link rel="stylesheet" href="~/css/site.css" />
+
+<h2>Combined Device Detection and IP Intelligence Example</h2>
+
+<p>
+    This example demonstrates the use of the Pipeline API to perform both device detection and 
+    IP intelligence lookups within a single ASP.NET Core web project. It highlights:
+    <ol>
+        <li>Device detection using User-Agent and Client Hints</li>
+        <li>IP-based geolocation and network information</li>
+        <li>Client-side evidence collection for enhanced detection</li>
+        <li>Parallel processing of both engines for optimal performance</li>
+    </ol>
+</p>
+
+<noscript>
+    <div class="example-alert">
+        WARNING: JavaScript is disabled in your browser. This means that client-side evidence 
+        collection will not work and some device properties may not be accurately detected.
+    </div>
+</noscript>
+
+<div id="content">
+    <!-- IP Address Input Form -->
+    <form method="get" asp-action="Index" style="margin-bottom: 25px;">
+        <div>
+            <label for="client-ip" style="font-weight: bold;">IP Address Lookup:</label>
+            <input type="text" id="client-ip" name="client-ip" value="@Model.UserInputIp" 
+                   placeholder="e.g., 8.8.8.8" style="margin-left: 10px; padding: 8px; width: 200px; border: 1px solid #ccc; border-radius: 4px;">
+            <button type="submit" style="margin-left: 10px; padding: 8px 20px; background-color: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer;">Look Up</button>
+        </div>
+    </form>
+    
+    <div style="display: flex; gap: 20px;">
+        <!-- Device Detection Results Column -->
+        <div style="flex: 1;">
+            <h3>Device Detection Results</h3>
+            @if (!string.IsNullOrEmpty(Model.DeviceMessage))
+            {
+                <p class="device-summary">@Model.DeviceMessage</p>
+            }
+            <table>
+                <tr>
+                    <th>Property</th>
+                    <th>Value</th>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Hardware Vendor:</b></td>
+                    <td>@(Model.Device?.HardwareVendor?.HasValue == true ? string.Join(", ", Model.Device.HardwareVendor.Value) : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Hardware Name:</b></td>
+                    <td>@(Model.Device?.HardwareName?.HasValue == true ? string.Join(", ", Model.Device.HardwareName.Value) : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Device Type:</b></td>
+                    <td>@(Model.Device?.DeviceType?.HasValue == true ? Model.Device.DeviceType.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Platform Vendor:</b></td>
+                    <td>@(Model.Device?.PlatformVendor?.HasValue == true ? string.Join(", ", Model.Device.PlatformVendor.Value) : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Platform Name:</b></td>
+                    <td>@(Model.Device?.PlatformName?.HasValue == true ? Model.Device.PlatformName.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Platform Version:</b></td>
+                    <td>@(Model.Device?.PlatformVersion?.HasValue == true ? Model.Device.PlatformVersion.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Browser Vendor:</b></td>
+                    <td>@(Model.Device?.BrowserVendor?.HasValue == true ? string.Join(", ", Model.Device.BrowserVendor.Value) : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Browser Name:</b></td>
+                    <td>@(Model.Device?.BrowserName?.HasValue == true ? Model.Device.BrowserName.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Browser Version:</b></td>
+                    <td>@(Model.Device?.BrowserVersion?.HasValue == true ? Model.Device.BrowserVersion.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Screen width (pixels):</b></td>
+                    <td>@(Model.Device?.ScreenPixelsWidth?.HasValue == true ? Model.Device.ScreenPixelsWidth.Value.ToString() : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Screen height (pixels):</b></td>
+                    <td>@(Model.Device?.ScreenPixelsHeight?.HasValue == true ? Model.Device.ScreenPixelsHeight.Value.ToString() : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Device Id:</b></td>
+                    <td>@(Model.Device?.DeviceId?.HasValue == true ? Model.Device.DeviceId.Value : "Unknown")</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- IP Intelligence Results Column -->
+        <div style="flex: 1;">
+            <h3>IP Intelligence Results</h3>
+            
+            @if (!string.IsNullOrEmpty(Model.IpMessage))
+            {
+                <p class="ip-summary">@Model.IpMessage</p>
+            }
+            
+            <table>
+                <tr>
+                    <th>Property</th>
+                    <th>Value</th>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Registered Name:</b></td>
+                    <td>@(Model.IpData?.RegisteredName?.HasValue == true ? Model.IpData.RegisteredName.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Registered Owner:</b></td>
+                    <td>@(Model.IpData?.RegisteredOwner?.HasValue == true ? Model.IpData.RegisteredOwner.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Registered Country:</b></td>
+                    <td>@(Model.IpData?.RegisteredCountry?.HasValue == true ? Model.IpData.RegisteredCountry.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>IP Range Start:</b></td>
+                    <td>@(Model.IpData?.IpRangeStart?.HasValue == true ? Model.IpData.IpRangeStart.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>IP Range End:</b></td>
+                    <td>@(Model.IpData?.IpRangeEnd?.HasValue == true ? Model.IpData.IpRangeEnd.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Country:</b></td>
+                    <td>@(Model.IpData?.Country?.HasValue == true ? Model.IpData.Country.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Country Code:</b></td>
+                    <td>@(Model.IpData?.CountryCode?.HasValue == true ? Model.IpData.CountryCode.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Country Code 3:</b></td>
+                    <td>@(Model.IpData?.CountryCode3?.HasValue == true ? Model.IpData.CountryCode3.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Region:</b></td>
+                    <td>@(Model.IpData?.Region?.HasValue == true ? Model.IpData.Region.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>State:</b></td>
+                    <td>@(Model.IpData?.State?.HasValue == true ? Model.IpData.State.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Town:</b></td>
+                    <td>@(Model.IpData?.Town?.HasValue == true ? Model.IpData.Town.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Latitude:</b></td>
+                    <td>@(Model.IpData?.Latitude?.HasValue == true ? Model.IpData.Latitude.Value.ToString("F4") : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Longitude:</b></td>
+                    <td>@(Model.IpData?.Longitude?.HasValue == true ? Model.IpData.Longitude.Value.ToString("F4") : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Areas:</b></td>
+                    <td>@(Model.IpData?.Areas?.HasValue == true ? Model.IpData.Areas.Value : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Accuracy Radius:</b></td>
+                    <td>@(Model.IpData?.AccuracyRadiusMin?.HasValue == true ? Model.IpData.AccuracyRadiusMin.Value.ToString() : "Unknown")</td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Time Zone Offset:</b></td>
+                    <td>@(Model.IpData?.TimeZoneOffset?.HasValue == true ? Model.IpData.TimeZoneOffset.Value.ToString() : "Unknown")</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <br />
+    
+    <!-- Evidence Section -->
+    <div id="evidence">
+        <h3>Evidence Used</h3>
+        <p class="smaller">Evidence collected from the current request</p>
+        <details>
+            <summary>Click to view evidence details</summary>
+            <table style="margin-top: 10px;">
+                <tr>
+                    <th>Key</th>
+                    <th>Value</th>
+                </tr>
+                @if (Model.Evidence != null)
+                {
+                    var index = 0;
+                    @foreach (var entry in Model.Evidence)
+                    {
+                        <tr class="@(index % 2 == 0 ? "lightyellow" : "lightgreen")">
+                            <td><b>@entry.Key</b></td>
+                            <td>@(entry.Value.Length > 100 ? entry.Value.Substring(0, 100) + "..." : entry.Value)</td>
+                        </tr>
+                        index++;
+                    }
+                }
+            </table>
+        </details>
+    </div>
+</div>
+
+@* Client-side JavaScript for evidence gathering and device detection callbacks.
+    This View Component is provided by the FiftyOne.Pipeline.Web package.
+    It generates the necessary JavaScript for client-side evidence collection
+    and handles callbacks for enhanced device detection. *@
+@await Component.InvokeAsync("FiftyOneJS")
+
+<script>
+    window.onload = function () {
+        // Subscribe to the 'complete' event which fires when client-side evidence 
+        // has been collected and sent back to the server for enhanced detection.
+        fod.complete(function (data) {
+            console.log('51Degrees client-side evidence collection completed');
+            console.log('Enhanced device data available:', data.device);
+            
+            // Optionally refresh the page to show updated results with client-side evidence
+            // location.reload();
+        });
+    }   
+</script>
+
+<style>
+    .device-summary, .ip-summary {
+        background-color: #f0f8ff;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    th, td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .lightgreen {
+        background-color: #f0fff0;
+    }
+    
+    .lightyellow {
+        background-color: #fffff0;
+    }
+    
+    details {
+        margin-top: 20px;
+    }
+    
+    summary {
+        cursor: pointer;
+        padding: 10px;
+        background-color: #f5f5f5;
+        border-radius: 5px;
+    }
+    
+    summary:hover {
+        background-color: #e8e8e8;
+    }
+</style>

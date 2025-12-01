@@ -20,17 +20,23 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using YamlDotNet.Serialization;
 
 /// <summary>
 /// @example OnPremise/OfflineProcessing-Console/Program.cs
+/// 
+/// This example shows how to process a YAML file containing IP address evidence for IP Intelligence analysis.
+/// 
+/// You will learn:
+/// 
+/// 1. How to create a Pipeline that uses 51Degrees On-premise IP Intelligence
+/// 2. How to process evidence from YAML files in batch
+/// 3. How to output IP Intelligence results to YAML format
 /// 
 /// Provides an example of processing a YAML file containing evidence for IP Intelligence. 
 /// There are 20,000 examples in the supplied file of evidence representing HTTP Headers.
@@ -52,14 +58,17 @@ using YamlDotNet.Serialization;
 /// performance and predictive power using Performance Profile, Graph and Difference and Drift 
 /// settings.
 /// 
+/// Evidence files can be obtained from the [ip-intelligence-data repository](https://github.com/51Degrees/ip-intelligence-data).
+/// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/OfflineProcessing-Console/Program.cs). 
 /// 
-/// @include{doc} example-require-datafile.txt
+/// This example requires an enterprise IP Intelligence data file (.ipi). 
+/// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
 /// 
 /// Required NuGet Dependencies:
-/// - FiftyOne.IpIntelligence
-/// - Microsoft.Extensions.Logging.Console
-/// - YamlDotNet
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
+/// - [Microsoft.Extensions.Logging.Console](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Console/)
+/// - [YamlDotNet](https://www.nuget.org/packages/YamlDotNet/)
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
 {
@@ -97,10 +106,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
                 // Note that we wrap the creation of a pipeline in a using to control its life cycle
                 using (var pipeline = new IpiPipelineBuilder(loggerFactory)
                     .UseOnPremise(dataFile, null, false)
-                    // We use the low memory profile as its performance is sufficient for this
+                    // We use the max performance profile for optimal detection speed in this
                     // example. See the documentation for more detail on this and other
-                    // configuration options:
-                    // https://51degrees.com/documentation/_ip_intelligence__features__performance_options.html
+                    // configuration options.
                     // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
                     // https://51degrees.com/documentation/_features__usage_sharing.html
                     .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
@@ -177,9 +185,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
                         }
                         else
                         {
-                            var nameValues = string.Join(", ", name.Value.Select(x => $"('{x.Value}' @ {x.Weighting()})"));
                             output.Add(nameof(ipData.RegisteredName), 
-                                $"\t{nameof(ipData.RegisteredName)}  ({name.Value.Count}): {nameValues}");
+                                $"\t{nameof(ipData.RegisteredName)}  : {name.Value}");
                         }
                     }
                     // Our IP Intelligence solution uses machine learning to find the optimal
@@ -203,7 +210,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
                 // Note that the Lite data file is only used for illustration, and has limited accuracy
                 // and capabilities. Find out about the Enterprise data file on our pricing page:
                 // https://51degrees.com/pricing
-                ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
+                Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
 
             File.WriteAllText("OfflineProcessing_DataFileName.txt", dataFile);
 
@@ -211,7 +218,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
             var evidenceFile = args.Length > 1 ? args[1] :
                 // This file contains the 20,000 most commonly seen combinations of header values 
                 // that are relevant to IP Intelligence. For example, User-Agent and UA-CH headers.
-                ExampleUtils.FindFile(Constants.YAML_EVIDENCE_FILE_NAME);
+                Examples.ExampleUtils.FindFile(Constants.YAML_EVIDENCE_FILE_NAME);
             // Finally, get the location for the output file. Use the same location as the
             // evidence if a path is not supplied on the command line.
             var outputFile = args.Length > 2 ? args[2] :

@@ -19,10 +19,6 @@ if ("TAC-HashV41.hash" -in $Assets) {
 }
 if ("51Degrees-EnterpriseIpiV41.ipi" -in $Assets) {
     Copy-Item "assets/51Degrees-EnterpriseIpiV41.ipi" $ipIntelligenceData
-    Copy-Item "assets/51Degrees-EnterpriseIpiV41.ipi" "$ipIntelligenceData/51Degrees-LiteV41.ipi" # use Enterprise as Lite
-}
-if ("51Degrees-EnterpriseIpiV41.ipi" -in $Assets) {
-    Copy-Item "assets/51Degrees-EnterpriseIpiV41.ipi" $ipIntelligenceData
 }
 if (!$SkipEvidence) {
     Push-Location $ipIntelligenceData

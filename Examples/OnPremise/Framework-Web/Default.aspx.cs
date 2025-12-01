@@ -25,12 +25,18 @@ using System.Web.UI;
 
 /// @example OnPremise/Framework-Web/Default.aspx.cs
 /// 
-/// This example demonstrates how to use the cloud-based IP Intelligence API in a .NET Framework 
-/// website.
+/// This example shows how to use 51Degrees On-premise IP Intelligence to determine location and network details from IP addresses in a .NET Framework web application.
+/// 
+/// You will learn:
+/// 
+/// 1. How to configure a Pipeline that uses 51Degrees On-premise IP Intelligence in a .NET Framework website
+/// 2. How the PipelineModule automatically processes requests and makes results available  
+/// 3. How to retrieve IP Intelligence results in your web pages
 /// 
 /// The source code for this example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/tree/master/Examples/OnPremise/Framework-Web).
 /// 
-/// @include{doc} example-require-datafile.txt
+/// This example requires an enterprise IP Intelligence data file (.ipi). 
+/// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
 /// 
 /// Required NuGet Dependencies: 
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)

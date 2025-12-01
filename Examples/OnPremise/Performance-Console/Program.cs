@@ -31,16 +31,23 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 
 /// <summary>
 /// @example Performance-Console/Program.cs
 ///
+/// This example shows how to benchmark the performance of 51Degrees On-premise IP Intelligence.
+/// 
+/// You will learn:
+/// 
+/// 1. How to create a Pipeline that uses 51Degrees On-premise IP Intelligence with different performance configurations
+/// 2. How to run benchmarks to measure detection speed and throughput
+/// 3. How to analyze performance trade-offs between speed, memory usage, and accuracy
+///
 /// The example illustrates a "clock-time" benchmark for assessing detection speed.
 ///
 /// Using a YAML formatted evidence file - "20000 Evidence Records.yml" - supplied with the
-/// distribution or can be obtained from the [data repository on Github](https://github.com/51Degrees/ip-intelligence-data/blob/master/20000%20Evidence%20Records.yml).
+/// distribution or can be obtained from the [data repository on Github](https://github.com/51Degrees/ip-intelligence-data).
 ///
 /// It's important to understand the trade-offs between performance, memory usage and accuracy, that
 /// the 51Degrees pipeline configuration makes available, and this example shows a range of
@@ -50,16 +57,14 @@ using System.Threading.Tasks;
 /// properties from multiple components. If you don't specify any properties to detect, then all 
 /// properties are detected.
 ///
-/// Please review [performance options](https://51degrees.com/documentation/_ip_intelligence__features__performance_options.html)
-/// and [IPI dataset options](https://51degrees.com/documentation/_ip_intelligence__on_premise.html#IpIntelligence_OnPremise_DataSetProduction_Performance)
-/// for more information about adjusting performance.
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Performance-Console/Program.cs).
 /// 
-/// @include{doc} example-require-datafile.txt
+/// This example requires an enterprise IP Intelligence data file (.ipi). 
+/// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
 /// 
 /// Required NuGet Dependencies:
-/// - FiftyOne.IpIntelligence
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
 {
@@ -224,10 +229,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                                 // out the very method that the benchmark is testing.
                                 if (ipData.RegisteredName.HasValue)
                                 {
-                                    foreach (var nextName in ipData.RegisteredName.Value)
-                                    {
-                                        result.HashSum += nextName.Value[0].GetHashCode();
-                                    }
+                                    result.HashSum += ipData.RegisteredName.Value.GetHashCode();
                                 }
                             }
 
@@ -364,7 +366,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
         {
             // Use the supplied path for the data file or find the lite file that is included
             // in the repository.
-            var options = ExampleUtils.ParseOptions(args);
+            var options = Examples.ExampleUtils.ParseOptions(args);
             if (options != null) {
                 var dataFile = options.DataFilePath != null ? options.DataFilePath :
                     // In this example, by default, the 51degrees "Lite" file needs to be somewhere in the
@@ -373,12 +375,12 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                     // Note that the Lite data file is only used for illustration, and has limited accuracy
                     // and capabilities. Find out about the Enterprise data file on our pricing page:
                     // https://51degrees.com/pricing
-                    ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
+                    Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
                 // Do the same for the yaml evidence file.
                 var evidenceFile = options.EvidenceFile != null ? options.EvidenceFile :
                     // This file contains the 20,000 most commonly seen combinations of header values 
                     // that are relevant to IP Intelligence. For example, User-Agent and UA-CH headers.
-                    ExampleUtils.FindFile(Constants.YAML_EVIDENCE_FILE_NAME);
+                    Examples.ExampleUtils.FindFile(Constants.YAML_EVIDENCE_FILE_NAME);
 
                 var results = new Dictionary<PerformanceConfiguration, IList<BenchmarkResult>>();
                 for (int i = 0; i < _configs.Length; i++)

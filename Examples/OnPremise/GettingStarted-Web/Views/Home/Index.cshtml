@@ -116,8 +116,8 @@
     <h3>IP Intelligence Lookup</h3>
     <form method="get" asp-action="Index">
         <div style="margin-bottom: 20px;">
-            <label for="ipAddress">Enter IP Address:</label>
-            <input type="text" id="ipAddress" name="ipAddress" value="@Model.InputIpAddress" 
+            <label for="client-ip">Enter IP Address:</label>
+            <input type="text" id="client-ip" name="client-ip" value="@Model.InputIpAddress" 
                    placeholder="e.g., 13.95.93.152" style="margin-left: 10px; padding: 5px;">
             <button type="submit" style="margin-left: 10px; padding: 5px 15px;">Look Up</button>
         </div>
@@ -168,7 +168,7 @@
             @foreach (var entry in Model.Evidence)
             {
                 <tr class="@(entry.Used ? "lightgreen" : "lightyellow")">
-                    <td><b>@(entry.Key)</b></td>
+                    <td>@if(entry.Used){<b>@entry.Key</b>}else{@entry.Key}</td>
                     <td>@(entry.Value)</td>
                 </tr>
             }

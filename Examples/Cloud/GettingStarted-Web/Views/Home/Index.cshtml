@@ -1,0 +1,233 @@
+@* *********************************************************************
+ * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
+ * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
+ * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
+ *
+ * This Original Work is licensed under the European Union Public Licence
+ * (EUPL) v.1.2 and is subject to its terms as set out below.
+ *
+ * If a copy of the EUPL was not distributed with this file, You can obtain
+ * one at https://opensource.org/licenses/EUPL-1.2.
+ *
+ * The 'Compatible Licences' set out in the Appendix to the EUPL (as may be
+ * amended by the European Commission) shall be deemed incompatible for
+ * the purposes of the Work and the provisions of the compatibility
+ * clause in Article 5 of the EUPL shall not apply.
+ *
+ * If using the Work as, or as part of, a network application, by
+ * including the attribution notice(s) required under Article 5 of the EUPL
+ * in the end user terms of the application under an appropriate heading,
+ * such notice(s) shall fulfill the requirements of that article.
+ * ********************************************************************* *@
+
+@using FiftyOne.IpIntelligence.Examples
+@model FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model.IndexModel
+@{
+    ViewData["Title"] = "IP Intelligence Web Integration Example";
+}
+
+<link rel="stylesheet" href="~/css/site.css" />
+
+<h2>IP Intelligence Web Integration Example</h2>
+
+<p>
+    This example demonstrates the use of the Pipeline API to perform IP Intelligence lookups within a
+    simple ASP.NET Core web project.
+</p>
+
+<noscript>
+    <div class="example-alert">
+        WARNING: JavaScript is disabled in your browser.
+    </div>
+</noscript>
+
+<div id="content">
+    <h3>IP Intelligence Lookup</h3>
+    <form method="get" asp-action="Index">
+        <div style="margin-bottom: 20px;">
+            <label for="ipAddress">Enter IP Address:</label>
+            <input type="text" id="ipAddress" name="ipAddress" value="@Model.InputIpAddress"
+                   placeholder="e.g., 13.95.93.152" style="margin-left: 10px; padding: 5px;">
+            <button type="submit" style="margin-left: 10px; padding: 5px 15px;">Look Up</button>
+        </div>
+    </form>
+
+    <h3>Detection results</h3>
+    <p>
+        The following values are determined by IP Intelligence analysis:
+    </p>
+    <table>
+        <tr>
+            <th>Property</th>
+            <th>Value</th>
+        </tr>
+        <tr class="lightyellow"><td><b>Registered Name:</b></td><td>@Model.Name</td></tr>
+        <tr class="lightgreen"><td><b>Registered Owner:</b></td><td>@Model.RegisteredOwner</td></tr>
+        <tr class="lightyellow"><td><b>Registered Country:</b></td><td>@Model.RegisteredCountry</td></tr>
+        <tr class="lightgreen"><td><b>IP Range Start:</b></td><td>@Model.IpRangeStart</td></tr>
+        <tr class="lightyellow"><td><b>IP Range End:</b></td><td>@Model.IpRangeEnd</td></tr>
+        <tr class="lightgreen"><td><b>Country:</b></td><td>@Model.Country</td></tr>
+        <tr class="lightyellow"><td><b>Country Code:</b></td><td>@Model.CountryCode</td></tr>
+        <tr class="lightgreen"><td><b>Country Code 3:</b></td><td>@Model.CountryCode3</td></tr>
+        <tr class="lightyellow"><td><b>Region:</b></td><td>@Model.Region</td></tr>
+        <tr class="lightgreen"><td><b>State:</b></td><td>@Model.State</td></tr>
+        <tr class="lightyellow"><td><b>Town:</b></td><td>@Model.Town</td></tr>
+        <tr class="lightgreen"><td><b>Latitude:</b></td><td>@Model.Latitude</td></tr>
+        <tr class="lightyellow"><td><b>Longitude:</b></td><td>@Model.Longitude</td></tr>
+        <tr class="lightgreen"><td><b>Areas:</b></td><td>@Model.Areas</td></tr>
+        <tr class="lightyellow"><td><b>Accuracy Radius:</b></td><td>@Model.AccuracyRadius</td></tr>
+        <tr class="lightgreen"><td><b>Time Zone Offset:</b></td><td>@Model.TimeZoneOffset</td></tr>
+    </table>
+    <br />
+
+    <div id="evidence">
+        <h3>Evidence used</h3>
+        <p class="smaller">Evidence was <span class="lightgreen">used</span> / <span class="lightyellow">present</span> for detection</p>
+        <table>
+            <tr>
+                <th>Key</th>
+                <th>Value</th>
+            </tr>
+            @foreach (var entry in Model.Evidence.Where(e => e.Key.Equals("server.client-ip", StringComparison.OrdinalIgnoreCase)))
+            {
+                <tr class="@(entry.Used ? "lightgreen" : "lightyellow")">
+                    <td><b>@(entry.Key)</b></td>
+                    <td>@(entry.Value)</td>
+                </tr>
+            }
+        </table>
+    </div>
+    <br />
+
+    <div id="response-headers">
+        <h3>Response headers</h3>
+        <table>
+            <tr>
+                <th>Key</th>
+                <th>Value</th>
+            </tr>
+            @foreach (var entry in Model.ResponseHeaders)
+            {
+                <tr class="lightyellow">
+                    <td><b>@(entry.Key)</b></td>
+                    <td>@(entry.Value)</td>
+                </tr>
+            }
+        </table>
+    </div>
+    <br />
+    @if (Model.Engine.DataSourceTier == "Lite")
+    {
+        <div class="example-alert">
+            WARNING: You are using the free 'Lite' data file. Find out about the Enterprise data file on our
+            <a href="https://51degrees.com/pricing">pricing page</a>.
+        </div>
+    }
+
+    <br />
+    <div id="map-section" style="display: none;">
+        <h3 id="map-title">Location Map</h3>
+        <div id="map" style="height: 400px; width: 100%; border: 1px solid #ccc;"></div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/wellknown@0.5.0/wellknown.js"></script>
+
+<script>
+    // Map configuration - English only
+    var mapConfig = {
+        title: 'Location Map',
+        ipLocationLabel: 'IP Location',
+        latitudeLabel: 'Lat',
+        longitudeLabel: 'Lng'
+    };
+
+    // Constants
+    var UNKNOWN_VALUE = 'Unknown';
+    var EMPTY_POLYGON = 'POLYGON EMPTY';
+
+    // Helper function to check if a value is valid (not unknown or empty)
+    function isValidValue(value) {
+        return value && !value.includes(UNKNOWN_VALUE) && value !== '0' && value !== '';
+    }
+
+    // Get the Areas value from the model
+    var areasWkt = '@Html.Raw(Model.Areas?.Replace("'", "\\'") ?? "")';
+    var latitude = '@Model.Latitude';
+    var longitude = '@Model.Longitude';
+
+    if (isValidValue(areasWkt) && areasWkt !== EMPTY_POLYGON) {
+        // Show the map section
+        document.getElementById('map-section').style.display = 'block';
+
+        // Initialize the map
+        var map = L.map('map');
+
+        // Add CartoDB Positron tile layer - shows all place names in English
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap contributors © CARTO',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        try {
+            // Parse WKT to GeoJSON using wellknown library
+            var geoJson = wellknown.parse(areasWkt);
+
+            if (geoJson) {
+                // Add the polygon to the map
+                var polygon = L.geoJSON(geoJson, {
+                    style: {
+                        color: '#ff0000',
+                        weight: 2,
+                        opacity: 0.8,
+                        fillColor: '#ff0000',
+                        fillOpacity: 0.2
+                    }
+                }).addTo(map);
+
+                // Fit the map to the polygon bounds
+                map.fitBounds(polygon.getBounds());
+
+                // If we have valid coordinates, add a marker for the IP location
+                if (isValidValue(latitude) && isValidValue(longitude)) {
+                    var lat = parseFloat(latitude);
+                    var lng = parseFloat(longitude);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        L.marker([lat, lng])
+                            .addTo(map)
+                            .bindPopup(mapConfig.ipLocationLabel + '<br>' + mapConfig.latitudeLabel + ': ' + lat + '<br>' + mapConfig.longitudeLabel + ': ' + lng)
+                            .openPopup();
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing polygon:', e);
+            document.getElementById('map-section').style.display = 'none';
+        }
+    } else if (isValidValue(latitude) && isValidValue(longitude)) {
+        // If no polygon but we have coordinates, show just the marker
+        document.getElementById('map-section').style.display = 'block';
+
+        var lat = parseFloat(latitude);
+        var lng = parseFloat(longitude);
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+            var map = L.map('map').setView([lat, lng], 10);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap contributors © CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+
+            L.marker([lat, lng])
+                .addTo(map)
+                .bindPopup(mapConfig.ipLocationLabel + '<br>' + mapConfig.latitudeLabel + ': ' + lat + '<br>' + mapConfig.longitudeLabel + ': ' + lng)
+                .openPopup();
+        }
+    }
+</script>
+

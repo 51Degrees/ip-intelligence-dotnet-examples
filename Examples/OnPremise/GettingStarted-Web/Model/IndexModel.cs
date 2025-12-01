@@ -84,7 +84,6 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
 
             // Get the results of IP Intelligence.
             var ipiData = FlowData.Get<IIpIntelligenceData>();
-            
             // Initialize the properties list
             Properties = new List<PropertyData>();
             

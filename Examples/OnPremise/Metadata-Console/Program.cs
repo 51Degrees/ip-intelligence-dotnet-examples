@@ -34,20 +34,11 @@ using System.Text;
 /// <summary>
 /// @example OnPremise/Metadata-Console/Program.cs
 ///
-/// The IP Intelligence data file contains meta data that can provide additional information
-/// about the various records in the data model.
-/// This example shows how to access this data and display the values available.
-/// 
-/// To help navigate the data, it's useful to have an understanding of the types of records that
-/// are present:
-/// - Component - A record relating to a major aspect of the entity making a web request. There are currently 4 components: Hardware, Software Platform (OS), Browser and Crawler.
-/// - Profile - A record containing the details for a specific instance of a component. An example of a hardware profile would be the profile for the iPhone 13. An example of a platform profile would be Android 12.1.0.
-/// - Property - Each property will have a specific value (or values) for each profile. An example of a hardware property is 'IsMobile'. An example of a browser property is 'BrowserName'.
-/// 
-/// The example will output each component in turn, with a list of the properties associated with
-/// each component. Some of the possible values for each property are also displayed.
-/// There are too many profiles to display, so we just list the number of profiles for each 
-/// component.
+/// This example shows how to access metadata about the IP Intelligence properties that are available 
+/// in the data file. This can be useful for understanding what information is available and how to access it.
+///
+/// The example will output the available properties along with details about their data types and descriptions.
+/// This helps you understand what IP Intelligence data you can access for your use case.
 /// 
 /// Finally, the evidence keys that are accepted by IP Intelligence are listed. These are the 
 /// keys that, when added to the evidence collection in flow data, could have some impact on the
@@ -55,11 +46,12 @@ using System.Text;
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Metadata-Console/Program.cs). 
 /// 
-/// @include{doc} example-require-datafile.txt
+/// This example requires an enterprise IP Intelligence data file (.ipi). 
+/// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
 /// 
 /// Required NuGet Dependencies:
-/// - FiftyOne.IpIntelligence
-/// - Microsoft.Extensions.Logging.Console
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
+/// - [Microsoft.Extensions.Logging.Console](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Console/)
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
 {
@@ -75,10 +67,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
                 // If you already have a pipeline and just want to get a reference to the engine 
                 // then you can use `var engine = pipeline.GetElement<IpiOnPremiseEngine>();`
                 using (var ddEngine = new IpiOnPremiseEngineBuilder(loggerFactory)
-                    // We use the low memory profile as its performance is sufficient for this
+                    // We use the max performance profile for optimal detection speed in this
                     // example. See the documentation for more detail on this and other
-                    // configuration options:
-                    // https://51degrees.com/documentation/_ip_intelligence__features__performance_options.html
+                    // configuration options.
                     // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
                     .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
                     // inhibit auto-update of the data file for this test
@@ -230,13 +221,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
             // Use the supplied path for the data file or find the lite file that is included
             // in the repository.
             var dataFile = args.Length > 0 ? args[0] :
-                // In this example, by default, the 51degrees "Lite" file needs to be somewhere in the
+                // In this example, by default, the 51degrees IP Intelligence data file needs to be somewhere in the
                 // project space, or you may specify another file as a command line parameter.
                 //
-                // Note that the Lite data file is only used for illustration, and has limited accuracy
-                // and capabilities. Find out about the Enterprise data file on our pricing page:
-                // https://51degrees.com/pricing
-                ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
+                // For testing, contact us to obtain an enterprise data file: https://51degrees.com/contact-us
+                Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
 
             File.WriteAllText("Metadata_DataFileName.txt", dataFile);
 

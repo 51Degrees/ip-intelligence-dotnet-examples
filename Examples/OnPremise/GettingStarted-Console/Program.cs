@@ -20,7 +20,9 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-using FiftyOne.Pipeline.Core.Data;
+
+// Ignore Spelling: Ip
+
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines;
 using FiftyOne.Pipeline.Engines.Data;
@@ -28,21 +30,26 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Text;
 
 /// <summary>
 /// @example OnPremise/GettingStarted-Console/Program.cs
 /// 
-/// @include{doc} example-getting-started-onpremise.txt
+/// This example shows how to use 51Degrees On-premise IP Intelligence to determine location and network details from IP addresses.
+/// 
+/// You will learn:
+/// 
+/// 1. How to create a Pipeline that uses 51Degrees On-premise IP Intelligence
+/// 2. How to pass input data (evidence) to the Pipeline
+/// 3. How to retrieve the results
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-Console/Program.cs). 
 /// 
-/// @include{doc} example-require-datafile.txt
+/// This example requires an enterprise IP Intelligence data file (.ipi). 
+/// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
 /// 
 /// Required NuGet Dependencies:
-/// - FiftyOne.IpIntelligence
+/// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
 {
@@ -59,10 +66,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 // Note that we wrap the creation of a pipeline in a using to control its life cycle
                 using (var pipeline = new IpiPipelineBuilder()
                     .UseOnPremise(dataFile, null, false)
-                    // We use the low memory profile as its performance is sufficient for this
+                    // We use the max performance profile for optimal detection speed in this
                     // example. See the documentation for more detail on this and other
-                    // configuration options:
-                    // https://51degrees.com/documentation/_ip_intelligence__features__performance_options.html
+                    // configuration options.
                     // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
                     // https://51degrees.com/documentation/_features__usage_sharing.html
                     .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
@@ -102,14 +108,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     .SetProperty("Latitude")
                     .SetProperty("LocationConfidence")
                     .SetProperty("Longitude")
-                    .SetProperty("Mcc")
-                    .SetProperty("Region")
-                    .SetProperty("RegisteredCountry")
-                    .SetProperty("RegisteredName")
-                    .SetProperty("RegisteredOwner")
-                    .SetProperty("State")
-                    .SetProperty("Suburb")
-                    .SetProperty("TimeZoneIana")
+                    .SetProperty("Areas")
+                    .SetProperty("AccuracyRadiusMin")
                     .SetProperty("TimeZoneOffset")
                     .SetProperty("Town")
                     .SetProperty("ZipCode")
@@ -117,7 +117,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 {
                     // carry out some sample detections
                     // and collect IP addresses
-                    foreach (var evidence in ExampleUtils.EvidenceValues)
+                    foreach (var evidence in Examples.ExampleUtils.EvidenceValues)
                     {
                         AnalyseEvidence(evidence, pipeline, output);
                     }
@@ -164,6 +164,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     // can get by asking for a result matching the `IIpIntelligenceData` interface.
                     var ipData = data.Get<IIpIntelligenceData>();
 
+<<<<<<< HEAD
                     // Output all available properties
                     message.AppendLine("\t--- Accuracy & Location Confidence ---");
                     OutputWeightedIntValues(nameof(ipData.AccuracyRadiusMax), ipData.AccuracyRadiusMax, message);
@@ -220,12 +221,30 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     OutputWeightedBoolValues(nameof(ipData.IsTor), ipData.IsTor, message);
                     OutputWeightedBoolValues(nameof(ipData.IsPublicRouter), ipData.IsPublicRouter, message);
                     OutputWeightedIntValues(nameof(ipData.HumanProbability), ipData.HumanProbability, message);
+=======
+                    // Output all the properties
+                    //OutputProperty(nameof(ipData.RegisteredName), ipData.RegisteredName, message);
+                    //OutputProperty(nameof(ipData.RegisteredOwner), ipData.RegisteredOwner, message);
+                    //OutputProperty(nameof(ipData.RegisteredCountry), ipData.RegisteredCountry, message);
+                    //OutputProperty(nameof(ipData.IpRangeStart), ipData.IpRangeStart, message);
+                    //OutputProperty(nameof(ipData.IpRangeEnd), ipData.IpRangeEnd, message);
+                    //OutputProperty(nameof(ipData.Country), ipData.Country, message);
+                    //OutputProperty(nameof(ipData.CountryCode), ipData.CountryCode, message);
+                    //OutputProperty(nameof(ipData.CountryCode3), ipData.CountryCode3, message);
+                    //OutputProperty(nameof(ipData.Region), ipData.Region, message);
+                    //OutputProperty(nameof(ipData.State), ipData.State, message);
+                    //OutputProperty(nameof(ipData.Town), ipData.Town, message);
+                    //OutputProperty(nameof(ipData.Latitude), ipData.Latitude, message);
+                    //OutputProperty(nameof(ipData.Longitude), ipData.Longitude, message);
+                    //OutputProperty(nameof(ipData.Areas), ipData.Areas, message);
+                    OutputProperty(nameof(ipData.AccuracyRadiusMin), ipData.AccuracyRadiusMin, message);
+                    //OutputProperty(nameof(ipData.TimeZoneOffset), ipData.TimeZoneOffset, message);
+>>>>>>> main
                     output.WriteLine(message.ToString());
                 }
             }
-
-            private void OutputListProperty(string name, 
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> property,
+            private void OutputProperty<T>(string name,
+                IAspectPropertyValue<T> property,
                 StringBuilder message)
             {
                 if (!property.HasValue)
@@ -234,77 +253,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 }
                 else
                 {
-                    var values = string.Join(", ", property.Value.Select(x => 
-                        x.Weighting() == 1 ? $"'{x.Value}'" : $"('{x.Value}' @ {x.Weighting()})"));
-                    message.AppendLine($"\t{name} ({property.Value.Count}): {values}");
-                }
-            }
-
-
-            private void OutputValue(string name, 
-                IAspectPropertyValue value,
-                StringBuilder message)
-            {
-                // Individual result values have a wrapper called `AspectPropertyValue`.
-                // This functions similarly to a null-able type.
-                // If the value has not been set then trying to access the `Value` property will
-                // throw an exception. `AspectPropertyValue` also includes the `NoValueMessage`
-                // property, which describes why the value has not been set.
-                if (!value.HasValue)
-                {
-                    message.AppendLine($"\t{name}: {value.NoValueMessage}");
-                }
-                else
-                {
-                    message.AppendLine($"\t{name}: {value.Value}");
-                }
-            }
-
-            private void OutputWeightedIntValues(string name, 
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<int>>> property,
-                StringBuilder message)
-            {
-                if (!property.HasValue)
-                {
-                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
-                }
-                else
-                {
-                    var values = property.Value.Select(x => 
-                        Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString() : $"({x.Value} @ {x.Weighting():F4})");
-                    message.AppendLine($"\t{name} ({property.Value.Count}): {string.Join(", ", values)}");
-                }
-            }
-
-            private void OutputWeightedFloatValues(string name, 
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<float>>> property,
-                StringBuilder message)
-            {
-                if (!property.HasValue)
-                {
-                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
-                }
-                else
-                {
-                    var values = property.Value.Select(x => 
-                        Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString("F6") : $"({x.Value:F6} @ {x.Weighting():F4})");
-                    message.AppendLine($"\t{name} ({property.Value.Count}): {string.Join(", ", values)}");
-                }
-            }
-
-            private void OutputWeightedIPAddressValues(string name, 
-                IAspectPropertyValue<IReadOnlyList<IWeightedValue<System.Net.IPAddress>>> property,
-                StringBuilder message)
-            {
-                if (!property.HasValue)
-                {
-                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
-                }
-                else
-                {
-                    var values = property.Value.Select(x => 
-                        Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString() : $"({x.Value} @ {x.Weighting():F4})");
-                    message.AppendLine($"\t{name} ({property.Value.Count}): {string.Join(", ", values)}");
+                    message.AppendLine($"\t{name}: {property.Value}");
                 }
             }
 
@@ -337,7 +286,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 // and capabilities. Find out about the Enterprise data file on our pricing page:
                 // https://51degrees.com/pricing
 
-                ExampleUtils.FindFile(Constants.LITE_IPI_DATA_FILE_NAME);
+                Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
 
             File.WriteAllText("GettigStarted_DataFileName.txt", dataFile);
 
