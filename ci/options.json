@@ -1,11 +1,11 @@
-[  
+[
     {
         "Image": "windows-latest",
         "Name": "Windows_x64_Release",
         "Configuration": "Release",
         "Arch": "x64",
         "BuildMethod": "dotnet",
-        "PackageRequirement" : true
+        "PackageRequirement": true
     },
     {
         "Image": "windows-latest",
@@ -13,7 +13,7 @@
         "Configuration": "Release",
         "Arch": "x64",
         "BuildMethod": "msbuild",
-        "PackageRequirement" : true
+        "PackageRequirement": true
     },
     {
         "Image": "ubuntu-latest",
@@ -21,22 +21,22 @@
         "Configuration": "CoreRelease",
         "Arch": "x64",
         "BuildMethod": "dotnet",
-        "PackageRequirement" : true
+        "PackageRequirement": true
     },
     {
-        "Image": "macos-13",
-        "Name": "macos_x64_Release",
-        "Configuration": "CoreRelease",
-        "Arch": "x64",
-        "BuildMethod": "dotnet",
-        "PackageRequirement" : true
-    },
-    {
-        "Image": "macos-14",
+        "Image": "macos-latest",
         "Name": "macos_arm64_Release",
         "Configuration": "CoreRelease",
         "Arch": "ARM64",
         "BuildMethod": "dotnet",
-        "PackageRequirement" : true
+        "PackageRequirement": true
+    },
+    {
+        "Image": "macos-15-intel",
+        "Name": "macos_x64_Release",
+        "Configuration": "CoreRelease",
+        "Arch": "x64",
+        "BuildMethod": "dotnet",
+        "PackageRequirement": true
     }
 ]

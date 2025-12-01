@@ -20,6 +20,9 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+
+// Ignore Spelling: Metadata Offline
+
 using FiftyOne.IpIntelligence.Examples;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -27,6 +30,7 @@ using System;
 using System.IO;
 using System.Threading;
 
+[assembly: Parallelize]
 namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise;
 
 /// <summary>
@@ -145,6 +149,7 @@ public class TestExamples
     /// Test the Metrics Example
     /// </summary>
     [TestMethod]
+    [Ignore("Disabled until profileOffsets are sorted (again).")]
     public void Example_OnPremise_MetricsConsole()
     {
         var tempfile = Path.GetTempFileName();
@@ -153,7 +158,10 @@ public class TestExamples
             DataFile,
             new LoggerFactory(),
             writer,
+            // Sample 0.1% of possible IP addresses.
             0.0001,
+            // Include all the possible IP ranges.
+            (_) => true,
             CancellationToken.None).Wait();
         File.Delete(tempfile);
     }

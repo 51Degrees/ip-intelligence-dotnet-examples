@@ -77,8 +77,5 @@
     <ProjectReference Include="..\..\FiftyOne.IpIntelligence.Examples\FiftyOne.IpIntelligence.Examples.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.0-alpha.171" />
-  </ItemGroup>
 
 </Project>
