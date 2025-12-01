@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.1" />
-    <PackageReference Include="FiftyOne.Pipeline.Engines" Version="4.5.6" />
+    <PackageReference Include="FiftyOne.IpIntelligence" Version="4.5.2" />
+    <PackageReference Include="FiftyOne.Pipeline.Engines" Version="4.5.7" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
 
