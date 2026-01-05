@@ -18,15 +18,12 @@ jobs:
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
           submodules: recursive
-      - name: Create data directory and fetch assets
-        run: |
-          mkdir -p ip-intelligence-data
-          wget -q -O ip-intelligence-data/51Degrees-EnterpriseIpiV41.ipi.gz '${{ secrets.IPI_DATA_FILE_URL }}'
-          gunzip ip-intelligence-data/51Degrees-EnterpriseIpiV41.ipi.gz
       - name: Build
+        env:
+          IPI_DATA_FILE_URL: ${{ secrets.IPI_DATA_FILE_URL }}
         run: |
           printf -v tag '%s-%(%y%m%dT%H%M)T' "$BASE_VERSION" -1
-          docker build --platform=linux/amd64 --tag=51degrees/ipitester:{latest,"$tag"} .
+          docker build --secret id=IPI_DATA_FILE_URL --platform=linux/amd64 --tag=51degrees/ipitester:{latest,"$tag"} .
       - name: Publish
         if: ${{ !inputs.dryrun }}
         env:
