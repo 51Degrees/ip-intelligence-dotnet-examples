@@ -6,8 +6,7 @@ RUN apt-get update && \
         build-essential \
         cmake \
         libatomic1 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    rm -rf /var/lib/apt/lists/*
 
 COPY Examples /app
 WORKDIR /app
@@ -34,17 +33,19 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0-noble
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libatomic1 \
-        libstdc++6 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+        libstdc++6 \
+        curl && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy the published application
 COPY --from=build /app/publish .
 
-# Copy the IP Intelligence data file directly to the final image
-COPY ip-intelligence-data/51Degrees-EnterpriseIpiV41.ipi /app/data/51Degrees-EnterpriseIpiV41.ipi
+# Download the IP Intelligence data file directly to the final image
+RUN --mount=type=secret,required=true,id=IPI_DATA_FILE_URL,env=IPI_DATA_FILE_URL \
+    mkdir -p  /app/data && \
+    curl -sSL "$IPI_DATA_FILE_URL" | gzip -cd >/app/data/51Degrees-EnterpriseIpiV41.ipi
 
 EXPOSE 5225
 

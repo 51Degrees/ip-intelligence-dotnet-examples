@@ -18,19 +18,12 @@ jobs:
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
           submodules: recursive
-      - name: Create data directory and fetch assets
-        run: |
-          mkdir -p ip-intelligence-data
-          wget -q -O ip-intelligence-data/51Degrees-EnterpriseIpiV41.ipi.gz '${{ secrets.IPI_DATA_FILE_URL }}'
-          gunzip ip-intelligence-data/51Degrees-EnterpriseIpiV41.ipi.gz
-      - name: Patch sources
-        run: |
-          sed -i '/AddOverrides_DD.*;$/d' Examples/OnPremise/Mixed/GettingStarted-API/Program.cs
-          cp Examples/OnPremise/Mixed/GettingStarted-API/{docker-appsettings,appsettings}.json
       - name: Build
+        env:
+          IPI_DATA_FILE_URL: ${{ secrets.IPI_DATA_FILE_URL }}
         run: |
           printf -v tag '%s-%(%y%m%dT%H%M)T' "$BASE_VERSION" -1
-          docker build --tag=51degrees/minicloud:{latest,"$tag"} -f Examples/OnPremise/Mixed/GettingStarted-API/Dockerfile .
+          docker build --secret id=IPI_DATA_FILE_URL --tag=51degrees/minicloud:{latest,"$tag"} -f Examples/OnPremise/Mixed/GettingStarted-API/Dockerfile .
       - name: Publish
         if: ${{ !inputs.dryrun }}
         env:
