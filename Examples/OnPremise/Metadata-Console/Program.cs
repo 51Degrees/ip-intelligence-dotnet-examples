@@ -79,8 +79,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
                     .Build(dataFile, false))
                 {
                     OutputComponents(ddEngine, output);
-                    // TODO: Restore showing other data
-                    // OutputProfileDetails(ddEngine, output);
+                    OutputProfileDetails(ddEngine, output);
                     OutputEvidenceKeyDetails(ddEngine, output);
 
                     ExampleUtils.CheckDataFile(ddEngine, loggerFactory.CreateLogger<Program>());
