@@ -54,8 +54,7 @@ public class TestExamples
     /// <summary>
     /// Init method - specify License Key to run examples here or 
     /// set a License Key in an environment variable called 'ResourceKey'.
-    /// Set data file for hash examples and additionally a User-Agents file
-    /// for the performance example.
+    /// Set data file for hash examples.
     /// </summary>
     [TestInitialize]
     public void Init()
