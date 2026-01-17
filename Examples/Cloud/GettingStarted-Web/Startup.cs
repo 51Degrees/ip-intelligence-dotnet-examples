@@ -55,8 +55,7 @@ using System.Threading.Tasks;
 /// [middleware](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/middleware) 
 /// component that will intercept requests and perform device detection. The results will be 
 /// stored in the [HttpContext](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.httpcontext.items).
-/// The middleware will also handle setting response headers (e.g. Accept-CH for User-Agent 
-/// Client Hints) and serving requests for client-side JavaScript and JSON resources.
+/// The middleware will also handle setting response headers and serving requests for client-side JavaScript and JSON resources.
 /// ```{cs}
 /// services.AddFiftyOne(Configuration);
 /// 

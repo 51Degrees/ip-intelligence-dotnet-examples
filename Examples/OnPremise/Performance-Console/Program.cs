@@ -379,7 +379,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                 // Do the same for the yaml evidence file.
                 var evidenceFile = options.EvidenceFile != null ? options.EvidenceFile :
                     // This file contains the 20,000 most commonly seen combinations of header values 
-                    // that are relevant to IP Intelligence. For example, User-Agent and UA-CH headers.
+                    // that are relevant to IP Intelligence.
                     Examples.ExampleUtils.FindFile(Constants.YAML_EVIDENCE_FILE_NAME);
 
                 var results = new Dictionary<PerformanceConfiguration, IList<BenchmarkResult>>();
