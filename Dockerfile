@@ -35,9 +35,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+USER app
 
 # Copy the published application
-COPY --from=build /app/publish .
+COPY --from=build --chown=app /app/publish .
 
 # Download the IP Intelligence data file directly to the final image
 RUN --mount=type=secret,required=true,id=IPI_DATA_FILE_URL,env=IPI_DATA_FILE_URL \
