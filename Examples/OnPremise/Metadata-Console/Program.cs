@@ -108,8 +108,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
                         $"displayed. As an alternative, you can pass evidence keys to " +
                         $"filter.Include(string) to see if a particular key will be included " +
                         $"or not.");
-                    output.WriteLine($"For example, header.user-agent is " +
-                        (ddEngine.EvidenceKeyFilter.Include("header.user-agent") ? "" : "not ") +
+                    output.WriteLine($"For example, query.client-ip is " +
+                        (ddEngine.EvidenceKeyFilter.Include("query.client-ip") ? "" : "not ") +
                         "accepted.");
                 }
 

@@ -104,8 +104,8 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Metadata
                         $"displayed. As an alternative, you can pass evidence keys to " +
                         $"filter.Include(string) to see if a particular key will be included " +
                         $"or not.");
-                    output.WriteLine($"For example, header.user-agent is " +
-                        (engine.EvidenceKeyFilter.Include("header.user-agent") ? "" : "not ") +
+                    output.WriteLine($"For example, query.client-ip is " +
+                        (engine.EvidenceKeyFilter.Include("query.client-ip") ? "" : "not ") +
                         "accepted.");
                 }
 
