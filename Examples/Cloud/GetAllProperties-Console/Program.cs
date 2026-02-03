@@ -76,7 +76,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
                 // Create the FlowData instance.
                 using (var data = pipeline.CreateFlowData())
                 {
-                    // Add a User-Agent as evidence.
+                    // Add Client IP as evidence.
                     data.AddEvidence(FiftyOne.Pipeline.Core.Constants.EVIDENCE_CLIENTIP_KEY, ipAddress);
                     // Process the supplied evidence.
                     data.Process();
