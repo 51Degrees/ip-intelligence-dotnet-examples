@@ -1,4 +1,26 @@
-﻿using FiftyOne.Pipeline.Core.FlowElements;
+﻿/* *********************************************************************
+ * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
+ * Copyright 2026 51 Degrees Mobile Experts Limited, Davidson House,
+ * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
+ *
+ * This Original Work is licensed under the European Union Public Licence
+ * (EUPL) v.1.2 and is subject to its terms as set out below.
+ *
+ * If a copy of the EUPL was not distributed with this file, You can obtain
+ * one at https://opensource.org/licenses/EUPL-1.2.
+ *
+ * The 'Compatible Licences' set out in the Appendix to the EUPL (as may be
+ * amended by the European Commission) shall be deemed incompatible for
+ * the purposes of the Work and the provisions of the compatibility
+ * clause in Article 5 of the EUPL shall not apply.
+ *
+ * If using the Work as, or as part of, a network application, by
+ * including the attribution notice(s) required under Article 5 of the EUPL
+ * in the end user terms of the application under an appropriate heading,
+ * such notice(s) shall fulfill the requirements of that article.
+ * ********************************************************************* */
+
+using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines;
 using Microsoft.Extensions.Logging;
 using System;
@@ -6,21 +28,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace FiftyOne.IpIntelligence.Examples.OnPremise.VpnDetection;
+namespace FiftyOne.IpIntelligence.Examples.OnPremise.Suspicious;
 
 /// <summary>
-/// @example OnPremise/VpnDetection-Console/Program.cs
+/// @example OnPremise/Suspicious-Console/Program.cs
 /// 
 /// This example shows how to combine 51Degrees On-premise IP Intelligence
-/// properties to determine whether an IP is likely to be a VPN.
+/// properties to determine whether an IP is likely to be the source
+/// suspicious requests.
 /// 
 /// You will learn:
 /// 
 /// 1. How to get diversity properties from the IP Intelligence engine.
 /// 2. How to combine diversity values with other network related values to
-/// assess the likelihood of an IP address being a VPN or proxy.
+/// assess the likelihood of an IP address being something suspicious.
 /// 
-/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/VpnDetection-Console/Program.cs). 
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Suspicious-Console/Program.cs). 
 /// 
 /// This example requires an enterprise IP Intelligence data file (.ipi). 
 /// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
@@ -74,28 +97,48 @@ public class Program
             flowData.Process();
             var ipData = flowData.Get<IIpIntelligenceData>();
 
-            // In this example we use the IsCellular, HardwareDiversity,
-            // and LocationConfidence properties to determine if the IP
-            // address is likely to be a VPN or proxy.
+            // In this example we use the following properties to make some
+            // basic assumptions about the likelihood of an IP being a source of
+            // suspicious activity.
             var isCellular = ipData.IsCellular.HasValue && ipData.IsCellular.Value;
-            var hardwareDiversity = ipData.HardwareDiversity.HasValue ?
-                ipData.HardwareDiversity.Value : 0;
-            var locationConfidence = ipData.LocationConfidence.HasValue
-                ? ipData.LocationConfidence.Value : null;
-            // Here we can say that if there is a high diversity of hardware
-            // profiles in the IP, then is could be either VPN, cellular, proxy,
-            // or other hosting.
-            // We can then rule out cellular with the IsCellular property,
-            // and with a low LocationConfidence, we can assume it is a VPN,
-            // or proxy, rather than other hosting. High hardware diversity
-            // makes it more likely to be VPN or proxy, but other hosting
-            // networks can also fall into this.
+            var hardwareDiversity = ipData.HardwareDiversity.HasValue ? ipData.HardwareDiversity.Value : 0;
+            var browserDiversity = ipData.BrowserDiversity.HasValue ? ipData.BrowserDiversity.Value : 0;
+            var locationConfidence = ipData.LocationConfidence.HasValue ? ipData.LocationConfidence.Value : null;
+            var hosted = ipData.IsHosted.HasValue ? ipData.IsHosted.Value : false;
+            var country = ipData.CountryCode.HasValue ? ipData.CountryCode.Value : null;
+            var registeredCountry = ipData.RegisteredCountry.HasValue ? ipData.RegisteredCountry.Value : null;
+            var human = ipData.HumanProbability.HasValue ? ipData.HumanProbability.Value : 0;
+
+            // Calculating a simple "suspicious" score based on the properties
+            // above.
             // Many other properties can be used to draw conclusions about the
-            // likelihood of VPNs, and this is a very basic example that should
-            // not be used in production without further testing and tuning.
-            var isVpn = hardwareDiversity >= 7 &&
+            // likelihood of suspicious activity, and this is a basic example
+            // that should not be used in production without further testing
+            // and tuning.
+            var isSuspicious =
+                // Here we can say that if there is a high diversity of hardware
+                // profiles in the IP, then is could be either VPN, cellular,
+                // proxy, or other hosting.
+                // We can then rule out cellular with the IsCellular property.
+                // A low location confidence is further evidence of VPN or
+                // proxy use, rather than other hosting, but this is not a
+                // strong deteminer on its own.
+                (hardwareDiversity >= 7 &&
                 isCellular == false &&
-                locationConfidence == "Low";
+                locationConfidence == "Low") ||
+                // Then we can also consider the observed country, and the
+                // coutnry the IP range is registered to. If these are not the
+                // same, then this can be an indication of VPN or proxy use.
+                (hosted == true &&
+                country != null &&
+                country != "Unknown" &&
+                country != registeredCountry) ||
+                // If the browser versions are significantly more diverse than
+                // the hardware, this may indicate that some devices are using
+                // multiple browsers, which can be a sign of suspicious
+                // activity.
+                browserDiversity - hardwareDiversity > 2;
+
             var message = new StringBuilder();
             message.AppendLine("Input values:");
             foreach (var entry in evidence)
@@ -106,8 +149,13 @@ public class Program
             message.AppendLine("Results:");
             message.AppendLine($"\tIsCellular: {isCellular}");
             message.AppendLine($"\tHardwareDiversity: {hardwareDiversity}");
+            message.AppendLine($"\tBrowserDiversity: {browserDiversity}");
             message.AppendLine($"\tLocationConfidence: {locationConfidence}");
-            message.AppendLine($"\tIsVpn: {isVpn}");
+            message.AppendLine($"\tIsHosted: {hosted}");
+            message.AppendLine($"\tCountry: {country}");
+            message.AppendLine($"\tRegisteredCountry: {registeredCountry}");
+            message.AppendLine($"\tHumanProbability: {human}");
+            message.AppendLine($"\tIsSuspicious: {isSuspicious}");
             output.WriteLine(message.ToString());
         }
     }

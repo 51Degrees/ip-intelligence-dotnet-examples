@@ -3,8 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>Examples.OnPremise.FraudDetection</RootNamespace>
-    <Platforms>AnyCPU;x64;ARM64</Platforms>
+    <RootNamespace>FiftyOne.IpIntelligence.Examples.OnPremise.Suspicious</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

@@ -166,22 +166,12 @@ public class TestExamples
     }
 
     /// <summary>
-    /// Test the VPN Detection Example
+    /// Test the Suspicious Example
     /// </summary>
     [TestMethod]
-    public void Example_OnPremise_VpnDetection()
+    public void Example_OnPremise_Suspicious()
     {
-        var example = new Examples.OnPremise.VpnDetection.Program.Example();
-        example.Run(DataFile, new LoggerFactory(), TextWriter.Null);
-    }
-
-    /// <summary>
-    /// Test the Fraud Detection Example
-    /// </summary>
-    [TestMethod]
-    public void Example_OnPremise_FraudDetection()
-    {
-        var example = new Examples.OnPremise.FraudDetection.Program.Example();
+        var example = new Examples.OnPremise.Suspicious.Program.Example();
         example.Run(DataFile, new LoggerFactory(), TextWriter.Null);
     }
 
