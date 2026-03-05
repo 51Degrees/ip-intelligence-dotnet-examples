@@ -1,6 +1,9 @@
 ﻿using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.VpnDetection;
@@ -43,8 +46,7 @@ public class Program
                 // configuration options.
                 // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
                 // https://51degrees.com/documentation/_features__usage_sharing.html
-                // TODO .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
-                .SetPerformanceProfile(PerformanceProfiles.LowMemory)
+                .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
                 // inhibit sharing usage for this example, usually this should be set to "true"
                 .SetShareUsage(false)
                 // inhibit auto-update of the data file for this test
@@ -112,16 +114,14 @@ public class Program
 
     static void Main(string[] args)
     {
-        // TODO
-        var dataFile = @"\\snas-01\Staging1\ipi\v4\2026\02\26\51Degrees-EnterpriseIpiV41.ipi";
         // Use the supplied path for the data file or find the lite file that is included
         // in the repository.
-        //var dataFile = args.Length > 0 ? args[0] :
+        var dataFile = args.Length > 0 ? args[0] :
         // In this example, by default, the 51degrees IP Intelligence data file needs to be somewhere in the
         // project space, or you may specify another file as a command line parameter.
         //
         // For testing, contact us to obtain an enterprise data file: https://51degrees.com/contact-us
-        //Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
+        Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
 
         File.WriteAllText("Metadata_DataFileName.txt", dataFile);
 
