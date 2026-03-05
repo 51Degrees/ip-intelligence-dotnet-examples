@@ -66,8 +66,8 @@ public class TestExamples
             licenseKey: "!!YOUR_LICENSE_KEY!!";
 
         // Set IP Intelligence Data file
-            DataFile = Environment.GetEnvironmentVariable(
-                Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
+        DataFile = Environment.GetEnvironmentVariable(
+            Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
         if (string.IsNullOrWhiteSpace(DataFile))
         {
             DataFile = ExampleUtils.FindFile(
@@ -165,6 +165,25 @@ public class TestExamples
         File.Delete(tempfile);
     }
 
+    /// <summary>
+    /// Test the VPN Detection Example
+    /// </summary>
+    [TestMethod]
+    public void Example_OnPremise_VpnDetection()
+    {
+        var example = new Examples.OnPremise.VpnDetection.Program.Example();
+        example.Run(DataFile, new LoggerFactory(), TextWriter.Null);
+    }
+
+    /// <summary>
+    /// Test the Fraud Detection Example
+    /// </summary>
+    [TestMethod]
+    public void Example_OnPremise_FraudDetection()
+    {
+        var example = new Examples.OnPremise.FraudDetection.Program.Example();
+        example.Run(DataFile, new LoggerFactory(), TextWriter.Null);
+    }
 
     /// <summary>
     /// Test the UpdateDataFile Example
