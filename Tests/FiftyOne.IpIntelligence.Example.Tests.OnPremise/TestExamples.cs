@@ -172,7 +172,7 @@ public class TestExamples
     public void Example_OnPremise_Suspicious()
     {
         var example = new Examples.OnPremise.Suspicious.Program.Example();
-        example.Run(DataFile, new LoggerFactory(), TextWriter.Null);
+        example.Run(DataFile, new LoggerFactory(), Console.Out);
     }
 
     /// <summary>

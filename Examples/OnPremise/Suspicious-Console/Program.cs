@@ -78,11 +78,11 @@ public class Program
                 .SetDataFileSystemWatcher(false)
                 .Build())
             {
+                ExampleUtils.CheckDataFile(pipeline, loggerFactory.CreateLogger<Program>());
                 foreach (var evidence in Examples.ExampleUtils.EvidenceValues)
                 {
                     AnalyseEvidence(evidence, pipeline, output);
                 }
-                ExampleUtils.CheckDataFile(pipeline, loggerFactory.CreateLogger<Program>());
             }
         }
 
