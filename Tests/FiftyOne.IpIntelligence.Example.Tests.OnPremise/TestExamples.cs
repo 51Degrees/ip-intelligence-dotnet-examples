@@ -28,6 +28,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 
 [assembly: Parallelize]
@@ -44,6 +45,9 @@ namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise;
 [TestClass]
 public class TestExamples
 {
+    private StringBuilder OutputString { get; set; }
+    private StringWriter OutputWriter { get; set; }
+
     private string LicenseKey;
 
     private string DataFile;
@@ -59,6 +63,8 @@ public class TestExamples
     [TestInitialize]
     public void Init()
     {
+        OutputString = new StringBuilder();
+        OutputWriter = new StringWriter(OutputString);
         // Set license key for autoupdate examples.
         var licenseKey = Environment.GetEnvironmentVariable(
             Constants.LICENSE_KEY_ENV_VAR);
@@ -92,6 +98,12 @@ public class TestExamples
             GeoIpTruthEvidenceFile = ExampleUtils.FindFile(
                 Constants.GEOIP_COMPARISON_EVIDENCE_FILE_NAME);
         }
+    }
+
+    [TestCleanup]
+    public void Cleanup()
+    {
+        Console.WriteLine(OutputString.ToString());
     }
 
     /// <summary>
@@ -172,7 +184,7 @@ public class TestExamples
     public void Example_OnPremise_Suspicious()
     {
         var example = new Examples.OnPremise.Suspicious.Program.Example();
-        example.Run(DataFile, new LoggerFactory(), Console.Out);
+        example.Run(DataFile, new LoggerFactory(), OutputWriter);
     }
 
     /// <summary>
