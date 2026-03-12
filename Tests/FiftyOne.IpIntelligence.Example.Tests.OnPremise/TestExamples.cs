@@ -45,6 +45,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise;
 [TestClass]
 public class TestExamples
 {
+    public TestContext TestContext { get; set; }
     private StringBuilder OutputString { get; set; }
     private StringWriter OutputWriter { get; set; }
 
@@ -103,7 +104,7 @@ public class TestExamples
     [TestCleanup]
     public void Cleanup()
     {
-        Console.WriteLine(OutputString.ToString());
+        TestContext.WriteLine(OutputString.ToString());
     }
 
     /// <summary>
