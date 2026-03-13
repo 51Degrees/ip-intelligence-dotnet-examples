@@ -289,7 +289,7 @@ namespace FiftyOne.IpIntelligence.Examples
             },
             new Dictionary<string, object>()
             {
-                { "query.client-ip", "45.236.48.61" }
+                { "query.client-ip", "187.102.194.5" }
             },
             new Dictionary<string, object>()
             {

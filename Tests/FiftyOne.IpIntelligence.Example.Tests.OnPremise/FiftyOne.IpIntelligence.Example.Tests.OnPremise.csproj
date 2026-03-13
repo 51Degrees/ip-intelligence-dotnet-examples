@@ -32,6 +32,7 @@
     <ProjectReference Include="..\..\Examples\OnPremise\OfflineProcessing-Console\OfflineProcessing-Console.csproj" />
     <ProjectReference Include="..\..\Examples\OnPremise\UpdateDataFile-Console\UpdateDataFile-Console.csproj" />
     <ProjectReference Include="..\..\Examples\OnPremise\Compare-Console\Compare-Console.csproj" />
+    <ProjectReference Include="..\..\Examples\OnPremise\Suspicious-Console\Suspicious-Console.csproj" />
   </ItemGroup>
 
 </Project>
