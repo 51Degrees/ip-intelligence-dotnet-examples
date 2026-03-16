@@ -1,6 +1,6 @@
 /* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
- * Copyright 2023 51 Degrees Mobile Experts Limited, Davidson House,
+ * Copyright 2026 51 Degrees Mobile Experts Limited, Davidson House,
  * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
  * This Original Work is licensed under the European Union Public Licence
@@ -76,7 +76,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
                 // Create the FlowData instance.
                 using (var data = pipeline.CreateFlowData())
                 {
-                    // Add a User-Agent as evidence.
+                    // Add Client IP as evidence.
                     data.AddEvidence(FiftyOne.Pipeline.Core.Constants.EVIDENCE_CLIENTIP_KEY, ipAddress);
                     // Process the supplied evidence.
                     data.Process();

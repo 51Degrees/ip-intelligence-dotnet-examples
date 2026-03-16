@@ -1,6 +1,6 @@
 /* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
- * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
+ * Copyright 2026 51 Degrees Mobile Experts Limited, Davidson House,
  * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
  * This Original Work is licensed under the European Union Public Licence
@@ -55,7 +55,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
             string[] args,
             CancellationToken stopToken = default)
         {
-            var configOverrides = CreateConfigOverrides();
+            var dataFileOverride = args.Length > 0 ? args[0] : null;
+            var configOverrides = CreateConfigOverrides(dataFileOverride);
             return CreateHostBuilder(configOverrides, args).Build().RunAsync(
                 stopToken);
         }
@@ -88,7 +89,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
         /// In a real-world scenario, you can just put the data file in your working directory
         /// or use an absolute path in the configuration file.
         /// </summary>
-        private static Dictionary<string, string> CreateConfigOverrides()
+        private static Dictionary<string, string> CreateConfigOverrides(
+            string dataFileOverride = null)
         {
             var overrides = new Dictionary<string, string>();
 
@@ -102,7 +104,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
             // Use the 'ErrorOnUnknownConfiguration' option to warn us if we've got any
             // misnamed configuration keys.
             section.Bind(options, (o) => { o.ErrorOnUnknownConfiguration = true; });
-			
+
             // Get the index of the IP Intelligence engine element in the config file so that
             // we can create an override key for it.
             var ipiEngineOptions = options.GetElementConfig(nameof(IpiOnPremiseEngine));
@@ -110,14 +112,16 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
             var dataFileConfigKey = $"PipelineOptions:Elements:{ipiEngineIndex}" +
                 $":BuildParameters:DataFile";
 
-            var dataFile = options.GetIpiDataFile();
+            // Use the command line argument if provided, otherwise use the appsettings.json value.
+            var dataFile = dataFileOverride ?? options.GetIpiDataFile();
             var foundDataFile = false;
             if (string.IsNullOrEmpty(dataFile))
             {
-                throw new Exception($"A data file must be specified in the appsettings.json file.");
+                throw new Exception($"A data file must be specified as a command line argument " +
+                    $"or in the appsettings.json file.");
             }
             // The data file location provided in the configuration may be using an absolute or
-            // relative path. If it is relative then search for a matching file using the 
+            // relative path. If it is relative then search for a matching file using the
             // ExampleUtils.FindFile function.
             else if (Path.IsPathRooted(dataFile) == false)
             {
@@ -128,10 +132,14 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
                     overrides.Add(dataFileConfigKey, newPath);
                     foundDataFile = true;
                 }
-            } 
+            }
             else
             {
-                foundDataFile = File.Exists(dataFile);
+                if (File.Exists(dataFile))
+                {
+                    overrides[dataFileConfigKey] = dataFile;
+                    foundDataFile = true;
+                }
             }
 
             if (foundDataFile == false)

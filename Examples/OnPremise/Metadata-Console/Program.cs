@@ -1,6 +1,6 @@
 /* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
- * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
+ * Copyright 2026 51 Degrees Mobile Experts Limited, Davidson House,
  * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
  * This Original Work is licensed under the European Union Public Licence
@@ -79,8 +79,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
                     .Build(dataFile, false))
                 {
                     OutputComponents(ddEngine, output);
-                    // TODO: Restore showing other data
-                    // OutputProfileDetails(ddEngine, output);
+                    OutputProfileDetails(ddEngine, output);
                     OutputEvidenceKeyDetails(ddEngine, output);
 
                     ExampleUtils.CheckDataFile(ddEngine, loggerFactory.CreateLogger<Program>());
@@ -109,8 +108,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
                         $"displayed. As an alternative, you can pass evidence keys to " +
                         $"filter.Include(string) to see if a particular key will be included " +
                         $"or not.");
-                    output.WriteLine($"For example, header.user-agent is " +
-                        (ddEngine.EvidenceKeyFilter.Include("header.user-agent") ? "" : "not ") +
+                    output.WriteLine($"For example, query.client-ip is " +
+                        (ddEngine.EvidenceKeyFilter.Include("query.client-ip") ? "" : "not ") +
                         "accepted.");
                 }
 

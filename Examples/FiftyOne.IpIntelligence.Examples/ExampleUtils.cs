@@ -1,6 +1,6 @@
 /* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
- * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
+ * Copyright 2026 51 Degrees Mobile Experts Limited, Davidson House,
  * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
  * This Original Work is licensed under the European Union Public Licence
@@ -289,7 +289,7 @@ namespace FiftyOne.IpIntelligence.Examples
             },
             new Dictionary<string, object>()
             {
-                { "query.client-ip", "45.236.48.61" }
+                { "query.client-ip", "187.102.194.5" }
             },
             new Dictionary<string, object>()
             {

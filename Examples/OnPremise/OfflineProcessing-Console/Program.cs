@@ -1,6 +1,6 @@
 /* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
- * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
+ * Copyright 2026 51 Degrees Mobile Experts Limited, Davidson House,
  * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
  * This Original Work is licensed under the European Union Public Licence
@@ -20,13 +20,11 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using YamlDotNet.Serialization;
 
 /// <summary>
@@ -45,11 +43,8 @@ using YamlDotNet.Serialization;
 /// For example:
 /// 
 /// ```
-/// header.user-agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36'
-/// header.sec-ch-ua: '" Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"'
-/// header.sec-ch-ua-full-version: '"98.0.4758.87"'
-/// header.sec-ch-ua-mobile: '?0'
-/// header.sec-ch-ua-platform: '"Android"'
+/// query.client-ip: '8.8.8.8'
+/// server.client-ip: '1.2.3.4'
 /// ```
 /// 
 /// We create a IP Intelligence pipeline to read the data and find out about the associated IP address,
@@ -219,7 +214,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.OfflineProcessing
             // Do the same for the yaml evidence file.
             var evidenceFile = args.Length > 1 ? args[1] :
                 // This file contains the 20,000 most commonly seen combinations of header values 
-                // that are relevant to IP Intelligence. For example, User-Agent and UA-CH headers.
+                // that are relevant to IP Intelligence.
                 Examples.ExampleUtils.FindFile(Constants.YAML_EVIDENCE_FILE_NAME);
             // Finally, get the location for the output file. Use the same location as the
             // evidence if a path is not supplied on the command line.

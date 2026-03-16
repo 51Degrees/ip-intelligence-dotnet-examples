@@ -1,6 +1,6 @@
 /* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
- * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
+ * Copyright 2026 51 Degrees Mobile Experts Limited, Davidson House,
  * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
  * This Original Work is licensed under the European Union Public Licence
@@ -23,7 +23,6 @@
 
 // Ignore Spelling: Ip
 
-using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines;
 using FiftyOne.Pipeline.Engines.Data;
@@ -31,8 +30,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Text;
 
 /// <summary>
@@ -81,22 +78,6 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     .SetAutoUpdate(false)
                     .SetDataUpdateOnStartUp(false)
                     .SetDataFileSystemWatcher(false)
-                    .SetProperty("RegisteredCountry")
-                    .SetProperty("RegisteredOwner")
-                    .SetProperty("RegisteredName")
-                    .SetProperty("IpRangeStart")
-                    .SetProperty("IpRangeEnd")
-                    .SetProperty("Country")
-                    .SetProperty("CountryCode")
-                    .SetProperty("CountryCode3")
-                    .SetProperty("Region")
-                    .SetProperty("State")
-                    .SetProperty("Town")
-                    .SetProperty("Latitude")
-                    .SetProperty("Longitude")
-                    .SetProperty("Areas")
-                    .SetProperty("AccuracyRadiusMin")
-                    .SetProperty("TimeZoneOffset")
                     .Build())
                 {
                     // carry out some sample detections
@@ -149,22 +130,22 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     var ipData = data.Get<IIpIntelligenceData>();
 
                     // Output all the properties
-                    //OutputProperty(nameof(ipData.RegisteredName), ipData.RegisteredName, message);
-                    //OutputProperty(nameof(ipData.RegisteredOwner), ipData.RegisteredOwner, message);
-                    //OutputProperty(nameof(ipData.RegisteredCountry), ipData.RegisteredCountry, message);
-                    //OutputProperty(nameof(ipData.IpRangeStart), ipData.IpRangeStart, message);
-                    //OutputProperty(nameof(ipData.IpRangeEnd), ipData.IpRangeEnd, message);
-                    //OutputProperty(nameof(ipData.Country), ipData.Country, message);
-                    //OutputProperty(nameof(ipData.CountryCode), ipData.CountryCode, message);
-                    //OutputProperty(nameof(ipData.CountryCode3), ipData.CountryCode3, message);
-                    //OutputProperty(nameof(ipData.Region), ipData.Region, message);
-                    //OutputProperty(nameof(ipData.State), ipData.State, message);
-                    //OutputProperty(nameof(ipData.Town), ipData.Town, message);
-                    //OutputProperty(nameof(ipData.Latitude), ipData.Latitude, message);
-                    //OutputProperty(nameof(ipData.Longitude), ipData.Longitude, message);
-                    //OutputProperty(nameof(ipData.Areas), ipData.Areas, message);
+                    OutputProperty(nameof(ipData.RegisteredName), ipData.RegisteredName, message);
+                    OutputProperty(nameof(ipData.RegisteredOwner), ipData.RegisteredOwner, message);
+                    OutputProperty(nameof(ipData.RegisteredCountry), ipData.RegisteredCountry, message);
+                    OutputProperty(nameof(ipData.IpRangeStart), ipData.IpRangeStart, message);
+                    OutputProperty(nameof(ipData.IpRangeEnd), ipData.IpRangeEnd, message);
+                    OutputProperty(nameof(ipData.Country), ipData.Country, message);
+                    OutputProperty(nameof(ipData.CountryCode), ipData.CountryCode, message);
+                    OutputProperty(nameof(ipData.CountryCode3), ipData.CountryCode3, message);
+                    OutputProperty(nameof(ipData.Region), ipData.Region, message);
+                    OutputProperty(nameof(ipData.State), ipData.State, message);
+                    OutputProperty(nameof(ipData.Town), ipData.Town, message);
+                    OutputProperty(nameof(ipData.Latitude), ipData.Latitude, message);
+                    OutputProperty(nameof(ipData.Longitude), ipData.Longitude, message);
+                    OutputProperty(nameof(ipData.Areas), ipData.Areas, message);
                     OutputProperty(nameof(ipData.AccuracyRadiusMin), ipData.AccuracyRadiusMin, message);
-                    //OutputProperty(nameof(ipData.TimeZoneOffset), ipData.TimeZoneOffset, message);
+                    OutputProperty(nameof(ipData.TimeZoneOffset), ipData.TimeZoneOffset, message);
                     output.WriteLine(message.ToString());
                 }
             }

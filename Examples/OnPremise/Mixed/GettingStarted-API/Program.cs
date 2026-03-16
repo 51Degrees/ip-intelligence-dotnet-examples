@@ -1,6 +1,6 @@
 /* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
- * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
+ * Copyright 2026 51 Degrees Mobile Experts Limited, Davidson House,
  * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
  * This Original Work is licensed under the European Union Public Licence
@@ -31,6 +31,7 @@ using FiftyOne.Pipeline.Engines.FlowElements;
 using FiftyOne.Pipeline.Engines.Services;
 using FiftyOne.Pipeline.JsonBuilder.Data;
 using FiftyOne.Pipeline.Web.Shared;
+using Microsoft.AspNetCore.HttpOverrides;
 using System.IO.Compression;
 using System.Security.Cryptography;
 
@@ -54,9 +55,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
     {
         public static void Main(string[] args)
         {
+            var ddDataFileOverride = args.Length > 0 ? args[0] : null;
+            var ipiDataFileOverride = args.Length > 1 ? args[1] : null;
             var builder = WebApplication.CreateBuilder(args);
             builder.WebHost.UseUrls("http://0.0.0.0:5225");
-            AppendConfigOverrides(builder.Configuration);
+            AppendConfigOverrides(builder.Configuration, ipiDataFileOverride, ddDataFileOverride);
 
             // Add services to the container.
             builder.Services.AddAuthorization();
@@ -78,6 +81,14 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
 
             var app = builder.Build();
 
+            // Enable forwarded headers so that the real client IP is used when behind
+            // a reverse proxy (e.g. ngrok, Azure App Service, nginx).
+            // This updates HttpContext.Connection.RemoteIpAddress from X-Forwarded-For,
+            // which the 51Degrees pipeline then uses as server.client-ip evidence.
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
 
             app.UseHttpsRedirection();
             app.UseAuthorization();
@@ -295,7 +306,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         /// In a real-world scenario, you can just put the data file in your working directory
         /// or use an absolute path in the configuration file.
         /// </summary>
-        private static void AppendConfigOverrides(ConfigurationManager configurationManager)
+        private static void AppendConfigOverrides(ConfigurationManager configurationManager,
+            string? ddDataFileOverride = null,
+            string? ipiDataFileOverride = null)
         {
             var overrides = new Dictionary<string, string?>();
 
@@ -306,13 +319,14 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             // misnamed configuration keys.
             section.Bind(options, (o) => { o.ErrorOnUnknownConfiguration = true; });
 
-            AddOverrides_IPI(options, overrides);
-            AddOverrides_DD(options, overrides);
+            AddOverrides_IPI(options, overrides, ipiDataFileOverride);
+            AddOverrides_DD(options, overrides, ddDataFileOverride);
 
             configurationManager.AddInMemoryCollection(overrides);
         }
 
-        private static void AddOverrides_IPI(PipelineOptions options, Dictionary<string, string?> overrides)
+        private static void AddOverrides_IPI(PipelineOptions options, Dictionary<string, string?> overrides,
+            string? dataFileOverride = null)
         {
             // Get the index of the IP Intelligence engine element in the config file so that
             // we can create an override key for it.
@@ -321,14 +335,16 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             var dataFileConfigKey = $"PipelineOptions:Elements:{ipiEngineIndex}" +
                                     $":BuildParameters:DataFile";
 
-            var dataFile = options.GetIpiDataFile();
+            // Use the command line argument if provided, otherwise use the appsettings.json value.
+            var dataFile = dataFileOverride ?? options.GetIpiDataFile();
             var foundDataFile = false;
             if (string.IsNullOrEmpty(dataFile))
             {
-                throw new Exception($"A data file must be specified in the appsettings.json file.");
+                throw new Exception($"A data file must be specified as a command line argument " +
+                    $"or in the appsettings.json file.");
             }
             // The data file location provided in the configuration may be using an absolute or
-            // relative path. If it is relative then search for a matching file using the 
+            // relative path. If it is relative then search for a matching file using the
             // ExampleUtils.FindFile function.
             if (Path.IsPathRooted(dataFile) == false)
             {
@@ -342,7 +358,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             }
             else
             {
-                foundDataFile = File.Exists(dataFile);
+                if (File.Exists(dataFile))
+                {
+                    overrides[dataFileConfigKey] = dataFile;
+                    foundDataFile = true;
+                }
             }
 
             if (foundDataFile == false)
@@ -355,7 +375,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             }
         }
 
-        private static void AddOverrides_DD(PipelineOptions options, Dictionary<string, string?> overrides)
+        private static void AddOverrides_DD(PipelineOptions options, Dictionary<string, string?> overrides,
+            string? dataFileOverride = null)
         {
             // Get the index of the device detection engine element in the config file so that
             // we can create an override key for it.
@@ -364,14 +385,16 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             var dataFileConfigKey = $"PipelineOptions:Elements:{hashEngineIndex}" +
                                     $":BuildParameters:DataFile";
 
-            var dataFile = options.GetHashDataFile();
+            // Use the command line argument if provided, otherwise use the appsettings.json value.
+            var dataFile = dataFileOverride ?? options.GetHashDataFile();
             var foundDataFile = false;
             if (string.IsNullOrEmpty(dataFile))
             {
-                throw new Exception($"A data file must be specified in the appsettings.json file.");
+                throw new Exception($"A data file must be specified as a command line argument " +
+                    $"or in the appsettings.json file.");
             }
             // The data file location provided in the configuration may be using an absolute or
-            // relative path. If it is relative then search for a matching file using the 
+            // relative path. If it is relative then search for a matching file using the
             // ExampleUtils.FindFile function.
             if (Path.IsPathRooted(dataFile) == false)
             {
@@ -385,7 +408,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             }
             else
             {
-                foundDataFile = File.Exists(dataFile);
+                if (File.Exists(dataFile))
+                {
+                    overrides[dataFileConfigKey] = dataFile;
+                    foundDataFile = true;
+                }
             }
 
             if (foundDataFile == false)

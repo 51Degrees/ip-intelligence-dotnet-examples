@@ -1,6 +1,6 @@
 /* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
- * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
+ * Copyright 2026 51 Degrees Mobile Experts Limited, Davidson House,
  * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
  * This Original Work is licensed under the European Union Public Licence
@@ -77,7 +77,9 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
             string[] args,
             CancellationToken stopToken = default)
         {
-            var configOverrides = CreateConfigOverrides();
+            var ddDataFileOverride = args.Length > 0 ? args[0] : null;
+            var ipiDataFileOverride = args.Length > 1 ? args[1] : null;
+            var configOverrides = CreateConfigOverrides(ddDataFileOverride, ipiDataFileOverride);
             return CreateHostBuilder(configOverrides, args).Build().RunAsync(
                 stopToken);
         }
@@ -110,7 +112,9 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
         /// In a real-world scenario, you can just put the data file in your working directory
         /// or use an absolute path in the configuration file.
         /// </summary>
-        private static Dictionary<string, string> CreateConfigOverrides()
+        private static Dictionary<string, string> CreateConfigOverrides(
+            string ddDataFileOverride = null,
+            string ipiDataFileOverride = null)
         {
             var overrides = new Dictionary<string, string>();
 
@@ -125,13 +129,14 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
             // misnamed configuration keys.
             section.Bind(options, (o) => { o.ErrorOnUnknownConfiguration = true; });
 
-            AddOverrides_IPI(options, overrides);
-            AddOverrides_DD(options, overrides);
+            AddOverrides_IPI(options, overrides, ipiDataFileOverride);
+            AddOverrides_DD(options, overrides, ddDataFileOverride);
 
             return overrides;
         }
 
-        private static void AddOverrides_IPI(PipelineOptions options, Dictionary<string, string> overrides)
+        private static void AddOverrides_IPI(PipelineOptions options, Dictionary<string, string> overrides,
+            string dataFileOverride = null)
         {
             // Get the index of the IP Intelligence engine element in the config file so that
             // we can create an override key for it.
@@ -140,11 +145,13 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
             var dataFileConfigKey = $"PipelineOptions:Elements:{ipiEngineIndex}" +
                                     $":BuildParameters:DataFile";
 
-            var dataFile = options.GetIpiDataFile();
+            // Use the command line argument if provided, otherwise use the appsettings.json value.
+            var dataFile = dataFileOverride ?? options.GetIpiDataFile();
             var foundDataFile = false;
             if (string.IsNullOrEmpty(dataFile))
             {
-                throw new Exception($"A data file must be specified in the appsettings.json file.");
+                throw new Exception($"A data file must be specified as a command line argument " +
+                    $"or in the appsettings.json file.");
             }
             // The data file location provided in the configuration may be using an absolute or
             // relative path. If it is relative then search for a matching file using the 
@@ -161,7 +168,11 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
             }
             else
             {
-                foundDataFile = File.Exists(dataFile);
+                if (File.Exists(dataFile))
+                {
+                    overrides[dataFileConfigKey] = dataFile;
+                    foundDataFile = true;
+                }
             }
 
             if (foundDataFile == false)
@@ -174,7 +185,8 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
             }
         }
 
-        private static void AddOverrides_DD(PipelineOptions options, Dictionary<string, string> overrides)
+        private static void AddOverrides_DD(PipelineOptions options, Dictionary<string, string> overrides,
+            string dataFileOverride = null)
         {
             // Get the index of the device detection engine element in the config file so that
             // we can create an override key for it.
@@ -183,14 +195,16 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
             var dataFileConfigKey = $"PipelineOptions:Elements:{hashEngineIndex}" +
                                     $":BuildParameters:DataFile";
 
-            var dataFile = options.GetHashDataFile();
+            // Use the command line argument if provided, otherwise use the appsettings.json value.
+            var dataFile = dataFileOverride ?? options.GetHashDataFile();
             var foundDataFile = false;
             if (string.IsNullOrEmpty(dataFile))
             {
-                throw new Exception($"A data file must be specified in the appsettings.json file.");
+                throw new Exception($"A data file must be specified as a command line argument " +
+                    $"or in the appsettings.json file.");
             }
             // The data file location provided in the configuration may be using an absolute or
-            // relative path. If it is relative then search for a matching file using the 
+            // relative path. If it is relative then search for a matching file using the
             // ExampleUtils.FindFile function.
             if (Path.IsPathRooted(dataFile) == false)
             {
@@ -204,7 +218,11 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
             }
             else
             {
-                foundDataFile = File.Exists(dataFile);
+                if (File.Exists(dataFile))
+                {
+                    overrides[dataFileConfigKey] = dataFile;
+                    foundDataFile = true;
+                }
             }
 
             if (foundDataFile == false)
