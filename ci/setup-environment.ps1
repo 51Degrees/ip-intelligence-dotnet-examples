@@ -14,6 +14,12 @@ param(
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
 
+# Enable Win32 long paths to avoid DLL loading failures on Windows runners
+# where the workspace path can exceed MAX_PATH (260 chars).
+if ($IsWindows) {
+    reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f
+}
+
 $RepoPath = [IO.Path]::Combine($pwd, $RepoName)
 
 if ($BuildMethod -ne "dotnet") {
