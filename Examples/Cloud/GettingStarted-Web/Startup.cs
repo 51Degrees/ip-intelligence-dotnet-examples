@@ -25,6 +25,7 @@ using FiftyOne.Pipeline.CloudRequestEngine.FlowElements;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
@@ -133,12 +134,21 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb
         {
             app.UseDeveloperExceptionPage();
 
+            // Enable forwarded headers so that the real client IP is used when behind
+            // a reverse proxy (e.g. ngrok, Azure App Service, nginx).
+            // This updates HttpContext.Connection.RemoteIpAddress from X-Forwarded-For,
+            // which the 51Degrees middleware then uses as server.client-ip evidence.
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
+
             // This is only needed when running under an ASP.NET test server.
             app.UseMiddleware<UserAgentCorrectionMiddleware>();
 
             // Add the 51Degrees middleware component.
             // This will pass any incoming requests through the pipeline API, performing device
-            // detection. The IFlowData that is used will be stored in the data associated with 
+            // detection. The IFlowData that is used will be stored in the data associated with
             // the current HTTP session.
             // The IFlowDataAccessor provides an easy way to retrieve this data. See HomeController
             // for an example of this.
