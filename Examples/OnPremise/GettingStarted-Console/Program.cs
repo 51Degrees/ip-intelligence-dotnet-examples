@@ -23,6 +23,7 @@
 
 // Ignore Spelling: Ip
 
+using FiftyOne.IpIntelligence.Countries.Data;
 using FiftyOne.IpIntelligence.Countries.FlowElements;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
@@ -167,14 +168,15 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                         ipData.CountryCodesPopulation,
                         message);
 
-                    // Output flat country code lists (populated by IpCountriesElement)
+                    // Output flat country code lists from the IpCountriesElement's own data
+                    var countriesData = data.Get<IIpCountriesData>();
                     OutputList(
-                        nameof(ipData.CountryCodesGeographicalAll),
-                        ipData.CountryCodesGeographicalAll,
+                        nameof(countriesData.CountryCodesGeographicalAll),
+                        countriesData.CountryCodesGeographicalAll,
                         message);
                     OutputList(
-                        nameof(ipData.CountryCodesPopulationAll),
-                        ipData.CountryCodesPopulationAll,
+                        nameof(countriesData.CountryCodesPopulationAll),
+                        countriesData.CountryCodesPopulationAll,
                         message);
 
                     output.WriteLine(message.ToString());
