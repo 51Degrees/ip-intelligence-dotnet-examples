@@ -25,6 +25,7 @@ using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -68,6 +69,15 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseDeveloperExceptionPage();
+
+            // Enable forwarded headers so that the real client IP is used when behind
+            // a reverse proxy (e.g. ngrok, Azure App Service, nginx).
+            // This updates HttpContext.Connection.RemoteIpAddress from X-Forwarded-For,
+            // which the 51Degrees middleware then uses as server.client-ip evidence.
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
 
             // Add the 51Degrees middleware component.
             // This will pass any incoming requests through the pipeline API, performing both

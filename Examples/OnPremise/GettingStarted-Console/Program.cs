@@ -45,10 +45,9 @@ using System.Text;
 ///
 /// You will learn:
 ///
-/// 1. How to create a Pipeline that uses 51Degrees On-premise IP Intelligence
-/// 2. How to add the IpCountriesElement for flat country code lists
-/// 3. How to pass input data (evidence) to the Pipeline
-/// 4. How to retrieve the results
+/// 1. How to manually build a Pipeline with the IP Intelligence engine and IpCountriesElement
+/// 2. How to pass input data (evidence) to the Pipeline
+/// 3. How to retrieve the results
 ///
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-Console/Program.cs).
 ///
@@ -66,41 +65,39 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
         {
             public void Run(string dataFile, ILoggerFactory loggerFactory, TextWriter output)
             {
+                // Create IP Intelligence engine
+                var ipEngine = new IpiOnPremiseEngineBuilder(loggerFactory)
+                    .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
+                    .SetAutoUpdate(false)
+                    .SetDataFileSystemWatcher(false)
+                    .Build(dataFile, false);
+
+                // Create the IpCountries element that produces flat country code lists
+                var countriesAllElement = new IpCountriesElementBuilder(loggerFactory)
+                    .Build();
+
+                // Build pipeline with both engines - countriesAllElement must come after ipEngine
+                using (var pipeline = new PipelineBuilder(loggerFactory)
+                    .AddFlowElement(ipEngine)
+                    .AddFlowElement(countriesAllElement)
+                    .Build())
                 {
-                    // Create IP Intelligence engine
-                    var ipEngine = new IpiOnPremiseEngineBuilder(loggerFactory)
-                        .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
-                        .SetAutoUpdate(false)
-                        .SetDataFileSystemWatcher(false)
-                        .Build(dataFile, false);
-
-                    // Create the IpCountries element that produces flat country code lists
-                    var countriesAllElement = new IpCountriesElementBuilder(loggerFactory)
-                        .Build();
-
-                    // Build pipeline with both engines - countriesAllElement must come after ipEngine
-                    using (var pipeline = new PipelineBuilder(loggerFactory)
-                        .AddFlowElement(ipEngine)
-                        .AddFlowElement(countriesAllElement)
-                        .Build())
+                    // IPs near country borders that produce multi-country weighted results
+                    var borderIps = new List<Dictionary<string, object>>
                     {
-                        // IPs near country borders that produce multi-country weighted results
-                        var borderIps = new List<Dictionary<string, object>>
-                        {
-                            new Dictionary<string, object> { { "query.client-ip", "194.209.0.1" } },
-                            new Dictionary<string, object> { { "query.client-ip", "91.183.0.1" } },
-                            new Dictionary<string, object> { { "query.client-ip", "77.119.0.1" } },
-                            new Dictionary<string, object> { { "query.client-ip", "5.1.0.1" } },
-                            new Dictionary<string, object> { { "query.client-ip", "1.46.0.1" } },
-                        };
+                        new Dictionary<string, object> { { "query.client-ip", "194.209.0.1" } },
+                        new Dictionary<string, object> { { "query.client-ip", "91.183.0.1" } },
+                        new Dictionary<string, object> { { "query.client-ip", "77.119.0.1" } },
+                        new Dictionary<string, object> { { "query.client-ip", "5.1.0.1" } },
+                        new Dictionary<string, object> { { "query.client-ip", "1.46.0.1" } },
+                    };
 
-                        foreach (var evidence in borderIps)
-                        {
-                            AnalyseEvidence(evidence, pipeline, output);
-                        }
-
-                        ExampleUtils.CheckDataFile(pipeline, loggerFactory.CreateLogger<Program>());
+                    foreach (var evidence in borderIps)
+                    {
+                        AnalyseEvidence(evidence, pipeline, output);
                     }
+
+                    ExampleUtils.CheckDataFile(pipeline, loggerFactory.CreateLogger<Program>());
                 }
             }
 

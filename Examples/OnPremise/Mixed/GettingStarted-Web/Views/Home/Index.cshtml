@@ -25,6 +25,7 @@
     ViewData["Title"] = "Device Detection + IP Intelligence Example";
 }
 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="~/css/site.css" />
 
 <h2>Combined Device Detection and IP Intelligence Example</h2>
@@ -49,18 +50,18 @@
 
 <div id="content">
     <!-- IP Address Input Form -->
-    <form method="get" asp-action="Index" style="margin-bottom: 25px;">
+    <form method="get" asp-action="Index" class="ip-form">
         <div>
-            <label for="client-ip" style="font-weight: bold;">IP Address Lookup:</label>
-            <input type="text" id="client-ip" name="client-ip" value="@Model.UserInputIp" 
-                   placeholder="e.g., 8.8.8.8" style="margin-left: 10px; padding: 8px; width: 200px; border: 1px solid #ccc; border-radius: 4px;">
-            <button type="submit" style="margin-left: 10px; padding: 8px 20px; background-color: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer;">Look Up</button>
+            <label for="client-ip"><b>IP Address Lookup:</b></label>
+            <input type="text" id="client-ip" name="client-ip" value="@Model.UserInputIp"
+                   placeholder="e.g., 8.8.8.8">
+            <button type="submit">Look Up</button>
         </div>
     </form>
-    
-    <div style="display: flex; gap: 20px;">
+
+    <div class="results-columns">
         <!-- Device Detection Results Column -->
-        <div style="flex: 1;">
+        <div>
             <h3>Device Detection Results</h3>
             @if (!string.IsNullOrEmpty(Model.DeviceMessage))
             {
@@ -123,7 +124,7 @@
         </div>
 
         <!-- IP Intelligence Results Column -->
-        <div style="flex: 1;">
+        <div>
             <h3>IP Intelligence Results</h3>
             
             @if (!string.IsNullOrEmpty(Model.IpMessage))
@@ -206,13 +207,19 @@
 
     <br />
     
+    <div id="map-section" style="display: none;">
+        <h3 id="map-title">Location Map</h3>
+        <div id="map" style="height: 400px; width: 100%; border: 1px solid #ccc;"></div>
+    </div>
+    <br />
+
     <!-- Evidence Section -->
     <div id="evidence">
         <h3>Evidence Used</h3>
         <p class="smaller">Evidence collected from the current request</p>
         <details>
             <summary>Click to view evidence details</summary>
-            <table style="margin-top: 10px;">
+            <table>
                 <tr>
                     <th>Key</th>
                     <th>Value</th>
@@ -254,45 +261,90 @@
     }   
 </script>
 
-<style>
-    .device-summary, .ip-summary {
-        background-color: #f0f8ff;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 15px;
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/wellknown@0.5.0/wellknown.js"></script>
+
+<script>
+    var mapConfig = {
+        ipLocationLabel: 'IP Location',
+        latitudeLabel: 'Lat',
+        longitudeLabel: 'Lng'
+    };
+
+    var UNKNOWN_VALUE = 'Unknown';
+    var EMPTY_POLYGON = 'POLYGON EMPTY';
+
+    function isValidValue(value) {
+        return value && !value.includes(UNKNOWN_VALUE) && value !== '0' && value !== '';
     }
-    
-    table {
-        width: 100%;
-        border-collapse: collapse;
+
+    var areasWkt = '@Html.Raw(Model.IpData?.Areas?.HasValue == true ? Model.IpData.Areas.Value.ToString().Replace("'", "\\'") : "")';
+    var latitude = '@(Model.IpData?.Latitude?.HasValue == true ? Model.IpData.Latitude.Value.ToString("F4") : "")';
+    var longitude = '@(Model.IpData?.Longitude?.HasValue == true ? Model.IpData.Longitude.Value.ToString("F4") : "")';
+
+    if (isValidValue(areasWkt) && areasWkt !== EMPTY_POLYGON) {
+        document.getElementById('map-section').style.display = 'block';
+
+        var map = L.map('map');
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        try {
+            var geoJson = wellknown.parse(areasWkt);
+
+            if (geoJson) {
+                var polygon = L.geoJSON(geoJson, {
+                    style: {
+                        color: '#ff0000',
+                        weight: 2,
+                        opacity: 0.8,
+                        fillColor: '#ff0000',
+                        fillOpacity: 0.2
+                    }
+                }).addTo(map);
+
+                map.fitBounds(polygon.getBounds());
+
+                if (isValidValue(latitude) && isValidValue(longitude)) {
+                    var lat = parseFloat(latitude);
+                    var lng = parseFloat(longitude);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        L.marker([lat, lng])
+                            .addTo(map)
+                            .bindPopup(mapConfig.ipLocationLabel + '<br>' + mapConfig.latitudeLabel + ': ' + lat + '<br>' + mapConfig.longitudeLabel + ': ' + lng)
+                            .openPopup();
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing polygon:', e);
+            document.getElementById('map-section').style.display = 'none';
+        }
+    } else if (isValidValue(latitude) && isValidValue(longitude)) {
+        document.getElementById('map-section').style.display = 'block';
+
+        var lat = parseFloat(latitude);
+        var lng = parseFloat(longitude);
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+            var map = L.map('map').setView([lat, lng], 10);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+
+            L.marker([lat, lng])
+                .addTo(map)
+                .bindPopup(mapConfig.ipLocationLabel + '<br>' + mapConfig.latitudeLabel + ': ' + lat + '<br>' + mapConfig.longitudeLabel + ': ' + lng)
+                .openPopup();
+        }
     }
-    
-    th, td {
-        padding: 8px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-    }
-    
-    .lightgreen {
-        background-color: #f0fff0;
-    }
-    
-    .lightyellow {
-        background-color: #fffff0;
-    }
-    
-    details {
-        margin-top: 20px;
-    }
-    
-    summary {
-        cursor: pointer;
-        padding: 10px;
-        background-color: #f5f5f5;
-        border-radius: 5px;
-    }
-    
-    summary:hover {
-        background-color: #e8e8e8;
-    }
-</style>
+</script>
