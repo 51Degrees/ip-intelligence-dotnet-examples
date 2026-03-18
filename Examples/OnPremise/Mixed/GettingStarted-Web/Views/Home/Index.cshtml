@@ -238,47 +238,11 @@
                     </td>
                 </tr>
                 <tr class="lightyellow">
-                    <td><b>Country Codes Geographical All:</b></td>
-                    <td>
-                        @if (Model.CountriesData?.CountryCodesGeographicalAll.HasValue == true)
-                        {
-                            <select id="CountryId" name="CountryCodesGeographicalAll" class="form-control" size="8" style="overflow-y:auto; height:auto; max-height:160px;">
-                                @foreach (var c in Model.CountriesData?.CountryCodesGeographicalAll.Value)
-                                {
-                                    <option value="@c">@c</option>
-                                }
-                            </select>
-                        }
-                        else
-                        {
-                            @(Model.CountriesData?.CountryCodesGeographicalAll.NoValueMessage ?? "(no value)")
-                        }
-                    </td>
-                </tr>
-                <tr class="lightgreen">
-                    <td><b>Country Codes Population All:</b></td>
-                    <td>
-                        @if (Model.CountriesData?.CountryCodesPopulationAll.HasValue == true)
-                        {
-                            <select id="CountryId" name="CountryCodesPopulationAll" class="form-control" size="8" style="overflow-y:auto; height:auto; max-height:160px;">
-                                @foreach (var c in Model.CountriesData?.CountryCodesPopulationAll.Value)
-                                {
-                                    <option value="@c">@c</option>
-                                }
-                            </select>
-                        }
-                        else
-                        {
-                            @(Model.CountriesData?.CountryCodesPopulationAll.NoValueMessage ?? "(no value)")
-                        }
-                    </td>
-                </tr>
-                <tr class="lightyellow">
                     <td><b>Country Names Geographical All Translated:</b></td>
                     <td>
                         @if (Model.TranslationData?.CountryNamesGeographicalAllTranslated.HasValue == true)
                         {
-                            <select id="CountryId" name="CountryNamesGeographicalAllTranslated" class="form-control" size="8" style="overflow-y:auto; height:auto; max-height:160px;">
+                            <select id="CountryId" name="CountryNamesGeographicalAllTranslated" class="form-control">
                                 @foreach (var c in Model.TranslationData.CountryNamesGeographicalAllTranslated.Value)
                                 {
                                     <option value="@c">@c</option>
@@ -296,7 +260,7 @@
                     <td>
                         @if (Model.TranslationData?.CountryNamesPopulationAllTranslated.HasValue == true)
                         {
-                            <select id="CountryId" name="CountryNamesPopulationAllTranslated" class="form-control" size="8" style="overflow-y:auto; height:auto; max-height:160px;">
+                            <select id="CountryId" name="CountryNamesPopulationAllTranslated" class="form-control">
                                 @foreach (var c in Model.TranslationData.CountryNamesPopulationAllTranslated.Value)
                                 {
                                     <option value="@c">@c</option>
