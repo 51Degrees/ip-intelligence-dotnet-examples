@@ -61,8 +61,9 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
             services.AddSingleton<DeviceDetectionHashEngineBuilder>();
             services.AddSingleton<IpiOnPremiseEngineBuilder>();
             services.AddSingleton<IpCountriesElementBuilder>();
-            services.AddSingleton<CountriesTranslationEngineBuilder>();
             services.AddSingleton<CountryCodeTranslationEngineBuilder>();
+            services.AddSingleton<CountryCodeAllTranslationEngineBuilder>();
+            services.AddSingleton<CountriesTranslationEngineBuilder>();
             
             // Configure the services needed by the combined pipeline and create the 51Degrees Pipeline
             // instance that will be used to process requests.

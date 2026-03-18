@@ -274,38 +274,38 @@
                     </td>
                 </tr>
                 <tr class="lightyellow">
-                    <td><b>Country Names Geographical Translated:</b></td>
+                    <td><b>Country Names Geographical All Translated:</b></td>
                     <td>
-                        @if (Model.TranslationData?.CountryNamesGeographicalTranslated.HasValue == true)
+                        @if (Model.TranslationData?.CountryNamesGeographicalAllTranslated.HasValue == true)
                         {
-                            <select id="CountryId" name="CountryNamesGeographicalTranslated" class="form-control" size="8" style="overflow-y:auto; height:auto; max-height:160px;">
-                                @foreach (var c in Model.TranslationData.CountryNamesGeographicalTranslated.Value)
+                            <select id="CountryId" name="CountryNamesGeographicalAllTranslated" class="form-control" size="8" style="overflow-y:auto; height:auto; max-height:160px;">
+                                @foreach (var c in Model.TranslationData.CountryNamesGeographicalAllTranslated.Value)
                                 {
-                                    <option value="@c.Value">@c.Value (@(c.Weighting() * 100)%)</option>
+                                    <option value="@c">@c</option>
                                 }
                             </select>
                         }
                         else
                         {
-                            @(Model.TranslationData?.CountryNamesGeographicalTranslated.NoValueMessage ?? "(no value)")
+                            @(Model.TranslationData?.CountryNamesGeographicalAllTranslated.NoValueMessage ?? "(no value)")
                         }
                     </td>
                 </tr>
                 <tr class="lightgreen">
-                    <td><b>Country Names Geographical Translated:</b></td>
+                    <td><b>Country Names Geographical All Translated:</b></td>
                     <td>
-                        @if (Model.TranslationData?.CountryNamesPopulationTranslated.HasValue == true)
+                        @if (Model.TranslationData?.CountryNamesPopulationAllTranslated.HasValue == true)
                         {
-                            <select id="CountryId" name="CountryNamesPopulationTranslated" class="form-control" size="8" style="overflow-y:auto; height:auto; max-height:160px;">
-                                @foreach (var c in Model.TranslationData.CountryNamesPopulationTranslated.Value)
+                            <select id="CountryId" name="CountryNamesPopulationAllTranslated" class="form-control" size="8" style="overflow-y:auto; height:auto; max-height:160px;">
+                                @foreach (var c in Model.TranslationData.CountryNamesPopulationAllTranslated.Value)
                                 {
-                                    <option value="@c.Value">@c.Value (@(c.Weighting() * 100)%)</option>
+                                    <option value="@c">@c</option>
                                 }
                             </select>
                         }
                         else
                         {
-                            @(Model.TranslationData?.CountryNamesPopulationTranslated.NoValueMessage ?? "(no value)")
+                            @(Model.TranslationData?.CountryNamesPopulationAllTranslated.NoValueMessage ?? "(no value)")
                         }
                     </td>
                 </tr>
