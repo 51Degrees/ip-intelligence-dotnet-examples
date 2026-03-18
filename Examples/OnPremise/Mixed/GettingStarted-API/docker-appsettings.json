@@ -23,6 +23,14 @@
         }
       },
       {
+        // Translates country codes to English country names
+        "BuilderName": "CountryCodeTranslationEngine"
+      },
+      {
+        // Translates English country names to browser language
+        "BuilderName": "CountriesTranslationEngine"
+      },
+      {
         // Required to add Javascript and JSON end points for 51Degrees.core.js and 
         "BuilderName": "JsonBuilderElement"
       }
