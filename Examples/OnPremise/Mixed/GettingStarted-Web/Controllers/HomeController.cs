@@ -20,16 +20,18 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-using Microsoft.AspNetCore.Mvc;
-using FiftyOne.Pipeline.Web.Services;
-using FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Model;
-using Microsoft.Extensions.Logging;
-using FiftyOne.Pipeline.Core.FlowElements;
-using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.DeviceDetection;
+using FiftyOne.IpIntelligence.Countries.Data;
+using FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Model;
+using FiftyOne.IpIntelligence.Translation.Data;
+using FiftyOne.Pipeline.Core.Data;
+using FiftyOne.Pipeline.Core.FlowElements;
+using FiftyOne.Pipeline.Web.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Http;
 using System.Text;
 
 /// @example OnPremise/Mixed/GettingStarted-Web/Controllers/HomeController.cs
@@ -91,7 +93,11 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Con
             
             // Get IP Intelligence results from the flow data
             model.IpData = flowData.Get<IIpIntelligenceData>();
-            
+
+            model.CountriesData = flowData.Get<IIpCountriesData>();
+            model.TranslationData = flowData.Get<ICountriesTranslationData>();
+            model.CodeTranslationData = flowData.Get<ICountryCodeTranslationData>();
+
             // Check if a custom IP was provided via query parameter
             var clientIp = Request.Query["client-ip"].FirstOrDefault();
             if (!string.IsNullOrWhiteSpace(clientIp))

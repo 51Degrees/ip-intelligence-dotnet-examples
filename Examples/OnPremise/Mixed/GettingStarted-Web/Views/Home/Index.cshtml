@@ -1,3 +1,4 @@
+@using FiftyOne.Pipeline.Core.Data
 @* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
  * Copyright 2026 51 Degrees Mobile Experts Limited, Davidson House,
@@ -200,6 +201,113 @@
                 <tr class="lightgreen">
                     <td><b>Time Zone Offset:</b></td>
                     <td>@(Model.IpData?.TimeZoneOffset?.HasValue == true ? Model.IpData.TimeZoneOffset.Value.ToString() : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Country Codes Geographical:</b></td>
+                    <td>
+                        @if (Model.IpData?.CountryCodesGeographical.HasValue == true)
+                        {
+                            <ul>
+                                @foreach (var c in Model.IpData.CountryCodesGeographical.Value)
+                                {
+                                    <li>@c.Value (@(c.Weighting() * 100)%)</li>
+                                }
+                            </ul>
+                        } else
+                        {
+                            @(Model.IpData?.CountryCodesGeographical.NoValueMessage ?? "(no value)")
+                        }
+                    </td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Country Codes Population:</b></td>
+                    <td>
+                        @if (Model.IpData?.CountryCodesPopulation.HasValue == true)
+                        {
+                            <ul>
+                                @foreach (var c in Model.IpData.CountryCodesPopulation.Value)
+                                {
+                                    <li>@c.Value (@(c.Weighting() * 100)%)</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            @(Model.IpData?.CountryCodesPopulation.NoValueMessage ?? "(no value)")
+                        }
+                    </td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Country Codes Geographical All:</b></td>
+                    <td>
+                        @if (Model.CountriesData?.CountryCodesGeographicalAll.HasValue == true)
+                        {
+                            <select id="CountryId" name="CountryCodesGeographicalAll" class="form-control" size="8" style="overflow-y:auto; height:auto; max-height:160px;">
+                                @foreach (var c in Model.CountriesData?.CountryCodesGeographicalAll.Value)
+                                {
+                                    <option value="@c">@c</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            @(Model.CountriesData?.CountryCodesGeographicalAll.NoValueMessage ?? "(no value)")
+                        }
+                    </td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Country Codes Population All:</b></td>
+                    <td>
+                        @if (Model.CountriesData?.CountryCodesPopulationAll.HasValue == true)
+                        {
+                            <select id="CountryId" name="CountryCodesPopulationAll" class="form-control" size="8" style="overflow-y:auto; height:auto; max-height:160px;">
+                                @foreach (var c in Model.CountriesData?.CountryCodesPopulationAll.Value)
+                                {
+                                    <option value="@c">@c</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            @(Model.CountriesData?.CountryCodesPopulationAll.NoValueMessage ?? "(no value)")
+                        }
+                    </td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Country Names Geographical Translated:</b></td>
+                    <td>
+                        @if (Model.TranslationData?.CountryNamesGeographicalTranslated.HasValue == true)
+                        {
+                            <select id="CountryId" name="CountryNamesGeographicalTranslated" class="form-control" size="8" style="overflow-y:auto; height:auto; max-height:160px;">
+                                @foreach (var c in Model.TranslationData.CountryNamesGeographicalTranslated.Value)
+                                {
+                                    <option value="@c.Value">@c.Value (@(c.Weighting() * 100)%)</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            @(Model.TranslationData?.CountryNamesGeographicalTranslated.NoValueMessage ?? "(no value)")
+                        }
+                    </td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Country Names Geographical Translated:</b></td>
+                    <td>
+                        @if (Model.TranslationData?.CountryNamesPopulationTranslated.HasValue == true)
+                        {
+                            <select id="CountryId" name="CountryNamesPopulationTranslated" class="form-control" size="8" style="overflow-y:auto; height:auto; max-height:160px;">
+                                @foreach (var c in Model.TranslationData.CountryNamesPopulationTranslated.Value)
+                                {
+                                    <option value="@c.Value">@c.Value (@(c.Weighting() * 100)%)</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            @(Model.TranslationData?.CountryNamesPopulationTranslated.NoValueMessage ?? "(no value)")
+                        }
+                    </td>
                 </tr>
             </table>
         </div>
