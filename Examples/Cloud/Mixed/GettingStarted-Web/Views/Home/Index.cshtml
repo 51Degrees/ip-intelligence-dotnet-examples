@@ -21,6 +21,7 @@
  * ********************************************************************* *@
 
 @using FiftyOne.Pipeline.Core.Data
+@using FiftyOne.Pipeline.Engines.Data
 @model FiftyOne.IpIntelligence.Examples.Mixed.Cloud.GettingStartedWeb.Model.IndexModel
 @{
     ViewData["Title"] = "Device Detection + IP Intelligence Example";
@@ -205,35 +206,72 @@
                 <tr class="lightyellow">
                     <td><b>Country Codes Geographical:</b></td>
                     <td>
-                        @if (Model.IpData?.CountryCodesGeographical.HasValue == true)
-                        {
-                            <ul>
-                                @foreach (var c in Model.IpData.CountryCodesGeographical.Value)
+                        @{
+                            IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> countryCodesGeographical = null;
+                            try
+                            {
+                                countryCodesGeographical = Model.IpData?.CountryCodesGeographical;
+                            }
+                            catch
+                            {
+                                // nop
+                            }
+                            if (countryCodesGeographical != null)
+                            {
+                                if (countryCodesGeographical.HasValue)
                                 {
-                                    <li>@c.Value (@(c.Weighting() * 100)%)</li>
+                                    <ul>
+                                        @foreach (var c in countryCodesGeographical.Value)
+                                        {
+                                            <li>@c.Value (@(c.Weighting() * 100)%)</li>
+                                        }
+                                    </ul>
                                 }
-                            </ul>
-                        } else
-                        {
-                            @(Model.IpData?.CountryCodesGeographical.NoValueMessage ?? "(no value)")
+                                else
+                                {
+                                    @(countryCodesGeographical.NoValueMessage ?? "(no value)")
+                                }
+                            }
+                            else
+                            {
+                                <p>(Property Not Found)</p>
+                            }
                         }
                     </td>
                 </tr>
                 <tr class="lightgreen">
                     <td><b>Country Codes Population:</b></td>
                     <td>
-                        @if (Model.IpData?.CountryCodesPopulation.HasValue == true)
-                        {
-                            <ul>
-                                @foreach (var c in Model.IpData.CountryCodesPopulation.Value)
+                        @{
+                            IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> countryCodesPopulation = null;
+                            try
+                            {
+                                countryCodesPopulation = Model.IpData?.CountryCodesPopulation;
+                            }
+                            catch
+                            {
+                                // nop
+                            }
+                            if (countryCodesPopulation != null)
+                            {
+                                if (countryCodesPopulation.HasValue)
                                 {
-                                    <li>@c.Value (@(c.Weighting() * 100)%)</li>
+                                    <ul>
+                                        @foreach (var c in countryCodesPopulation.Value)
+                                        {
+                                            <li>@c.Value (@(c.Weighting() * 100)%)</li>
+                                        }
+                                    </ul>
                                 }
-                            </ul>
-                        }
-                        else
-                        {
-                            @(Model.IpData?.CountryCodesPopulation.NoValueMessage ?? "(no value)")
+                                else
+                                {
+                                    @(countryCodesPopulation.NoValueMessage ?? "(no value)")
+                                }
+                            }
+                            else
+                            {
+                                <p>(Property Not Found)</p>
+                            }
                         }
                     </td>
                 </tr>
