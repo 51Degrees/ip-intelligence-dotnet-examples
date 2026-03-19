@@ -240,14 +240,17 @@
                 <tr class="lightyellow">
                     <td><b>Country Names Geographical All Translated:</b></td>
                     <td>
-                        @if (Model.TranslationData?.CountryNamesGeographicalAllTranslated.HasValue == true)
+                        @if (Model.TranslationData?.CountryNamesGeographicalAllTranslated.HasValue == true
+                            && Model.TranslationData?.CountryCodesGeographicalAll.HasValue == true)
                         {
+                            var geoNames = Model.TranslationData.CountryNamesGeographicalAllTranslated.Value;
+                            var geoCodes = Model.TranslationData.CountryCodesGeographicalAll.Value;
                             <select id="CountryNamesGeographicalAllTranslated"
                                     name="CountryNamesGeographicalAllTranslated"
                                     class="form-control">
-                                @foreach (var c in Model.TranslationData.CountryNamesGeographicalAllTranslated.Value)
+                                @for (int i = 0; i < geoNames.Count; i++)
                                 {
-                                    <option value="@c">@c</option>
+                                    <option value="@geoCodes[i]">@geoNames[i]</option>
                                 }
                             </select>
                         }
@@ -258,16 +261,19 @@
                     </td>
                 </tr>
                 <tr class="lightgreen">
-                    <td><b>Country Names Geographical All Translated:</b></td>
+                    <td><b>Country Names Population All Translated:</b></td>
                     <td>
-                        @if (Model.TranslationData?.CountryNamesPopulationAllTranslated.HasValue == true)
+                        @if (Model.TranslationData?.CountryNamesPopulationAllTranslated.HasValue == true
+                            && Model.TranslationData?.CountryCodesPopulationAll.HasValue == true)
                         {
-                            <select id="CountryNamesPopulationAllTranslated" 
+                            var popNames = Model.TranslationData.CountryNamesPopulationAllTranslated.Value;
+                            var popCodes = Model.TranslationData.CountryCodesPopulationAll.Value;
+                            <select id="CountryNamesPopulationAllTranslated"
                                     name="CountryNamesPopulationAllTranslated"
                                     class="form-control">
-                                @foreach (var c in Model.TranslationData.CountryNamesPopulationAllTranslated.Value)
+                                @for (int i = 0; i < popNames.Count; i++)
                                 {
-                                    <option value="@c">@c</option>
+                                    <option value="@popCodes[i]">@popNames[i]</option>
                                 }
                             </select>
                         }

@@ -21,7 +21,6 @@
  * ********************************************************************* */
 
 using FiftyOne.DeviceDetection;
-using FiftyOne.IpIntelligence.Countries.Data;
 using FiftyOne.IpIntelligence.Translation.Data;
 using System.Collections.Generic;
 
@@ -35,9 +34,6 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Mod
         // IP Intelligence properties
         public IIpIntelligenceData IpData { get; set; }
         
-        // IP Countries properties
-        public IIpCountriesData CountriesData { get; set; }
-
         // IP Countries Translation properties
         public ICountriesTranslationData TranslationData { get; set; }
 

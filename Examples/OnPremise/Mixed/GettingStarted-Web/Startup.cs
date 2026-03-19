@@ -21,7 +21,6 @@
  * ********************************************************************* */
 
 using FiftyOne.DeviceDetection.Hash.Engine.OnPremise.FlowElements;
-using FiftyOne.IpIntelligence.Countries.FlowElements;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using FiftyOne.IpIntelligence.Translation.FlowElements;
 using Microsoft.AspNetCore.Builder;
@@ -60,9 +59,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
             // Add both Device Detection and IP Intelligence engine builders to services
             services.AddSingleton<DeviceDetectionHashEngineBuilder>();
             services.AddSingleton<IpiOnPremiseEngineBuilder>();
-            services.AddSingleton<IpCountriesElementBuilder>();
             services.AddSingleton<CountryCodeTranslationEngineBuilder>();
-            services.AddSingleton<CountryCodeAllTranslationEngineBuilder>();
             services.AddSingleton<CountriesTranslationEngineBuilder>();
             
             // Configure the services needed by the combined pipeline and create the 51Degrees Pipeline

@@ -54,6 +54,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
         public IReadOnlyList<string> CountryCodesPopulation { get; set; }
         public IReadOnlyList<string> CountryNamesGeographicalAllTranslated { get; set; }
         public IReadOnlyList<string> CountryNamesPopulationAllTranslated { get; set; }
+        public IReadOnlyList<string> CountryCodesGeographicalAll { get; set; }
+        public IReadOnlyList<string> CountryCodesPopulationAll { get; set; }
 
         public IFlowData FlowData { get; private set; }
 
@@ -115,6 +117,10 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
                 d => d.CountryNamesGeographicalAllTranslated.GetHumanReadableList());
             CountryNamesPopulationAllTranslated = translationData.TryGetValue(
                 d => d.CountryNamesPopulationAllTranslated.GetHumanReadableList());
+            CountryCodesGeographicalAll = translationData.TryGetValue(
+                d => d.CountryCodesGeographicalAll.GetHumanReadableList());
+            CountryCodesPopulationAll = translationData.TryGetValue(
+                d => d.CountryCodesPopulationAll.GetHumanReadableList());
         }
     }
 }

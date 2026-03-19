@@ -23,8 +23,8 @@
 
 // Ignore Spelling: Ip
 
-using FiftyOne.IpIntelligence.Countries.Data;
-using FiftyOne.IpIntelligence.Countries.FlowElements;
+using FiftyOne.IpIntelligence.Translation.Data;
+using FiftyOne.IpIntelligence.Translation.FlowElements;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
@@ -41,12 +41,12 @@ using System.Text;
 /// @example OnPremise/GettingStarted-Console/Program.cs
 ///
 /// This example shows how to use 51Degrees On-premise IP Intelligence to determine location and network details from IP addresses.
-/// It also demonstrates the IpCountriesElement which produces flat country code lists
-/// combining weighted results with all possible country codes.
+/// It also demonstrates the CountriesTranslationEngine which produces translated country
+/// name lists and complete ordered country code lists.
 ///
 /// You will learn:
 ///
-/// 1. How to manually build a Pipeline with the IP Intelligence engine and IpCountriesElement
+/// 1. How to manually build a Pipeline with the IP Intelligence engine and translation engines
 /// 2. How to pass input data (evidence) to the Pipeline
 /// 3. How to retrieve the results
 ///
@@ -73,14 +73,17 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     .SetDataFileSystemWatcher(false)
                     .Build(dataFile, false);
 
-                // Create the IpCountries element that produces flat country code lists
-                var countriesAllElement = new IpCountriesElementBuilder(loggerFactory)
+                // Create translation engines
+                var codeTranslationEngine = new CountryCodeTranslationEngineBuilder(loggerFactory)
+                    .Build();
+                var countriesTranslationEngine = new CountriesTranslationEngineBuilder(loggerFactory)
                     .Build();
 
-                // Build pipeline with both engines - countriesAllElement must come after ipEngine
+                // Build pipeline - translation engines must come after ipEngine
                 using (var pipeline = new PipelineBuilder(loggerFactory)
                     .AddFlowElement(ipEngine)
-                    .AddFlowElement(countriesAllElement)
+                    .AddFlowElement(codeTranslationEngine)
+                    .AddFlowElement(countriesTranslationEngine)
                     .Build())
                 {
                     // IPs near country borders that produce multi-country weighted results
@@ -104,7 +107,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
 
             private void AnalyseEvidence(
                 Dictionary<string, object> evidence,
-                IPipeline pipeline, 
+                IPipeline pipeline,
                 TextWriter output)
             {
                 // FlowData is a data structure that is used to convey information required for
@@ -168,15 +171,15 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                         ipData.CountryCodesPopulation,
                         message);
 
-                    // Output flat country code lists from the IpCountriesElement's own data
-                    var countriesData = data.Get<IIpCountriesData>();
+                    // Output complete country code lists from the CountriesTranslationEngine
+                    var translationData = data.Get<ICountriesTranslationData>();
                     OutputList(
-                        nameof(countriesData.CountryCodesGeographicalAll),
-                        countriesData.CountryCodesGeographicalAll,
+                        nameof(translationData.CountryCodesGeographicalAll),
+                        translationData.CountryCodesGeographicalAll,
                         message);
                     OutputList(
-                        nameof(countriesData.CountryCodesPopulationAll),
-                        countriesData.CountryCodesPopulationAll,
+                        nameof(translationData.CountryCodesPopulationAll),
+                        translationData.CountryCodesPopulationAll,
                         message);
 
                     output.WriteLine(message.ToString());
