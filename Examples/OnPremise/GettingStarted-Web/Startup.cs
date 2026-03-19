@@ -28,6 +28,8 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
+using FiftyOne.IpIntelligence.Countries.FlowElements;
+using FiftyOne.IpIntelligence.Translation.FlowElements;
 
 /// @example OnPremise/GettingStarted-Web/Startup.cs
 /// 
@@ -110,6 +112,13 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
             // Add the hash engine builder to services so that the system can find the builder
             // when it needs to.
             services.AddSingleton<IpiOnPremiseEngineBuilder>();
+            
+            // Add Translation engines
+            services.AddSingleton<IpCountriesElementBuilder>();
+            services.AddSingleton<CountryCodeTranslationEngineBuilder>();
+            services.AddSingleton<CountryCodeAllTranslationEngineBuilder>();
+            services.AddSingleton<CountriesTranslationEngineBuilder>();
+            
             // Configure the services needed by IP Intelligence and create the 51Degrees Pipeline
             // instance that will be used to process requests.
             services.AddFiftyOne(Configuration);

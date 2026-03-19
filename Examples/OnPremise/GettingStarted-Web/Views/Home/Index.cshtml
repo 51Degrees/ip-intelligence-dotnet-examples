@@ -91,6 +91,54 @@
         <tr class="lightgreen"><td><b>Areas:</b></td><td>@Model.Areas</td></tr>
         <tr class="lightyellow"><td><b>Accuracy Radius:</b></td><td>@Model.AccuracyRadius</td></tr>
         <tr class="lightgreen"><td><b>Time Zone Offset:</b></td><td>@Model.TimeZoneOffset</td></tr>
+                <tr class="lightyellow">
+                    <td><b>Country Codes Geographical:</b></td>
+                    <td>
+                        <ul>
+                            @foreach (var c in Model.CountryCodesGeographical)
+                            {
+                                <li>@c</li>
+                            }
+                        </ul>
+                    </td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Country Codes Population:</b></td>
+                    <td>
+                        <ul>
+                            @foreach (var c in Model.CountryCodesPopulation)
+                            {
+                                <li>@c</li>
+                            }
+                        </ul>
+                    </td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Country Names Geographical All Translated:</b></td>
+                    <td>
+                        <select id="CountryNamesGeographicalAllTranslated"
+                                name="CountryNamesGeographicalAllTranslated" 
+                                class="form-control">
+                            @foreach (var c in Model.CountryNamesGeographicalAllTranslated)
+                            {
+                                <option value="@c">@c</option>
+                            }
+                        </select>
+                    </td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Country Names Geographical All Translated:</b></td>
+                    <td>
+                        <select id="CountryNamesPopulationAllTranslated" 
+                                name="CountryNamesPopulationAllTranslated"
+                                class="form-control">
+                            @foreach (var c in Model.CountryNamesPopulationAllTranslated)
+                            {
+                                <option value="@c">@c</option>
+                            }
+                        </select>
+                    </td>
+                </tr>
     </table>
     <br />
 
