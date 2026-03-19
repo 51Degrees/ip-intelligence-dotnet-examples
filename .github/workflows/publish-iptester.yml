@@ -20,7 +20,7 @@ jobs:
           submodules: recursive
       - name: Build
         env:
-          IPI_DATA_FILE_URL: ${{ secrets.IPI_DATA_FILE_URL }}
+          IPI_DATA_FILE_URL: ${{ secrets.DEMO_IPI_DATA_FILE_URL }}
         run: |
           printf -v tag '%s-%(%y%m%dT%H%M)T' "$BASE_VERSION" -1
           docker build --secret id=IPI_DATA_FILE_URL --tag=51degrees/ipitester:{latest,"$tag"} .
