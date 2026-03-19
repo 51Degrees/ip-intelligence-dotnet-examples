@@ -1,6 +1,6 @@
 /* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
- * Copyright 2025 51 Degrees Mobile Experts Limited, Davidson House,
+ * Copyright 2026 51 Degrees Mobile Experts Limited, Davidson House,
  * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
  * This Original Work is licensed under the European Union Public Licence
@@ -36,23 +36,41 @@ namespace FiftyOne.IpIntelligence.Examples
         /// If a <see cref="PropertyMissingException"/> occurs then the resulting string will
         /// contain 'Unknown' + the message from the exception.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TData"></typeparam>
         /// <param name="data"></param>
         /// <param name="function"></param>
         /// <returns></returns>
-        public static string TryGetValue<T>(this T data, Func<T, string> function)
-            where T : IElementData
+        public static string TryGetValue<TData>(this TData data, Func<TData, string> function)
+            where TData : IElementData
+            => TryGetValue(data, function, ex => $"Unknown ({ex.Message})");
+        
+        /// <summary>
+        /// Execute the specified function on the supplied <see cref="IElementData"/> instance.
+        /// If a <see cref="PropertyMissingException"/> occurs then the resulting string will
+        /// contain 'Unknown' + the message from the exception.
+        /// </summary>
+        /// <typeparam name="TData"></typeparam>
+        /// <param name="data"></param>
+        /// <param name="function"></param>
+        /// <returns></returns>
+        public static IReadOnlyList<string> TryGetValue<TData>(this TData data, Func<TData, IReadOnlyList<string>> function)
+            where TData : IElementData
+            => TryGetValue(data, function, ex => new[]{$"Unknown ({ex.Message})"});
+        
+        private static TResult TryGetValue<TData, TResult>(
+            this TData data,
+            Func<TData, TResult> function,
+            Func<PropertyMissingException, TResult> fallbackFactory)
+            where TData : IElementData
         {
-            string result;
             try
             {
-                result = function(data);
+                return function(data);
             }
             catch (PropertyMissingException pex)
             {
-                result = $"Unknown ({pex.Message})";
+                return fallbackFactory(pex);
             }
-            return result;
         }
 
         /// <summary>
@@ -75,6 +93,26 @@ namespace FiftyOne.IpIntelligence.Examples
             var values = apv.Value.Select(x => 
                 Math.Abs(x.Weighting() - 1.0f) < 0.0001f ? x.Value.ToString() : $"({x.Value} @ {x.Weighting():F4})");
             return string.Join(", ", values);
+        }
+        /// <summary>
+        /// Get a human-readable version of the specified <see cref="IAspectPropertyValue"/>.
+        /// If no value has be set, the result will be 'Unknown' + the 
+        /// <see cref="IAspectPropertyValue.NoValueMessage"/>.
+        /// </summary>
+        /// <param name="apv"></param>
+        /// <returns></returns>
+        public static IReadOnlyList<string> GetHumanReadableList<T>(this IAspectPropertyValue<IReadOnlyList<T>> apv)
+        {
+            return apv.HasValue
+                ? apv.Value.Select(x => x.ToString()).ToList()
+                : (IReadOnlyList<string>)new[] { $"Unknown ({apv.NoValueMessage})" };
+        }
+        /// <inheritdoc cref="GetHumanReadableList{T}(IAspectPropertyValue{IReadOnlyList{T}})"/>
+        public static IReadOnlyList<string> GetHumanReadableList<T>(this IAspectPropertyValue<IReadOnlyList<IWeightedValue<T>>> apv)
+        {
+            return apv.HasValue
+                ? apv.Value.Select(x => $"{x.Value} ({x.Weighting() * 100}%)").ToList()
+                : (IReadOnlyList<string>)new[] { $"Unknown ({apv.NoValueMessage})" };
         }
     }
 }

@@ -55,6 +55,9 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model
         public List<EvidenceModel> Evidence { get; private set; }
 
         public IHeaderDictionary ResponseHeaders { get; private set; }
+        
+        public IReadOnlyList<string> CountryCodesGeographical { get; set; }
+        public IReadOnlyList<string> CountryCodesPopulation { get; set; }
 
         public IndexModel(IFlowData flowData, IHeaderDictionary responseHeaders)
         {
@@ -95,6 +98,8 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model
             Areas = ipiData.TryGetValue(d => d.Areas.GetHumanReadable());
             AccuracyRadius = ipiData.TryGetValue(d => d.AccuracyRadiusMin.GetHumanReadable());
             TimeZoneOffset = ipiData.TryGetValue(d => d.TimeZoneOffset.GetHumanReadable());
+            CountryCodesGeographical = ipiData.TryGetValue(d => d.CountryCodesGeographical.GetHumanReadableList());
+            CountryCodesPopulation = ipiData.TryGetValue(d => d.CountryCodesPopulation.GetHumanReadableList());
         }
     }
 }
