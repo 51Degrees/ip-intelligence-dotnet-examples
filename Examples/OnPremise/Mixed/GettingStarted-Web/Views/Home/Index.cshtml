@@ -242,7 +242,9 @@
                     <td>
                         @if (Model.TranslationData?.CountryNamesGeographicalAllTranslated.HasValue == true)
                         {
-                            <select id="CountryId" name="CountryNamesGeographicalAllTranslated" class="form-control">
+                            <select id="CountryNamesGeographicalAllTranslated"
+                                    name="CountryNamesGeographicalAllTranslated"
+                                    class="form-control">
                                 @foreach (var c in Model.TranslationData.CountryNamesGeographicalAllTranslated.Value)
                                 {
                                     <option value="@c">@c</option>
@@ -260,7 +262,9 @@
                     <td>
                         @if (Model.TranslationData?.CountryNamesPopulationAllTranslated.HasValue == true)
                         {
-                            <select id="CountryId" name="CountryNamesPopulationAllTranslated" class="form-control">
+                            <select id="CountryNamesPopulationAllTranslated" 
+                                    name="CountryNamesPopulationAllTranslated"
+                                    class="form-control">
                                 @foreach (var c in Model.TranslationData.CountryNamesPopulationAllTranslated.Value)
                                 {
                                     <option value="@c">@c</option>
