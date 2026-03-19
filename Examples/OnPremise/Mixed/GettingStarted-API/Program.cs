@@ -23,6 +23,7 @@
 using FiftyOne.DeviceDetection.Hash.Engine.OnPremise.FlowElements;
 using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using FiftyOne.IpIntelligence.Examples.Mixed.OnPremise;
+using FiftyOne.IpIntelligence.Translation.FlowElements;
 using FiftyOne.Pipeline.Core.Configuration;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
@@ -71,6 +72,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             });
             builder.Services.AddSingleton<IpiOnPremiseEngineBuilder>();
             builder.Services.AddSingleton<DeviceDetectionHashEngineBuilder>();
+            builder.Services.AddSingleton<CountryCodeTranslationEngineBuilder>();
+            builder.Services.AddSingleton<CountriesTranslationEngineBuilder>();
 
             // Configure the services needed by IP Intelligence and create the 51Degrees Pipeline
             // instance that will be used to process requests.
