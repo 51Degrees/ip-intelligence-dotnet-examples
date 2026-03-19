@@ -78,6 +78,28 @@
         <tr class="lightgreen"><td><b>Areas:</b></td><td>@Model.Areas</td></tr>
         <tr class="lightyellow"><td><b>Accuracy Radius:</b></td><td>@Model.AccuracyRadius</td></tr>
         <tr class="lightgreen"><td><b>Time Zone Offset:</b></td><td>@Model.TimeZoneOffset</td></tr>
+        <tr class="lightyellow">
+            <td><b>Country Codes Geographical:</b></td>
+            <td>
+                <ul>
+                    @foreach (var c in Model.CountryCodesGeographical)
+                    {
+                        <li>@c</li>
+                    }
+                </ul>
+            </td>
+        </tr>
+        <tr class="lightgreen">
+            <td><b>Country Codes Population:</b></td>
+            <td>
+                <ul>
+                    @foreach (var c in Model.CountryCodesPopulation)
+                    {
+                        <li>@c</li>
+                    }
+                </ul>
+            </td>
+        </tr>
     </table>
     <br />
 

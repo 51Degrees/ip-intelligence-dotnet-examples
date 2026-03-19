@@ -20,6 +20,7 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* *@
 
+@using FiftyOne.Pipeline.Core.Data
 @model FiftyOne.IpIntelligence.Examples.Mixed.Cloud.GettingStartedWeb.Model.IndexModel
 @{
     ViewData["Title"] = "Device Detection + IP Intelligence Example";
@@ -200,6 +201,41 @@
                 <tr class="lightgreen">
                     <td><b>Time Zone Offset:</b></td>
                     <td>@(Model.IpData?.TimeZoneOffset?.HasValue == true ? Model.IpData.TimeZoneOffset.Value.ToString() : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Country Codes Geographical:</b></td>
+                    <td>
+                        @if (Model.IpData?.CountryCodesGeographical.HasValue == true)
+                        {
+                            <ul>
+                                @foreach (var c in Model.IpData.CountryCodesGeographical.Value)
+                                {
+                                    <li>@c.Value (@(c.Weighting() * 100)%)</li>
+                                }
+                            </ul>
+                        } else
+                        {
+                            @(Model.IpData?.CountryCodesGeographical.NoValueMessage ?? "(no value)")
+                        }
+                    </td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Country Codes Population:</b></td>
+                    <td>
+                        @if (Model.IpData?.CountryCodesPopulation.HasValue == true)
+                        {
+                            <ul>
+                                @foreach (var c in Model.IpData.CountryCodesPopulation.Value)
+                                {
+                                    <li>@c.Value (@(c.Weighting() * 100)%)</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            @(Model.IpData?.CountryCodesPopulation.NoValueMessage ?? "(no value)")
+                        }
+                    </td>
                 </tr>
             </table>
         </div>
