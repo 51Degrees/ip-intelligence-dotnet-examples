@@ -101,18 +101,28 @@ namespace FiftyOne.IpIntelligence.Examples
         /// </summary>
         /// <param name="apv"></param>
         /// <returns></returns>
-        public static IReadOnlyList<string> GetHumanReadableList<T>(this IAspectPropertyValue<IReadOnlyList<T>> apv)
+        public static IReadOnlyList<string> GetHumanReadableList<T>(
+            this IAspectPropertyValue<IReadOnlyList<T>> apv)
         {
             return apv.HasValue
                 ? apv.Value.Select(x => x.ToString()).ToList()
                 : (IReadOnlyList<string>)new[] { $"Unknown ({apv.NoValueMessage})" };
         }
         /// <inheritdoc cref="GetHumanReadableList{T}(IAspectPropertyValue{IReadOnlyList{T}})"/>
-        public static IReadOnlyList<string> GetHumanReadableList<T>(this IAspectPropertyValue<IReadOnlyList<IWeightedValue<T>>> apv)
+        public static IReadOnlyList<string> GetHumanReadableList<T>(
+            this IAspectPropertyValue<IReadOnlyList<IWeightedValue<T>>> apv,
+            bool weighted)
         {
             return apv.HasValue
-                ? apv.Value.Select(x => $"{x.Value} ({x.Weighting() * 100}%)").ToList()
+                ? apv.Value.Select(
+                    x => weighted
+                    ? $"{x.Value} ({x.Weighting() * 100}%)"
+                    : x.Value.ToString()).ToList()
                 : (IReadOnlyList<string>)new[] { $"Unknown ({apv.NoValueMessage})" };
         }
+        /// <inheritdoc cref="GetHumanReadableList{T}(IAspectPropertyValue{IReadOnlyList{T}})"/>
+        public static IReadOnlyList<string> GetHumanReadableList<T>(
+            this IAspectPropertyValue<IReadOnlyList<IWeightedValue<T>>> apv)
+            => GetHumanReadableList(apv, true);
     }
 }

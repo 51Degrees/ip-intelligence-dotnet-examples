@@ -21,6 +21,7 @@
  * ********************************************************************* */
 
 using FiftyOne.IpIntelligence.Cloud.FlowElements;
+using FiftyOne.IpIntelligence.Translation.FlowElements;
 using FiftyOne.Pipeline.CloudRequestEngine.FlowElements;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -123,6 +124,8 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb
             // system can find the builders when it needs to.
             services.AddSingleton<CloudRequestEngineBuilder>();
             services.AddSingleton<IpiCloudEngineBuilder>();
+            services.AddSingleton<CountryCodeTranslationEngineBuilder>();
+            services.AddSingleton<CountriesTranslationEngineBuilder>();
             // Configure the services needed by device detection and create the 51Degrees Pipeline
             // instance that will be used to process requests.
             services.AddFiftyOne(Configuration);

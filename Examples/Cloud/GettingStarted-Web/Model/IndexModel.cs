@@ -25,6 +25,7 @@ using FiftyOne.Pipeline.Core.Data;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.Linq;
+using FiftyOne.IpIntelligence.Translation.Data;
 
 namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model
 {
@@ -58,6 +59,11 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model
         
         public IReadOnlyList<string> CountryCodesGeographical { get; set; }
         public IReadOnlyList<string> CountryCodesPopulation { get; set; }
+        
+        public IReadOnlyList<string> CountryCodesGeographicalRaw { get; set; }
+        public IReadOnlyList<string> CountryCodesPopulationRaw { get; set; }
+        public IReadOnlyList<string> CountryNamesGeographicalTranslated { get; set; }
+        public IReadOnlyList<string> CountryNamesPopulationTranslated { get; set; }
 
         public IndexModel(IFlowData flowData, IHeaderDictionary responseHeaders)
         {
@@ -100,6 +106,15 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model
             TimeZoneOffset = ipiData.TryGetValue(d => d.TimeZoneOffset.GetHumanReadable());
             CountryCodesGeographical = ipiData.TryGetValue(d => d.CountryCodesGeographical.GetHumanReadableList());
             CountryCodesPopulation = ipiData.TryGetValue(d => d.CountryCodesPopulation.GetHumanReadableList());
+            CountryCodesGeographicalRaw = ipiData.TryGetValue(d => d.CountryCodesGeographical.GetHumanReadableList(false));
+            CountryCodesPopulationRaw = ipiData.TryGetValue(d => d.CountryCodesPopulation.GetHumanReadableList(false));
+
+            // Get the results of Translation data.
+            var translationData = FlowData.Get<ICountriesTranslationData>();
+            CountryNamesGeographicalTranslated = translationData.TryGetValue(
+                d => d.CountryNamesGeographicalTranslated.GetHumanReadableList());
+            CountryNamesPopulationTranslated = translationData.TryGetValue(
+                d => d.CountryNamesPopulationTranslated.GetHumanReadableList());
         }
     }
 }

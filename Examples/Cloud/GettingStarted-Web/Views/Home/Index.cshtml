@@ -99,6 +99,36 @@
                 </ul>
             </td>
         </tr>
+        <tr class="lightyellow">
+            <td><b>Country Names Geographical Translated:</b></td>
+            <td>
+                <select id="CountryNamesGeographicalTranslated"
+                        name="CountryNamesGeographicalTranslated"
+                        class="form-control"
+                        size="8"
+                        style="overflow-y:auto; height:auto; max-height:160px;">
+                    @for (int i = 0; i < Model.CountryNamesGeographicalTranslated.Count; i++)
+                    {
+                        <option value="@Model.CountryCodesGeographicalRaw[i]">@Model.CountryNamesGeographicalTranslated[i]</option>
+                    }
+                </select>
+            </td>
+        </tr>
+        <tr class="lightgreen">
+            <td><b>Country Names Population Translated:</b></td>
+            <td>
+                <select id="CountryNamesPopulationTranslated"
+                        name="CountryNamesPopulationTranslated"
+                        class="form-control"
+                        size="8"
+                        style="overflow-y:auto; height:auto; max-height:160px;">
+                    @for (int i = 0; i < Model.CountryNamesPopulationTranslated.Count; i++)
+                    {
+                        <option value="@Model.CountryCodesPopulationRaw[i]">@Model.CountryNamesPopulationTranslated[i]</option>
+                    }
+                </select>
+            </td>
+        </tr>
     </table>
     <br />
 
