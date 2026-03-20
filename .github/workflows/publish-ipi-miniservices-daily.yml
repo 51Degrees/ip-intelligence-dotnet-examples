@@ -2,7 +2,7 @@ name: Publish IPI Miniservices Daily
 
 on:
   schedule:
-    - cron: '0 9 * * *'
+    - cron: '0 10 * * *'
 
 jobs:
   trigger:
