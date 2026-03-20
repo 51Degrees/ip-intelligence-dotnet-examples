@@ -26,6 +26,7 @@ using FiftyOne.Pipeline.Engines.Data;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.Linq;
+using FiftyOne.IpIntelligence.Translation.Data;
 
 namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
 {
@@ -48,6 +49,13 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
         public string AccuracyRadius { get; private set; }
         public string TimeZoneOffset { get; private set; }
         public string InputIpAddress { get; set; }
+        
+        public IReadOnlyList<string> CountryCodesGeographical { get; set; }
+        public IReadOnlyList<string> CountryCodesPopulation { get; set; }
+        public IReadOnlyList<string> CountryNamesGeographicalAllTranslated { get; set; }
+        public IReadOnlyList<string> CountryNamesPopulationAllTranslated { get; set; }
+        public IReadOnlyList<string> CountryCodesGeographicalAll { get; set; }
+        public IReadOnlyList<string> CountryCodesPopulationAll { get; set; }
 
         public IFlowData FlowData { get; private set; }
 
@@ -100,6 +108,19 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb.Model
             Areas = ipiData.TryGetValue(d => d.Areas.GetHumanReadable());
             AccuracyRadius = ipiData.TryGetValue(d => d.AccuracyRadiusMin.GetHumanReadable());
             TimeZoneOffset = ipiData.TryGetValue(d => d.TimeZoneOffset.GetHumanReadable());
+            CountryCodesGeographical = ipiData.TryGetValue(d => d.CountryCodesGeographical.GetHumanReadableList());
+            CountryCodesPopulation = ipiData.TryGetValue(d => d.CountryCodesPopulation.GetHumanReadableList());
+            
+            // Get the results of IP Intelligence.
+            var translationData = FlowData.Get<ICountriesTranslationData>();
+            CountryNamesGeographicalAllTranslated = translationData.TryGetValue(
+                d => d.CountryNamesGeographicalAllTranslated.GetHumanReadableList());
+            CountryNamesPopulationAllTranslated = translationData.TryGetValue(
+                d => d.CountryNamesPopulationAllTranslated.GetHumanReadableList());
+            CountryCodesGeographicalAll = translationData.TryGetValue(
+                d => d.CountryCodesGeographicalAll.GetHumanReadableList());
+            CountryCodesPopulationAll = translationData.TryGetValue(
+                d => d.CountryCodesPopulationAll.GetHumanReadableList());
         }
     }
 }

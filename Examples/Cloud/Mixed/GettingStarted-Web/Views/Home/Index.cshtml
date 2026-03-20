@@ -20,6 +20,8 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* *@
 
+@using FiftyOne.Pipeline.Core.Data
+@using FiftyOne.Pipeline.Engines.Data
 @model FiftyOne.IpIntelligence.Examples.Mixed.Cloud.GettingStartedWeb.Model.IndexModel
 @{
     ViewData["Title"] = "Device Detection + IP Intelligence Example";
@@ -200,6 +202,78 @@
                 <tr class="lightgreen">
                     <td><b>Time Zone Offset:</b></td>
                     <td>@(Model.IpData?.TimeZoneOffset?.HasValue == true ? Model.IpData.TimeZoneOffset.Value.ToString() : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Country Codes Geographical:</b></td>
+                    <td>
+                        @{
+                            IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> countryCodesGeographical = null;
+                            try
+                            {
+                                countryCodesGeographical = Model.IpData?.CountryCodesGeographical;
+                            }
+                            catch
+                            {
+                                // nop
+                            }
+                            if (countryCodesGeographical != null)
+                            {
+                                if (countryCodesGeographical.HasValue)
+                                {
+                                    <ul>
+                                        @foreach (var c in countryCodesGeographical.Value)
+                                        {
+                                            <li>@c.Value (@(c.Weighting() * 100)%)</li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    @(countryCodesGeographical.NoValueMessage ?? "(no value)")
+                                }
+                            }
+                            else
+                            {
+                                <p>(Property Not Found)</p>
+                            }
+                        }
+                    </td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Country Codes Population:</b></td>
+                    <td>
+                        @{
+                            IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> countryCodesPopulation = null;
+                            try
+                            {
+                                countryCodesPopulation = Model.IpData?.CountryCodesPopulation;
+                            }
+                            catch
+                            {
+                                // nop
+                            }
+                            if (countryCodesPopulation != null)
+                            {
+                                if (countryCodesPopulation.HasValue)
+                                {
+                                    <ul>
+                                        @foreach (var c in countryCodesPopulation.Value)
+                                        {
+                                            <li>@c.Value (@(c.Weighting() * 100)%)</li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    @(countryCodesPopulation.NoValueMessage ?? "(no value)")
+                                }
+                            }
+                            else
+                            {
+                                <p>(Property Not Found)</p>
+                            }
+                        }
+                    </td>
                 </tr>
             </table>
         </div>

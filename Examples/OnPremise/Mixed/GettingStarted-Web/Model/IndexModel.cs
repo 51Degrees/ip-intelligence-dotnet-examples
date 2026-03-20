@@ -21,6 +21,7 @@
  * ********************************************************************* */
 
 using FiftyOne.DeviceDetection;
+using FiftyOne.IpIntelligence.Translation.Data;
 using System.Collections.Generic;
 
 namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Model
@@ -32,6 +33,12 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Mod
         
         // IP Intelligence properties
         public IIpIntelligenceData IpData { get; set; }
+        
+        // IP Countries Translation properties
+        public ICountriesTranslationData TranslationData { get; set; }
+
+        // IP Countries Codes Translation properties
+        public ICountryCodeTranslationData CodeTranslationData { get; set; }
         
         // Evidence used for detection
         public List<EvidenceModel> Evidence { get; set; }

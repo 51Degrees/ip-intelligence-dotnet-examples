@@ -23,6 +23,10 @@
 
 // Ignore Spelling: Ip
 
+using FiftyOne.IpIntelligence.Translation.Data;
+using FiftyOne.IpIntelligence.Translation.FlowElements;
+using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
+using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Engines;
 using FiftyOne.Pipeline.Engines.Data;
@@ -30,24 +34,27 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 /// <summary>
 /// @example OnPremise/GettingStarted-Console/Program.cs
-/// 
+///
 /// This example shows how to use 51Degrees On-premise IP Intelligence to determine location and network details from IP addresses.
-/// 
+/// It also demonstrates the CountriesTranslationEngine which produces translated country
+/// name lists and complete ordered country code lists.
+///
 /// You will learn:
-/// 
-/// 1. How to create a Pipeline that uses 51Degrees On-premise IP Intelligence
+///
+/// 1. How to manually build a Pipeline with the IP Intelligence engine and translation engines
 /// 2. How to pass input data (evidence) to the Pipeline
 /// 3. How to retrieve the results
-/// 
-/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-Console/Program.cs). 
-/// 
-/// This example requires an enterprise IP Intelligence data file (.ipi). 
+///
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-Console/Program.cs).
+///
+/// This example requires an enterprise IP Intelligence data file (.ipi).
 /// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
-/// 
+///
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
 /// </summary>
@@ -59,30 +66,37 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
         {
             public void Run(string dataFile, ILoggerFactory loggerFactory, TextWriter output)
             {
-                // In this example, we use the IpiPipelineBuilder and configure it
-                // in code. For more information about builders in general see the documentation at
-                // https://51degrees.com/documentation/_concepts__configuration__builders__index.html
-
-                // Note that we wrap the creation of a pipeline in a using to control its life cycle
-                using (var pipeline = new IpiPipelineBuilder()
-                    .UseOnPremise(dataFile, null, false)
-                    // We use the max performance profile for optimal detection speed in this
-                    // example. See the documentation for more detail on this and other
-                    // configuration options.
-                    // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
-                    // https://51degrees.com/documentation/_features__usage_sharing.html
+                // Create IP Intelligence engine
+                var ipEngine = new IpiOnPremiseEngineBuilder(loggerFactory)
                     .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
-                    // inhibit sharing usage for this example, usually this should be set to "true"
-                    .SetShareUsage(false)
-                    // inhibit auto-update of the data file for this test
                     .SetAutoUpdate(false)
-                    .SetDataUpdateOnStartUp(false)
                     .SetDataFileSystemWatcher(false)
+                    .Build(dataFile, false);
+
+                // Create translation engines
+                var codeTranslationEngine = new CountryCodeTranslationEngineBuilder(loggerFactory)
+                    .Build();
+                var countriesTranslationEngine = new CountriesTranslationEngineBuilder(loggerFactory)
+                    .Build();
+
+                // Build pipeline - translation engines must come after ipEngine
+                using (var pipeline = new PipelineBuilder(loggerFactory)
+                    .AddFlowElement(ipEngine)
+                    .AddFlowElement(codeTranslationEngine)
+                    .AddFlowElement(countriesTranslationEngine)
                     .Build())
                 {
-                    // carry out some sample detections
-                    // and collect IP addresses
-                    foreach (var evidence in Examples.ExampleUtils.EvidenceValues)
+                    // IPs near country borders that produce multi-country weighted results
+                    var borderIps = new List<Dictionary<string, object>>
+                    {
+                        new Dictionary<string, object> { { "query.client-ip", "194.209.0.1" } },
+                        new Dictionary<string, object> { { "query.client-ip", "91.183.0.1" } },
+                        new Dictionary<string, object> { { "query.client-ip", "77.119.0.1" } },
+                        new Dictionary<string, object> { { "query.client-ip", "5.1.0.1" } },
+                        new Dictionary<string, object> { { "query.client-ip", "1.46.0.1" } },
+                    };
+
+                    foreach (var evidence in borderIps)
                     {
                         AnalyseEvidence(evidence, pipeline, output);
                     }
@@ -93,7 +107,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
 
             private void AnalyseEvidence(
                 Dictionary<string, object> evidence,
-                IPipeline pipeline, 
+                IPipeline pipeline,
                 TextWriter output)
             {
                 // FlowData is a data structure that is used to convey information required for
@@ -146,9 +160,32 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     OutputProperty(nameof(ipData.Areas), ipData.Areas, message);
                     OutputProperty(nameof(ipData.AccuracyRadiusMin), ipData.AccuracyRadiusMin, message);
                     OutputProperty(nameof(ipData.TimeZoneOffset), ipData.TimeZoneOffset, message);
+
+                    // Output weighted country code properties
+                    OutputWeightedList(
+                        nameof(ipData.CountryCodesGeographical),
+                        ipData.CountryCodesGeographical,
+                        message);
+                    OutputWeightedList(
+                        nameof(ipData.CountryCodesPopulation),
+                        ipData.CountryCodesPopulation,
+                        message);
+
+                    // Output complete country code lists from the CountriesTranslationEngine
+                    var translationData = data.Get<ICountriesTranslationData>();
+                    OutputList(
+                        nameof(translationData.CountryCodesGeographicalAll),
+                        translationData.CountryCodesGeographicalAll,
+                        message);
+                    OutputList(
+                        nameof(translationData.CountryCodesPopulationAll),
+                        translationData.CountryCodesPopulationAll,
+                        message);
+
                     output.WriteLine(message.ToString());
                 }
             }
+
             private void OutputProperty<T>(string name,
                 IAspectPropertyValue<T> property,
                 StringBuilder message)
@@ -162,6 +199,39 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     message.AppendLine($"\t{name}: {property.Value}");
                 }
             }
+
+            private void OutputWeightedList(string name,
+                IAspectPropertyValue<IReadOnlyList<IWeightedValue<string>>> property,
+                StringBuilder message)
+            {
+                if (!property.HasValue)
+                {
+                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
+                }
+                else
+                {
+                    var items = property.Value;
+                    var formatted = string.Join(", ",
+                        items.Select(w => $"{w.Value}({w.Weighting():F2})"));
+                    message.AppendLine($"\t{name}: [{formatted}]");
+                }
+            }
+
+            private void OutputList(string name,
+                IAspectPropertyValue<IReadOnlyList<string>> property,
+                StringBuilder message)
+            {
+                if (!property.HasValue)
+                {
+                    message.AppendLine($"\t{name}: {property.NoValueMessage}");
+                }
+                else
+                {
+                    var codes = property.Value;
+                    var all = string.Join(", ", codes);
+                    message.AppendLine($"\t{name} ({codes.Count} total): {all}");
+                }
+            }
         }
 
         static void Main(string[] args)
@@ -169,16 +239,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
             // Use the supplied path for the data file or find the lite file that is included
             // in the repository.
             var dataFile = args.Length > 0 ? args[0] :
-                // In this example, by default, the 51degrees "Lite" file needs to be somewhere in the
-                // project space, or you may specify another file as a command line parameter.
-                //
-                // Note that the Lite data file is only used for illustration, and has limited accuracy
-                // and capabilities. Find out about the Enterprise data file on our pricing page:
-                // https://51degrees.com/pricing
-
                 Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
-
-            File.WriteAllText("GettigStarted_DataFileName.txt", dataFile);
 
             // Configure a logger to output to the console.
             var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
@@ -187,7 +248,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
             if (dataFile != null)
             {
                 new Example().Run(dataFile, loggerFactory, Console.Out);
-            } 
+            }
             else
             {
                 logger.LogError("Failed to find a IP Intelligence data file. Make sure the " +

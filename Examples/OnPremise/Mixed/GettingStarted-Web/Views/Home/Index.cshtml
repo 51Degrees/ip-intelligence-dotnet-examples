@@ -1,3 +1,4 @@
+@using FiftyOne.Pipeline.Core.Data
 @* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
  * Copyright 2026 51 Degrees Mobile Experts Limited, Davidson House,
@@ -200,6 +201,87 @@
                 <tr class="lightgreen">
                     <td><b>Time Zone Offset:</b></td>
                     <td>@(Model.IpData?.TimeZoneOffset?.HasValue == true ? Model.IpData.TimeZoneOffset.Value.ToString() : "Unknown")</td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Country Codes Geographical:</b></td>
+                    <td>
+                        @if (Model.IpData?.CountryCodesGeographical.HasValue == true)
+                        {
+                            <ul>
+                                @foreach (var c in Model.IpData.CountryCodesGeographical.Value)
+                                {
+                                    <li>@c.Value (@(c.Weighting() * 100)%)</li>
+                                }
+                            </ul>
+                        } else
+                        {
+                            @(Model.IpData?.CountryCodesGeographical.NoValueMessage ?? "(no value)")
+                        }
+                    </td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Country Codes Population:</b></td>
+                    <td>
+                        @if (Model.IpData?.CountryCodesPopulation.HasValue == true)
+                        {
+                            <ul>
+                                @foreach (var c in Model.IpData.CountryCodesPopulation.Value)
+                                {
+                                    <li>@c.Value (@(c.Weighting() * 100)%)</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            @(Model.IpData?.CountryCodesPopulation.NoValueMessage ?? "(no value)")
+                        }
+                    </td>
+                </tr>
+                <tr class="lightyellow">
+                    <td><b>Country Names Geographical All Translated:</b></td>
+                    <td>
+                        @if (Model.TranslationData?.CountryNamesGeographicalAllTranslated.HasValue == true
+                            && Model.TranslationData?.CountryCodesGeographicalAll.HasValue == true)
+                        {
+                            var geoNames = Model.TranslationData.CountryNamesGeographicalAllTranslated.Value;
+                            var geoCodes = Model.TranslationData.CountryCodesGeographicalAll.Value;
+                            <select id="CountryNamesGeographicalAllTranslated"
+                                    name="CountryNamesGeographicalAllTranslated"
+                                    class="form-control">
+                                @for (int i = 0; i < geoNames.Count; i++)
+                                {
+                                    <option value="@geoCodes[i]">@geoNames[i]</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            @(Model.TranslationData?.CountryNamesGeographicalAllTranslated.NoValueMessage ?? "(no value)")
+                        }
+                    </td>
+                </tr>
+                <tr class="lightgreen">
+                    <td><b>Country Names Population All Translated:</b></td>
+                    <td>
+                        @if (Model.TranslationData?.CountryNamesPopulationAllTranslated.HasValue == true
+                            && Model.TranslationData?.CountryCodesPopulationAll.HasValue == true)
+                        {
+                            var popNames = Model.TranslationData.CountryNamesPopulationAllTranslated.Value;
+                            var popCodes = Model.TranslationData.CountryCodesPopulationAll.Value;
+                            <select id="CountryNamesPopulationAllTranslated"
+                                    name="CountryNamesPopulationAllTranslated"
+                                    class="form-control">
+                                @for (int i = 0; i < popNames.Count; i++)
+                                {
+                                    <option value="@popCodes[i]">@popNames[i]</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            @(Model.TranslationData?.CountryNamesPopulationAllTranslated.NoValueMessage ?? "(no value)")
+                        }
+                    </td>
                 </tr>
             </table>
         </div>
