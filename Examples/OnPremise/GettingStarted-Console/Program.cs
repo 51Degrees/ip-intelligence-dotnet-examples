@@ -90,7 +90,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                     // IPs near country borders that produce multi-country weighted results
                     var borderIps = new List<Dictionary<string, object>>
                     {
-                        new Dictionary<string, object> { { "query.client-ip", "194.209.0.1" } },
+                        new Dictionary<string, object> { { "query.client-ip", "194.209.0.1" }, {"header.accept-language", "fr"} },
                         new Dictionary<string, object> { { "query.client-ip", "91.183.0.1" } },
                         new Dictionary<string, object> { { "query.client-ip", "77.119.0.1" } },
                         new Dictionary<string, object> { { "query.client-ip", "5.1.0.1" } },
