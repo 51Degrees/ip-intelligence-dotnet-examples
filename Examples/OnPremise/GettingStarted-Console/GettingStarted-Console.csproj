@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\FiftyOne.IpIntelligence.Examples.OnPremise\FiftyOne.IpIntelligence.Examples.OnPremise.csproj" />
-    <ProjectReference Include="..\..\FiftyOne.IpIntelligence.Examples\FiftyOne.IpIntelligence.Examples.csproj" />
   </ItemGroup>
 
 </Project>
