@@ -76,6 +76,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                 // Create translation engines
                 var codeTranslationEngine = new CountryCodeTranslationEngineBuilder(loggerFactory)
                     .Build();
+
                 var countriesTranslationEngine = new CountriesTranslationEngineBuilder(loggerFactory)
                     .Build();
 
@@ -166,6 +167,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
                         nameof(ipData.CountryCodesGeographical),
                         ipData.CountryCodesGeographical,
                         message);
+                    
                     OutputWeightedList(
                         nameof(ipData.CountryCodesPopulation),
                         ipData.CountryCodesPopulation,
@@ -173,13 +175,29 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
 
                     // Output complete country code lists from the CountriesTranslationEngine
                     var translationData = data.Get<ICountriesTranslationData>();
+                    OutputWeightedList(
+                        nameof(translationData.CountryNamesGeographicalTranslated),
+                        translationData.CountryNamesGeographicalTranslated,
+                        message);
+                    OutputWeightedList(
+                        nameof(translationData.CountryNamesPopulationTranslated),
+                        translationData.CountryNamesPopulationTranslated,
+                        message);
                     OutputList(
                         nameof(translationData.CountryCodesGeographicalAll),
                         translationData.CountryCodesGeographicalAll,
                         message);
                     OutputList(
+                        nameof(translationData.CountryNamesGeographicalAllTranslated),
+                        translationData.CountryNamesGeographicalAllTranslated,
+                        message);
+                    OutputList(
                         nameof(translationData.CountryCodesPopulationAll),
                         translationData.CountryCodesPopulationAll,
+                        message);
+                    OutputList(
+                        nameof(translationData.CountryNamesPopulationAllTranslated),
+                        translationData.CountryNamesPopulationAllTranslated,
                         message);
 
                     output.WriteLine(message.ToString());
