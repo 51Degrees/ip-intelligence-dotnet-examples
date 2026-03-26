@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="FiftyOne.DeviceDetection" Version="4.5.61" />
-    <PackageReference Include="FiftyOne.IpIntelligence.Translation" Version="4.5.48" />
+    <PackageReference Include="FiftyOne.IpIntelligence.Translation" Version="4.5.49" />
     <PackageReference Include="FiftyOne.Pipeline.Web" Version="4.5.27" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.*" />
   </ItemGroup>
