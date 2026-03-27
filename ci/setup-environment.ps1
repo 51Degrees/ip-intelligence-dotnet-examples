@@ -56,7 +56,7 @@ try {
     Write-Information "Entered $MixedApiProjPath"
     & ./inject-secrets.ps1 `
         -DDLicenseKey $Keys.DeviceDetection `
-        -IPIFileURL $Keys.DeviceDetectionUrl `
+        -IPIFileURL $Keys.IpIntelligenceUrl `
         -Clean
 } finally {
     Write-Information "Leaving $MixedApiProjPath"

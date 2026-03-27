@@ -1,6 +1,6 @@
 param (
     [string]$DeviceDetection,
-    [string]$DeviceDetectionUrl,
+    [string]$IpIntelligenceUrl,
     [switch]$SkipEvidence,
     [string[]]$Assets = @("TAC-HashV41.hash", "51Degrees-EnterpriseIpiV41.ipi")
 )
@@ -8,8 +8,7 @@ $ErrorActionPreference = "Stop"
 
 $ipIntelligenceData = "$PSScriptRoot/../ip-intelligence-data"
 
-# TODO: fix DeviceDetectionUrl containing IpIntelligenceUrl
-./steps/fetch-assets.ps1 -DeviceDetection $DeviceDetection -IpIntelligenceUrl $DeviceDetectionUrl -Assets $Assets
+./steps/fetch-assets.ps1 -DeviceDetection:$DeviceDetection -IpIntelligenceUrl:$IpIntelligenceUrl -Assets $Assets
 
 Write-Host "Assets hashes:"
 Get-FileHash -Algorithm MD5 -Path assets/*
