@@ -83,9 +83,16 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         public static WebApplication BuildWebApp(
             // ReSharper restore MemberCanBePrivate.Global
             string[] args,
-            Action<IServiceCollection>? serviceInjection = null) {
-            var ddDataFileOverride = args.Length > 0 ? args[0] : null;
-            var ipiDataFileOverride = args.Length > 1 ? args[1] : null;
+            Action<IServiceCollection>? serviceInjection = null)
+        {
+            string? ddDataFileOverride = null;
+            string? ipiDataFileOverride = null;
+            if ((args.Length > 0) && (args[0].StartsWith("--") == false))
+            {
+                ddDataFileOverride = args.Length > 0 ? args[0] : null;
+                ipiDataFileOverride = args.Length > 1 ? args[1] : null;
+            }
+
             var builder = WebApplication.CreateBuilder(args);
             builder.WebHost.UseUrls("http://0.0.0.0:5225");
             AppendConfigOverrides(builder.Configuration, ipiDataFileOverride, ddDataFileOverride);
