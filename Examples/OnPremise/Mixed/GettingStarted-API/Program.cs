@@ -55,6 +55,35 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
     {
         public static void Main(string[] args)
         {
+            var app = BuildWebApp(args);
+            app.Run();
+        }
+
+        /// <summary>
+        /// Builds Cloud service emulator.
+        /// </summary>
+        /// <param name="args">
+        /// Program args.
+        /// Passed to <see cref="WebApplication.CreateBuilder()"/>.</param>
+        /// <param name="serviceInjection">
+        /// Allows injecting additional element builders into
+        /// <see cref="WebApplicationBuilder.Services"/>. 
+        /// </param>
+        /// <returns>
+        /// Application that can be
+        /// <see cref="WebApplication.Run(string?)"/> directly
+        /// or started asynchronously via
+        /// <see cref="WebApplication.StartAsync(CancellationToken)"/>
+        /// and stopped later via
+        /// <see cref="HostingAbstractionsHostExtensions.WaitForShutdownAsync(IHost, CancellationToken)"/>
+        /// or <see cref="WebApplication.StopAsync(CancellationToken)"/>.
+        /// </returns>
+        // ReSharper disable MemberCanBePrivate.Global
+        // Made public to enable reusing in other repos.
+        public static WebApplication BuildWebApp(
+            // ReSharper restore MemberCanBePrivate.Global
+            string[] args,
+            Action<IServiceCollection>? serviceInjection = null) {
             var ddDataFileOverride = args.Length > 0 ? args[0] : null;
             var ipiDataFileOverride = args.Length > 1 ? args[1] : null;
             var builder = WebApplication.CreateBuilder(args);
@@ -74,6 +103,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             });
             builder.Services.AddSingleton<IpiOnPremiseEngineBuilder>();
             builder.Services.AddSingleton<DeviceDetectionHashEngineBuilder>();
+            serviceInjection?.Invoke(builder.Services);
 
             // Configure the services needed by IP Intelligence and create the 51Degrees Pipeline
             // instance that will be used to process requests.
@@ -106,8 +136,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             
             // Force pipeline initialization before accepting first request.
             app.Services.GetService<IPipeline>();
-            
-            app.Run();
+
+            return app;
         }
 
         private static async Task GetDataFile(
