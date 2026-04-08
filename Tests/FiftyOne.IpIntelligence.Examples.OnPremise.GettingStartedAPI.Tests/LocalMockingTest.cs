@@ -48,6 +48,10 @@ public class LocalMockingTest
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync();
-        Assert.AreNotEqual(string.Empty, json);
+        Assert.AreNotEqual(string.Empty, json,
+            "JSON response was empty.");
+        Assert.DoesNotContain("device", json, 
+            StringComparison.OrdinalIgnoreCase,
+            "JSON response contains DD property. Config override failed?.");
     }
 }
