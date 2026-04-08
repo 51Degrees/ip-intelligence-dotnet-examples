@@ -32,19 +32,27 @@ namespace FiftyOne.IpIntelligence.Examples
         public static ElementOptions GetElementConfig(
             this PipelineOptions options, 
             string elementName)
+        => TryGetElementConfig(options, elementName, out var elementOptions)
+        ? elementOptions
+        : throw new Exception($"Failed to find the expected '{elementName}' section " +
+                              "in the supplied configuration.");
+
+        public static bool TryGetElementConfig(
+            this PipelineOptions options, 
+            string elementName,
+            out ElementOptions outElementOptions)
         {
             var query = options.Elements
                 .Where(e => e.BuilderName.IndexOf(elementName,
                     StringComparison.OrdinalIgnoreCase) >= 0);
             if (query.Count() == 1)
             {
-                return query.Single();
+                outElementOptions = query.Single();
+                return true;
             }
-            else
-            {
-                throw new Exception($"Failed to find the expected '{elementName}' section " +
-                    "in the supplied configuration.");
-            }
+
+            outElementOptions = null;
+            return false;
         }
     }
 }

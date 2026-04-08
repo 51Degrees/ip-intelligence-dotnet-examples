@@ -95,7 +95,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
 
             var builder = WebApplication.CreateBuilder(args);
             builder.WebHost.UseUrls("http://0.0.0.0:5225");
-            AppendConfigOverrides(builder.Configuration, ipiDataFileOverride, ddDataFileOverride);
+            AppendConfigOverrides(
+                builder.Configuration,
+                out var rawOptions,
+                ipiDataFileOverride,
+                ddDataFileOverride);
 
             // Add services to the container.
             builder.Services.AddAuthorization();
@@ -139,7 +143,12 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             app.Map("/json", ProcessEvidence).WithName(nameof(ProcessEvidence));
             app.Map("/{resource}.json", ProcessEvidence).WithName(nameof(ProcessEvidence) + "WithResource");
             
-            app.MapGet("/download-ipi-gz", GetDataFile).WithName(nameof(GetDataFile));
+            if (rawOptions.TryGetElementConfig(
+                    nameof(IpiOnPremiseEngine),
+                    out _))
+            {
+                app.MapGet("/download-ipi-gz", GetDataFile).WithName(nameof(GetDataFile));
+            } 
             
             // Force pipeline initialization before accepting first request.
             app.Services.GetService<IPipeline>();
@@ -343,21 +352,23 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         /// In a real-world scenario, you can just put the data file in your working directory
         /// or use an absolute path in the configuration file.
         /// </summary>
-        private static void AppendConfigOverrides(ConfigurationManager configurationManager,
+        private static void AppendConfigOverrides(
+            ConfigurationManager configurationManager,
+            out PipelineOptions rawOptions,
             string? ddDataFileOverride = null,
             string? ipiDataFileOverride = null)
         {
             var overrides = new Dictionary<string, string?>();
 
             // Bind the configuration to a pipeline options instance
-            PipelineOptions options = new PipelineWebIntegrationOptions();
+            rawOptions = new PipelineWebIntegrationOptions();
             var section = configurationManager.GetRequiredSection("PipelineOptions");
             // Use the 'ErrorOnUnknownConfiguration' option to warn us if we've got any
             // misnamed configuration keys.
-            section.Bind(options, (o) => { o.ErrorOnUnknownConfiguration = true; });
+            section.Bind(rawOptions, (o) => { o.ErrorOnUnknownConfiguration = true; });
 
-            AddOverrides_IPI(options, overrides, ipiDataFileOverride);
-            AddOverrides_DD(options, overrides, ddDataFileOverride);
+            AddOverrides_IPI(rawOptions, overrides, ipiDataFileOverride);
+            AddOverrides_DD(rawOptions, overrides, ddDataFileOverride);
 
             configurationManager.AddInMemoryCollection(overrides);
         }
@@ -367,7 +378,12 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         {
             // Get the index of the IP Intelligence engine element in the config file so that
             // we can create an override key for it.
-            var ipiEngineOptions = options.GetElementConfig(nameof(IpiOnPremiseEngine));
+            if (options.TryGetElementConfig(
+                    nameof(IpiOnPremiseEngine),
+                    out var ipiEngineOptions) == false)
+            {
+                return;
+            } 
             var ipiEngineIndex = options.Elements.IndexOf(ipiEngineOptions);
             var dataFileConfigKey = $"PipelineOptions:Elements:{ipiEngineIndex}" +
                                     $":BuildParameters:DataFile";
@@ -417,7 +433,13 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         {
             // Get the index of the device detection engine element in the config file so that
             // we can create an override key for it.
-            var hashEngineOptions = options.GetElementConfig(nameof(DeviceDetectionHashEngine));
+            
+            if (options.TryGetElementConfig(
+                    nameof(DeviceDetectionHashEngine),
+                    out var hashEngineOptions) == false)
+            {
+                return;
+            }
             var hashEngineIndex = options.Elements.IndexOf(hashEngineOptions);
             var dataFileConfigKey = $"PipelineOptions:Elements:{hashEngineIndex}" +
                                     $":BuildParameters:DataFile";
