@@ -53,9 +53,14 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
     /// <seealso cref="https://cloud.51degrees.com/api-docs/index.html"/>
     public class Program
     {
+        // ReSharper disable MemberCanBePrivate.Global
+        // Made public to enable reusing in other repos.
+        public string ApiVersion { get; init; } = "4";
+        // ReSharper restore MemberCanBePrivate.Global
+        
         public static void Main(string[] args)
         {
-            var app = BuildWebApp(args);
+            var app = new Program().BuildWebApp(args);
             app.Run();
         }
 
@@ -80,7 +85,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         /// </returns>
         // ReSharper disable MemberCanBePrivate.Global
         // Made public to enable reusing in other repos.
-        public static WebApplication BuildWebApp(
+        public WebApplication BuildWebApp(
             // ReSharper restore MemberCanBePrivate.Global
             string[] args,
             Action<IServiceCollection>? serviceInjection = null)
@@ -304,13 +309,22 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             return Results.Json(keys);
         }
 
-        private static IResult ProcessEvidence(string? resource, HttpContext context, IPipeline pipeline) 
+        private IResult ProcessEvidence(string? resource, HttpContext context, IPipeline pipeline) 
         {
             var aggregated = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
+            aggregated["cloud.api-version"] = ApiVersion;
             foreach (var kvp in context.Request.Query)
             {
-                aggregated["query." + kvp.Key] = kvp.Value.LastOrDefault() ?? string.Empty;
+                var effectiveValue = kvp.Value.LastOrDefault() ?? string.Empty;
+                aggregated["query." + kvp.Key] = effectiveValue;
+                if (string.Compare(
+                        kvp.Key,
+                        "resource",
+                        StringComparison.InvariantCultureIgnoreCase) == 0)
+                {
+                    aggregated["fiftyone.resource-key"] = effectiveValue;
+                }
             }
             foreach (var kvp in context.Request.Headers)
             {
@@ -324,8 +338,20 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             {
                 foreach (var kvp in context.Request.Form)
                 {
-                    aggregated["query." + kvp.Key] = kvp.Value.ToString();
+                    var effectiveValue = kvp.Value.LastOrDefault() ?? string.Empty;
+                    aggregated["query." + kvp.Key] = effectiveValue;
+                    if (string.Compare(
+                            kvp.Key,
+                            "resource",
+                            StringComparison.InvariantCultureIgnoreCase) == 0)
+                    {
+                        aggregated["fiftyone.resource-key"] = effectiveValue;
+                    }
                 }
+            }
+            if (resource is not null)
+            {
+                aggregated["fiftyone.resource-key"] = resource;
             }
 
             using var flowData = pipeline.CreateFlowData();
