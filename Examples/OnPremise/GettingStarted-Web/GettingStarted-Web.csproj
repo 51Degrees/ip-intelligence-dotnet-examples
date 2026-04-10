@@ -21,7 +21,7 @@
 
   <ItemGroup>
 	<PackageReference Include="FiftyOne.IpIntelligence.Translation" Version="4.5.52" />
-	<PackageReference Include="FiftyOne.Pipeline.Web" Version="4.5.29" />
+	<PackageReference Include="FiftyOne.Pipeline.Web" Version="4.5.30" />
 	<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.25" />
   </ItemGroup>
 
