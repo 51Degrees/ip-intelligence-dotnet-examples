@@ -53,13 +53,73 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
     /// <seealso cref="https://cloud.51degrees.com/api-docs/index.html"/>
     public class Program
     {
+        #region Customization Properties
+        // ReSharper disable MemberCanBePrivate.Global
+        // Properties are made public to enable reusing in other repos.
+        
+        /// <summary>
+        /// Program args.
+        /// Passed to <see cref="WebApplication.CreateBuilder()"/>.
+        /// </summary>
+        public string[] Args { get; init; } = Array.Empty<string>();
+        
+        /// <summary>
+        /// Intended to injecting additional evidence
+        /// that might be present in more real environment
+        /// (e.g. API Version). 
+        /// </summary>
+        public Action<IDictionary<string, object>>? UnconditionalEvidenceInjector { get; init; }
+        
+        /// <summary>
+        /// Allows injecting additional element builders into
+        /// <see cref="WebApplicationBuilder.Services"/>
+        /// before building the <see cref="Pipeline"/>.
+        /// </summary>
+        public Action<IServiceCollection>? ServiceInjector { get; init; }
+        
+        // ReSharper restore MemberCanBePrivate.Global
+        #endregion
+        
         public static void Main(string[] args)
         {
-            var ddDataFileOverride = args.Length > 0 ? args[0] : null;
-            var ipiDataFileOverride = args.Length > 1 ? args[1] : null;
-            var builder = WebApplication.CreateBuilder(args);
+            var app = new Program
+            {
+                Args = args,
+            }.BuildWebApp();
+            app.Run();
+        }
+
+        /// <summary>
+        /// Builds Cloud service emulator.
+        /// </summary>
+        /// <returns>
+        /// Application that can be
+        /// <see cref="WebApplication.Run(string?)"/> directly
+        /// or started asynchronously via
+        /// <see cref="WebApplication.StartAsync(CancellationToken)"/>
+        /// and stopped later via
+        /// <see cref="HostingAbstractionsHostExtensions.WaitForShutdownAsync(IHost, CancellationToken)"/>
+        /// or <see cref="WebApplication.StopAsync(CancellationToken)"/>.
+        /// </returns>
+        // ReSharper disable MemberCanBePrivate.Global
+        // Made public to enable reusing in other repos.
+        public WebApplication BuildWebApp()
+        {
+            string? ddDataFileOverride = null;
+            string? ipiDataFileOverride = null;
+            if ((Args.Length > 0) && (Args[0].StartsWith("--") == false))
+            {
+                ddDataFileOverride = Args.Length > 0 ? Args[0] : null;
+                ipiDataFileOverride = Args.Length > 1 ? Args[1] : null;
+            }
+
+            var builder = WebApplication.CreateBuilder(Args);
             builder.WebHost.UseUrls("http://0.0.0.0:5225");
-            AppendConfigOverrides(builder.Configuration, ipiDataFileOverride, ddDataFileOverride);
+            AppendConfigOverrides(
+                builder.Configuration,
+                out var rawOptions,
+                ipiDataFileOverride,
+                ddDataFileOverride);
 
             // Add services to the container.
             builder.Services.AddAuthorization();
@@ -74,6 +134,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             });
             builder.Services.AddSingleton<IpiOnPremiseEngineBuilder>();
             builder.Services.AddSingleton<DeviceDetectionHashEngineBuilder>();
+            ServiceInjector?.Invoke(builder.Services);
 
             // Configure the services needed by IP Intelligence and create the 51Degrees Pipeline
             // instance that will be used to process requests.
@@ -102,12 +163,17 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             app.Map("/json", ProcessEvidence).WithName(nameof(ProcessEvidence));
             app.Map("/{resource}.json", ProcessEvidence).WithName(nameof(ProcessEvidence) + "WithResource");
             
-            app.MapGet("/download-ipi-gz", GetDataFile).WithName(nameof(GetDataFile));
+            if (rawOptions.TryGetElementConfig(
+                    nameof(IpiOnPremiseEngine),
+                    out _))
+            {
+                app.MapGet("/download-ipi-gz", GetDataFile).WithName(nameof(GetDataFile));
+            } 
             
             // Force pipeline initialization before accepting first request.
             app.Services.GetService<IPipeline>();
-            
-            app.Run();
+
+            return app;
         }
 
         private static async Task GetDataFile(
@@ -258,13 +324,22 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             return Results.Json(keys);
         }
 
-        private static IResult ProcessEvidence(string? resource, HttpContext context, IPipeline pipeline) 
+        private IResult ProcessEvidence(string? resource, HttpContext context, IPipeline pipeline) 
         {
             var aggregated = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-
+            UnconditionalEvidenceInjector?.Invoke(aggregated);
+            
             foreach (var kvp in context.Request.Query)
             {
-                aggregated["query." + kvp.Key] = kvp.Value.LastOrDefault() ?? string.Empty;
+                var effectiveValue = kvp.Value.LastOrDefault() ?? string.Empty;
+                aggregated["query." + kvp.Key] = effectiveValue;
+                if (string.Compare(
+                        kvp.Key,
+                        "resource",
+                        StringComparison.InvariantCultureIgnoreCase) == 0)
+                {
+                    aggregated["fiftyone.resource-key"] = effectiveValue;
+                }
             }
             foreach (var kvp in context.Request.Headers)
             {
@@ -278,8 +353,20 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             {
                 foreach (var kvp in context.Request.Form)
                 {
-                    aggregated["query." + kvp.Key] = kvp.Value.ToString();
+                    var effectiveValue = kvp.Value.LastOrDefault() ?? string.Empty;
+                    aggregated["query." + kvp.Key] = effectiveValue;
+                    if (string.Compare(
+                            kvp.Key,
+                            "resource",
+                            StringComparison.InvariantCultureIgnoreCase) == 0)
+                    {
+                        aggregated["fiftyone.resource-key"] = effectiveValue;
+                    }
                 }
+            }
+            if (resource is not null)
+            {
+                aggregated["fiftyone.resource-key"] = resource;
             }
 
             using var flowData = pipeline.CreateFlowData();
@@ -306,21 +393,23 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         /// In a real-world scenario, you can just put the data file in your working directory
         /// or use an absolute path in the configuration file.
         /// </summary>
-        private static void AppendConfigOverrides(ConfigurationManager configurationManager,
+        private static void AppendConfigOverrides(
+            ConfigurationManager configurationManager,
+            out PipelineOptions rawOptions,
             string? ddDataFileOverride = null,
             string? ipiDataFileOverride = null)
         {
             var overrides = new Dictionary<string, string?>();
 
             // Bind the configuration to a pipeline options instance
-            PipelineOptions options = new PipelineWebIntegrationOptions();
+            rawOptions = new PipelineWebIntegrationOptions();
             var section = configurationManager.GetRequiredSection("PipelineOptions");
             // Use the 'ErrorOnUnknownConfiguration' option to warn us if we've got any
             // misnamed configuration keys.
-            section.Bind(options, (o) => { o.ErrorOnUnknownConfiguration = true; });
+            section.Bind(rawOptions, (o) => { o.ErrorOnUnknownConfiguration = true; });
 
-            AddOverrides_IPI(options, overrides, ipiDataFileOverride);
-            AddOverrides_DD(options, overrides, ddDataFileOverride);
+            AddOverrides_IPI(rawOptions, overrides, ipiDataFileOverride);
+            AddOverrides_DD(rawOptions, overrides, ddDataFileOverride);
 
             configurationManager.AddInMemoryCollection(overrides);
         }
@@ -330,7 +419,12 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         {
             // Get the index of the IP Intelligence engine element in the config file so that
             // we can create an override key for it.
-            var ipiEngineOptions = options.GetElementConfig(nameof(IpiOnPremiseEngine));
+            if (options.TryGetElementConfig(
+                    nameof(IpiOnPremiseEngine),
+                    out var ipiEngineOptions) == false)
+            {
+                return;
+            } 
             var ipiEngineIndex = options.Elements.IndexOf(ipiEngineOptions);
             var dataFileConfigKey = $"PipelineOptions:Elements:{ipiEngineIndex}" +
                                     $":BuildParameters:DataFile";
@@ -380,7 +474,13 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         {
             // Get the index of the device detection engine element in the config file so that
             // we can create an override key for it.
-            var hashEngineOptions = options.GetElementConfig(nameof(DeviceDetectionHashEngine));
+            
+            if (options.TryGetElementConfig(
+                    nameof(DeviceDetectionHashEngine),
+                    out var hashEngineOptions) == false)
+            {
+                return;
+            }
             var hashEngineIndex = options.Elements.IndexOf(hashEngineOptions);
             var dataFileConfigKey = $"PipelineOptions:Elements:{hashEngineIndex}" +
                                     $":BuildParameters:DataFile";
