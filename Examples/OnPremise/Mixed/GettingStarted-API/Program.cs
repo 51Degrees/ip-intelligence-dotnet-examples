@@ -53,27 +53,45 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
     /// <seealso cref="https://cloud.51degrees.com/api-docs/index.html"/>
     public class Program
     {
+        #region Customization Properties
         // ReSharper disable MemberCanBePrivate.Global
-        // Made public to enable reusing in other repos.
-        public string ApiVersion { get; init; } = "4";
+        // Properties are made public to enable reusing in other repos.
+        
+        /// <summary>
+        /// Program args.
+        /// Passed to <see cref="WebApplication.CreateBuilder()"/>.
+        /// </summary>
+        public string[] Args { get; init; } = Array.Empty<string>();
+        
+        /// <summary>
+        /// Intended to injecting additional evidence
+        /// that might be present in more real environment
+        /// (e.g. API Version). 
+        /// </summary>
+        public Action<IDictionary<string, object>>? UnconditionalEvidenceInjector { get; init; }
+        
+        /// <summary>
+        /// Allows injecting additional element builders into
+        /// <see cref="WebApplicationBuilder.Services"/>
+        /// before building the <see cref="Pipeline"/>.
+        /// </summary>
+        public Action<IServiceCollection>? ServiceInjector { get; init; }
+        
         // ReSharper restore MemberCanBePrivate.Global
+        #endregion
         
         public static void Main(string[] args)
         {
-            var app = new Program().BuildWebApp(args);
+            var app = new Program
+            {
+                Args = args,
+            }.BuildWebApp();
             app.Run();
         }
 
         /// <summary>
         /// Builds Cloud service emulator.
         /// </summary>
-        /// <param name="args">
-        /// Program args.
-        /// Passed to <see cref="WebApplication.CreateBuilder()"/>.</param>
-        /// <param name="serviceInjection">
-        /// Allows injecting additional element builders into
-        /// <see cref="WebApplicationBuilder.Services"/>. 
-        /// </param>
         /// <returns>
         /// Application that can be
         /// <see cref="WebApplication.Run(string?)"/> directly
@@ -85,20 +103,17 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         /// </returns>
         // ReSharper disable MemberCanBePrivate.Global
         // Made public to enable reusing in other repos.
-        public WebApplication BuildWebApp(
-            // ReSharper restore MemberCanBePrivate.Global
-            string[] args,
-            Action<IServiceCollection>? serviceInjection = null)
+        public WebApplication BuildWebApp()
         {
             string? ddDataFileOverride = null;
             string? ipiDataFileOverride = null;
-            if ((args.Length > 0) && (args[0].StartsWith("--") == false))
+            if ((Args.Length > 0) && (Args[0].StartsWith("--") == false))
             {
-                ddDataFileOverride = args.Length > 0 ? args[0] : null;
-                ipiDataFileOverride = args.Length > 1 ? args[1] : null;
+                ddDataFileOverride = Args.Length > 0 ? Args[0] : null;
+                ipiDataFileOverride = Args.Length > 1 ? Args[1] : null;
             }
 
-            var builder = WebApplication.CreateBuilder(args);
+            var builder = WebApplication.CreateBuilder(Args);
             builder.WebHost.UseUrls("http://0.0.0.0:5225");
             AppendConfigOverrides(
                 builder.Configuration,
@@ -119,7 +134,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             });
             builder.Services.AddSingleton<IpiOnPremiseEngineBuilder>();
             builder.Services.AddSingleton<DeviceDetectionHashEngineBuilder>();
-            serviceInjection?.Invoke(builder.Services);
+            ServiceInjector?.Invoke(builder.Services);
 
             // Configure the services needed by IP Intelligence and create the 51Degrees Pipeline
             // instance that will be used to process requests.
@@ -312,8 +327,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         private IResult ProcessEvidence(string? resource, HttpContext context, IPipeline pipeline) 
         {
             var aggregated = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-
-            aggregated["cloud.api-version"] = ApiVersion;
+            UnconditionalEvidenceInjector?.Invoke(aggregated);
+            
             foreach (var kvp in context.Request.Query)
             {
                 var effectiveValue = kvp.Value.LastOrDefault() ?? string.Empty;

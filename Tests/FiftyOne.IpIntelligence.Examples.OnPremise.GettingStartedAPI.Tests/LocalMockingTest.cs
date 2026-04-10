@@ -17,7 +17,7 @@ public class LocalMockingTest
     [TestInitialize]
     public Task TestInitialize()
     {
-        _cloudApp = new Program().BuildWebApp([]);
+        _cloudApp = new Program().BuildWebApp();
         return _cloudApp.StartAsync();
     }
 
