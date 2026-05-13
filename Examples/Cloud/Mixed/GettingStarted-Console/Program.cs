@@ -48,9 +48,9 @@ using FiftyOne.DeviceDetection.Cloud.FlowElements;
 /// 2. How to pass input data (User-Agent and IP address) to the Pipeline
 /// 3. How to retrieve device and IP intelligence results from a single pipeline
 /// 
-/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/Mixed/GettingStarted-Console/Program.cs). 
-/// 
-/// To run this example, you will eventually need to create a Resource Key, but for now you should use the GettingStarted-API example - just run it and point this example to its custom endpoint to simulate a custom hosted Cloud service. Resource Key is used as shorthand to store the particular set of properties you are interested in as well as any associated License Keys that entitle you to increased request limits and/or paid-for properties, but it is not yet available for IP Intelligence.
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/Mixed/GettingStarted-Console/Program.cs).
+///
+/// To run this example, create a Resource Key for free at https://configure.51degrees.com and supply it via the appsettings.json file or the RESOURCE_KEY environment variable. By default the pipeline talks to cloud.51degrees.com; set 51D_CLOUD_ENDPOINT to point at a self-hosted Cloud service instead.
 ///
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)

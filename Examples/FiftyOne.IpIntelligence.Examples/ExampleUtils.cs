@@ -36,7 +36,7 @@ namespace FiftyOne.IpIntelligence.Examples
         /// The default environment variable key used to get the resource key 
         /// to use when running cloud examples.
         /// </summary>
-        public const string CLOUD_RESOURCE_KEY_ENV_VAR = "SUPER_RESOURCE_KEY";
+        public const string CLOUD_RESOURCE_KEY_ENV_VAR = "RESOURCE_KEY";
 
         /// <summary>
         /// The default environment variable key used to get the end point URL
