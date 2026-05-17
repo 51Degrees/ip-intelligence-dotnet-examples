@@ -79,39 +79,37 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 CloudExamplePath,
                 new string[]
                 {
-                    "CHINANET-GD",
+                    "VMCBBUK",
                 },
                 new string[]
                 {
-                    "China",
-                    "CN",
-                    "cn",
+                    "United Kingdom",
+                    "GB",
                 },
                 new string[]
                 {
-                    "1.3.0.0",
-                    "1.3.255.255",
+                    "82.12.34.0",
+                    "82.12.34.255",
                 },
-                "starting with 1.3.x",
+                "82.12.34.x",
             ],
             [
                 MixedCloudExamplePath,
                 new string[]
                 {
-                    "CHINANET-GD",
+                    "VMCBBUK",
                 },
                 new string[]
                 {
-                    "China",
-                    "CN",
-                    "cn",
+                    "United Kingdom",
+                    "GB",
                 },
                 new string[]
                 {
-                    "1.3.0.0",
-                    "1.3.255.255",
+                    "82.12.34.0",
+                    "82.12.34.255",
                 },
-                "starting with 1.3.x",
+                "82.12.34.x",
             ],
         ];
 

@@ -147,7 +147,11 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedConsole
                 IAspectPropertyValue<T> property,
                 StringBuilder message)
             {
-                if (!property.HasValue)
+                if (property == null)
+                {
+                    message.AppendLine($"\t{name}: (not available)");
+                }
+                else if (!property.HasValue)
                 {
                     message.AppendLine($"\t{name}: {property.NoValueMessage}");
                 }
