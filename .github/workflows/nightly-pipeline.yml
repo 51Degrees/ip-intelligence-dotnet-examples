@@ -49,7 +49,7 @@ jobs:
       token: ${{ secrets.ACCESS_TOKEN }}
       DeviceDetection: ${{ secrets.DEVICE_DETECTION_KEY }}
       IpIntelligenceUrl: ${{ secrets.IPI_DATA_FILE_URL }}
-      TestResourceKey: ${{ secrets.SUPER_RESOURCE_KEY}}
+      TestResourceKey: ${{ secrets.RESOURCE_KEY_CLOUD_V5_BESPOKE}}
       AcceptCHBrowserKey: ${{ secrets.ACCEPTCH_BROWSER_KEY}}
       AcceptCHHardwareKey: ${{ secrets.ACCEPTCH_HARDWARE_KEY}}
       AcceptCHPlatformKey: ${{ secrets.ACCEPTCH_PLATFORM_KEY}}
