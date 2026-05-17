@@ -38,8 +38,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
     /// <summary>
     /// Runs the Cloud examples against the real 51Degrees Cloud service
     /// (cloud.51degrees.com by default). Requires the RESOURCE_KEY
-    /// environment variable to be set; otherwise the tests are skipped as
-    /// inconclusive.
+    /// environment variable to be set.
     /// </summary>
     /// <remarks>
     /// Note that these tests do not generally ensure the correctness
@@ -57,14 +56,11 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             _resourceKey = Environment.GetEnvironmentVariable(
                 ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR);
 
-            if (string.IsNullOrWhiteSpace(_resourceKey))
-            {
-                Assert.Inconclusive(
-                    $"Skipping cloud test: environment variable " +
-                    $"'{ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR}' is not set. " +
-                    $"Obtain a resource key at https://configure.51degrees.com " +
-                    $"and export it to run this test.");
-            }
+            Assert.IsFalse(
+                string.IsNullOrWhiteSpace(_resourceKey),
+                $"Environment variable '{ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR}' " +
+                $"is not set. Obtain a resource key at " +
+                $"https://configure.51degrees.com and export it to run this test.");
         }
 
         private static readonly string RepoRootPath =
