@@ -87,21 +87,21 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
 
             private static readonly List<Dictionary<string, object>> CombinedEvidence =
             [
+                // Desktop from UK
+                new()
+                {
+                    {
+                        "header.user-agent",
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+                    },
+                    { "query.client-ip", "82.12.34.23" }
+                },
                 // Mobile device from China
                 new()
                 {
                     {
                         "header.user-agent",
-                        "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Mobile/15E148 Safari/604.1" 
-                    },
-                    { "query.client-ip", "62.61.32.31" }
-                },
-                // Mobile device from China 2
-                new()
-                {
-                    {
-                        "header.user-agent",
-                        "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Mobile/15E148 Safari/604.1" 
+                        "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Mobile/15E148 Safari/604.1"
                     },
                     { "query.client-ip", "1.3.32.31" }
                 },
