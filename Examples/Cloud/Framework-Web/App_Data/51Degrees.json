@@ -6,11 +6,10 @@
         // Obtain a resource key with the properties required to run this 
         // example for free: https://configure.51degrees.com/1QWJwHxl
         "BuildParameters": {
-          "ResourceKey": "test-key",
-          "CloudRequestOrigin": "51Degrees.example.com",
+          "ResourceKey": "!!ENTER_YOUR_RESOURCE_KEY_HERE!!",
+          "CloudRequestOrigin": "51Degrees.example.com"
           //// Explicitly include just the properties used by the example.
-          //"Properties": "RegisteredName",
-          "EndPoint": "http://localhost:5225/"
+          //"Properties": "RegisteredName"
         }
       },
       {

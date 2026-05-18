@@ -36,7 +36,7 @@ namespace FiftyOne.IpIntelligence.Examples
         /// The default environment variable key used to get the resource key 
         /// to use when running cloud examples.
         /// </summary>
-        public const string CLOUD_RESOURCE_KEY_ENV_VAR = "SUPER_RESOURCE_KEY";
+        public const string CLOUD_RESOURCE_KEY_ENV_VAR = "RESOURCE_KEY";
 
         /// <summary>
         /// The default environment variable key used to get the end point URL
@@ -285,7 +285,7 @@ namespace FiftyOne.IpIntelligence.Examples
             },
             new Dictionary<string, object>()
             {
-                { "query.client-ip", "1.3.32.31" }
+                { "query.client-ip", "82.12.34.23" }
             },
             new Dictionary<string, object>()
             {
