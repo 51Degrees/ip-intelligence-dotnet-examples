@@ -37,8 +37,8 @@ using System.Linq;
 /// 3. How to enumerate through all the properties returned by the service
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/GetAllProperties-Console/Program.cs).
-/// 
-/// To run this example, you will eventually need to create a Resource Key, but for now you should use the GettingStarted-API example - just run it and point this example to its custom endpoint to simulate a custom hosted Cloud service. Resource Key is used as shorthand to store the particular set of properties you are interested in as well as any associated License Keys that entitle you to increased request limits and/or paid-for properties, but it is not yet available for IP Intelligence.
+///
+/// To run this example, create a Resource Key for free at https://configure.51degrees.com and supply it as the first command-line argument or via the RESOURCE_KEY environment variable. By default the pipeline talks to cloud.51degrees.com; set 51D_CLOUD_ENDPOINT to point at a self-hosted Cloud service instead.
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
 {
@@ -52,13 +52,12 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
             {
                 var builder = new IpiPipelineBuilder()
                     // Tell it that we want to use cloud and pass our resource key.
-                    .UseCloud(resourceKey)
-                    .SetEndPoint(cloudEndPoint)
-                    ;
+                    .UseCloud(resourceKey);
 
                 // If a cloud endpoint has been provided then set the
-                // cloud pipeline endpoint. 
-                if (string.IsNullOrWhiteSpace(cloudEndPoint) == false) 
+                // cloud pipeline endpoint. Otherwise the default
+                // (cloud.51degrees.com) is used.
+                if (string.IsNullOrWhiteSpace(cloudEndPoint) == false)
                 {
                     builder.SetEndPoint(cloudEndPoint);
                 }
@@ -158,25 +157,36 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
 
         static void Main(string[] args)
         {
-            // Obtain a resource key for free at https://configure.51degrees.com
-            string resourceKey = "testResourceKey";
+            // Use the command line args to get the resource key if present.
+            // Otherwise, get it from the environment variable.
+            string resourceKey = args.Length > 0 ? args[0] :
+                Environment.GetEnvironmentVariable(
+                    ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR);
 
-            if (resourceKey.StartsWith("!!"))
+            // Optional custom cloud endpoint via env var. If unset, the SDK
+            // defaults to cloud.51degrees.com.
+            string cloudEndPoint = Environment.GetEnvironmentVariable(
+                ExampleUtils.CLOUD_END_POINT_ENV_VAR) ?? "";
+
+            if (string.IsNullOrWhiteSpace(resourceKey))
             {
-                Console.WriteLine("You need to create a resource key at " +
-                    "https://configure.51degrees.com and paste it into the code, " +
-                    "replacing !!YOUR_RESOURCE_KEY!!.");
-                Console.WriteLine("Make sure to include all the properties " +
-                    "that you want to see displayed by this example.");
-
+                Console.WriteLine($"No resource key specified on the command line or in the " +
+                    $"environment variable '{ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR}'. " +
+                    $"Obtain a resource key at https://configure.51degrees.com and supply it " +
+                    $"as the first argument or via that environment variable.");
             }
             else
             {
-                new Example().Run(resourceKey, "http://localhost:5225");
+                new Example().Run(resourceKey, cloudEndPoint);
             }
 #if (DEBUG)
-            Console.WriteLine("Done. Press any key to exit.");
-            Console.ReadKey();
+            // Only prompt when running interactively. When stdin is redirected
+            // (e.g. tests, CI, piping), Console.ReadKey throws.
+            if (Console.IsInputRedirected == false)
+            {
+                Console.WriteLine("Done. Press any key to exit.");
+                Console.ReadKey();
+            }
 #endif
         }
     }

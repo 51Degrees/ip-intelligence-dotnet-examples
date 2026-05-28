@@ -30,16 +30,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 
 [assembly: Parallelize]
 namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
 {
     /// <summary>
-    /// This test class ensures that the Cloud examples execute successfully
-    /// when running against the local API provided by GettingStarted-API.
+    /// Runs the Cloud examples against the real 51Degrees Cloud service
+    /// (cloud.51degrees.com by default). Requires the RESOURCE_KEY
+    /// environment variable to be set.
     /// </summary>
     /// <remarks>
     /// Note that these tests do not generally ensure the correctness
@@ -63,14 +62,8 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
         [ClassInitialize]
         public static async Task ClassInit(TestContext context)
         {
-            // Set IP Intelligence Data file
-            _dataFile = Environment.GetEnvironmentVariable(
-                Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
-            if (string.IsNullOrWhiteSpace(_dataFile))
-            {
-                _dataFile = ExampleUtils.FindFile(
-                    Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
-            }
+            _resourceKey = Environment.GetEnvironmentVariable(
+                ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR);
 
             // Find Device Detection hash data file (required by the Mixed API)
             _ddDataFile = Environment.GetEnvironmentVariable(Constants.DEVICE_DETECTION_DATA_FILE_ENV_VAR);
@@ -117,11 +110,6 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             Path.GetFullPath(
                 Path.GetDirectoryName(
                     ExampleUtils.FindFile("FiftyOne.IpIntelligence.Examples.sln"))!);
-
-        private static readonly string ApiProjectPath =
-            Path.Combine(RepoRootPath, "Examples", "OnPremise", "Mixed", "GettingStarted-API");
-        private static readonly string ApiExePath =
-            Path.Combine(ApiProjectPath, "bin", "Debug", "net8.0", "GettingStarted-API");
 
         private static readonly string CloudExamplePath =
             Path.Combine(RepoRootPath, "Examples", "Cloud", "GettingStarted-Console");
@@ -253,55 +241,50 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 CloudExamplePath,
                 new string[]
                 {
-                    "CHINANET-GD",
+                    "VMCBBUK",
                 },
                 new string[]
                 {
-                    "China",
-                    "CN",
-                    "cn",
+                    "United Kingdom",
+                    "GB",
                 },
                 new string[]
                 {
-                    "1.3.0.0",
-                    "1.3.255.255",
+                    "82.12.34.0",
+                    "82.12.34.255",
                 },
-                "starting with 1.3.x",
+                "82.12.34.x",
             ],
             [
                 MixedCloudExamplePath,
                 new string[]
                 {
-                    "CHINANET-GD",
+                    "VMCBBUK",
                 },
                 new string[]
                 {
-                    "China",
-                    "CN",
-                    "cn",
+                    "United Kingdom",
+                    "GB",
                 },
                 new string[]
                 {
-                    "1.3.0.0",
-                    "1.3.255.255",
+                    "82.12.34.0",
+                    "82.12.34.255",
                 },
-                "starting with 1.3.x",
+                "82.12.34.x",
             ],
         ];
 
         /// <summary>
-        /// Test the Cloud GettingStarted Example using the local API
+        /// Runs a Cloud example as a separate process (matching how a user
+        /// would run it) and verifies the output contains the expected
+        /// IP intelligence values for one of the IPs in
+        /// <see cref="ExampleUtils.EvidenceValues"/>.
         /// </summary>
-        /// <remarks>
-        /// This test verifies that the Cloud example runs successfully when configured
-        /// to use a local API endpoint (GettingStarted-API) for testing purposes.
-        /// This demonstrates how Cloud examples can be tested against a local
-        /// API server instead of relying on external cloud services.
-        /// </remarks>
         [TestMethod]
         [TestCategory("Integration")]
         [DynamicData(nameof(CloudExamplesToTest))]
-        public void Example_Cloud_GettingStarted_WithLocalAPI(
+        public void Example_Cloud_GettingStarted(
             string examplePath,
             string[] networkNames,
             string[] countryNames,
@@ -317,8 +300,17 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 WorkingDirectory = examplePath,
-                CreateNoWindow = true
+                CreateNoWindow = true,
             };
+            // Pass the resource key (and optional custom endpoint) through to
+            // the example process; it picks them up via the same env vars.
+            startInfo.Environment[ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR] = _resourceKey;
+            var endPoint = Environment.GetEnvironmentVariable(
+                ExampleUtils.CLOUD_END_POINT_ENV_VAR);
+            if (string.IsNullOrWhiteSpace(endPoint) == false)
+            {
+                startInfo.Environment[ExampleUtils.CLOUD_END_POINT_ENV_VAR] = endPoint;
+            }
 
             using (var process = new Process { StartInfo = startInfo })
             {
@@ -342,7 +334,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 process.BeginErrorReadLine();
 
                 // Wait for the process to complete with a reasonable timeout
-                Assert.IsTrue(process.WaitForExit(30000), "Cloud example should complete within 30 seconds");
+                Assert.IsTrue(process.WaitForExit(60000), "Cloud example should complete within 60 seconds");
 
                 var result = output.ToString();
                 var errorOutput = error.ToString();

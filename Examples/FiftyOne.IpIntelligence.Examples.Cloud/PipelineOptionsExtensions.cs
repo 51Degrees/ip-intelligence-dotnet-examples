@@ -60,7 +60,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud
         /// <param name="resourceKey"></param>
         public static void SetResourceKey(this PipelineOptions options, string resourceKey)
         {
-            var cloudConfig = options.GetElementConfig(nameof(IpiCloudEngine));
+            var cloudConfig = options.GetElementConfig(nameof(CloudRequestEngine));
             cloudConfig.BuildParameters[RESOURCE_KEY_SETTING_NAME] = resourceKey;
         }
 
@@ -72,7 +72,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud
         /// <param name="cloudEndPoint"></param>
         public static void SetCloudEndPoint(this PipelineOptions options, string cloudEndPoint)
         {
-            var cloudConfig = options.GetElementConfig(nameof(IpiCloudEngine));
+            var cloudConfig = options.GetElementConfig(nameof(CloudRequestEngine));
             cloudConfig.BuildParameters[CLOUD_END_POINT_SETTING_NAME] = cloudEndPoint;
         }
     }

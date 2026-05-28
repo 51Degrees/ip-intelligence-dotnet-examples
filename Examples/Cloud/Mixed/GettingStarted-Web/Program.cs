@@ -20,8 +20,15 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using FiftyOne.IpIntelligence.Examples;
+using FiftyOne.IpIntelligence.Examples.Cloud;
+using FiftyOne.Pipeline.CloudRequestEngine.FlowElements;
+using FiftyOne.Pipeline.Core.Configuration;
+using FiftyOne.Pipeline.Web.Shared;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -38,7 +45,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.Cloud.GettingStartedWeb
 
         /// <summary>
         /// Used by unit tests to run the example in an almost identical manner
-        /// to a developer using the example. Returns the task that the web 
+        /// to a developer using the example. Returns the task that the web
         /// server is running in so that the test can trigger the cancellation
         /// token and then wait for the server to shutdown before finishing.
         /// </summary>
@@ -49,19 +56,82 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.Cloud.GettingStartedWeb
             string[] args,
             CancellationToken stopToken = default)
         {
-            return CreateHostBuilder(args).Build().RunAsync(
+            var config = CreateConfiguration();
+            var configOverrides = CreateConfigOverrides(config);
+            return CreateHostBuilder(config, configOverrides, args).Build().RunAsync(
                 stopToken);
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
+        public static IHostBuilder CreateHostBuilder(
+            IConfiguration baseConfig,
+            IDictionary<string, string> overrides,
+            string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder
                         .ConfigureAppConfiguration(config =>
-                            config.AddJsonFile("appsettings.json"))
+                        {
+                            config
+                                .AddConfiguration(baseConfig)
+                                .AddInMemoryCollection(overrides);
+                        })
                         .UseStartup<Startup>()
                         .UseUrls(Constants.AllUrls);
                 });
+
+        private static IConfiguration CreateConfiguration()
+            => new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .Build();
+
+        /// <summary>
+        /// If the resource key in the config file is the placeholder
+        /// (begins with '!!'), substitute the value of the
+        /// <see cref="ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR"/> environment
+        /// variable instead. Mirrors the standalone GettingStarted-Web example.
+        /// </summary>
+        private static Dictionary<string, string> CreateConfigOverrides(IConfiguration config)
+        {
+            var result = new Dictionary<string, string>();
+
+            PipelineOptions options = new PipelineWebIntegrationOptions();
+            var section = config.GetRequiredSection("PipelineOptions");
+            section.Bind(options, (o) => { o.ErrorOnUnknownConfiguration = true; });
+
+            var resourceKeyFromConfig = options.GetResourceKey();
+            var configHasKey = string.IsNullOrWhiteSpace(resourceKeyFromConfig) == false &&
+                    resourceKeyFromConfig.StartsWith("!!") == false;
+
+            if (configHasKey == false)
+            {
+                var cloudEngineOptions = options.GetElementConfig(nameof(CloudRequestEngine));
+                var cloudEngineIndex = options.Elements.IndexOf(cloudEngineOptions);
+                var resourceKeyConfigKey = $"PipelineOptions:Elements:{cloudEngineIndex}" +
+                    $":BuildParameters:ResourceKey";
+
+                string resourceKey = Environment.GetEnvironmentVariable(
+                        ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR);
+
+                if (string.IsNullOrEmpty(resourceKey) == false)
+                {
+                    result.Add(resourceKeyConfigKey, resourceKey);
+                }
+                else
+                {
+                    throw new Exception($"No resource key specified in the configuration file " +
+                        $"'appsettings.json' or the environment variable " +
+                        $"'{ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR}'. The 51Degrees Cloud " +
+                        $"service is accessed using a 'ResourceKey'. For more information " +
+                        $"see https://51degrees.com/documentation/_info__resource_keys.html. " +
+                        $"A resource key with the properties required by this example can be " +
+                        $"created for free at https://configure.51degrees.com/1QWJwHxl. " +
+                        $"Once complete, populate the config file or environment variable " +
+                        $"mentioned at the start of this message with the key.");
+                }
+            }
+
+            return result;
+        }
     }
 }
