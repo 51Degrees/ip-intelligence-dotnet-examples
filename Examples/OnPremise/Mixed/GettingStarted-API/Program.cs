@@ -37,11 +37,11 @@ using System.Security.Cryptography;
 
 /// <summary>
 /// @example OnPremise/GettingStarted-API/Program.cs
-/// 
-/// 
-/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-API/Program.cs). 
-/// 
-/// 
+///
+///
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/GettingStarted-API/Program.cs).
+///
+///
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
 /// </summary>
@@ -56,30 +56,30 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         #region Customization Properties
         // ReSharper disable MemberCanBePrivate.Global
         // Properties are made public to enable reusing in other repos.
-        
+
         /// <summary>
         /// Program args.
         /// Passed to <see cref="WebApplication.CreateBuilder()"/>.
         /// </summary>
         public string[] Args { get; init; } = Array.Empty<string>();
-        
+
         /// <summary>
         /// Intended to injecting additional evidence
         /// that might be present in more real environment
-        /// (e.g. API Version). 
+        /// (e.g. API Version).
         /// </summary>
         public Action<IDictionary<string, object>>? UnconditionalEvidenceInjector { get; init; }
-        
+
         /// <summary>
         /// Allows injecting additional element builders into
         /// <see cref="WebApplicationBuilder.Services"/>
         /// before building the <see cref="Pipeline"/>.
         /// </summary>
         public Action<IServiceCollection>? ServiceInjector { get; init; }
-        
+
         // ReSharper restore MemberCanBePrivate.Global
         #endregion
-        
+
         public static void Main(string[] args)
         {
             var app = new Program
@@ -112,14 +112,17 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
                 ddDataFileOverride = Args.Length > 0 ? Args[0] : null;
                 ipiDataFileOverride = Args.Length > 1 ? Args[1] : null;
             }
+            // Fall back to environment variables so test infrastructure can pass paths
+            ddDataFileOverride ??= Environment.GetEnvironmentVariable(Constants.DEVICE_DETECTION_DATA_FILE_ENV_VAR);
+            ipiDataFileOverride ??= Environment.GetEnvironmentVariable(Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
 
             var builder = WebApplication.CreateBuilder(Args);
             builder.WebHost.UseUrls("http://0.0.0.0:5225");
             AppendConfigOverrides(
                 builder.Configuration,
                 out var rawOptions,
-                ipiDataFileOverride,
-                ddDataFileOverride);
+                ddDataFileOverride,
+                ipiDataFileOverride);
 
             // Add services to the container.
             builder.Services.AddAuthorization();
@@ -162,14 +165,14 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
 
             app.Map("/json", ProcessEvidence).WithName(nameof(ProcessEvidence));
             app.Map("/{resource}.json", ProcessEvidence).WithName(nameof(ProcessEvidence) + "WithResource");
-            
+
             if (rawOptions.TryGetElementConfig(
                     nameof(IpiOnPremiseEngine),
                     out _))
             {
                 app.MapGet("/download-ipi-gz", GetDataFile).WithName(nameof(GetDataFile));
-            } 
-            
+            }
+
             // Force pipeline initialization before accepting first request.
             app.Services.GetService<IPipeline>();
 
@@ -324,11 +327,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             return Results.Json(keys);
         }
 
-        private IResult ProcessEvidence(string? resource, HttpContext context, IPipeline pipeline) 
+        private IResult ProcessEvidence(string? resource, HttpContext context, IPipeline pipeline)
         {
             var aggregated = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
             UnconditionalEvidenceInjector?.Invoke(aggregated);
-            
+
             foreach (var kvp in context.Request.Query)
             {
                 var effectiveValue = kvp.Value.LastOrDefault() ?? string.Empty;
@@ -383,12 +386,12 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         /// <summary>
         /// Typically, something like this will not be necessary.
         /// The IP Intelligence API will accept an absolute or relative path for the data file.
-        /// However, if a relative path is specified, it will only look in the current working 
+        /// However, if a relative path is specified, it will only look in the current working
         /// directory.
-        /// In our examples, we have many different projects and we don't want to have a copy of 
+        /// In our examples, we have many different projects and we don't want to have a copy of
         /// the data file for every single one.
-        /// In order to handle this, we dynamically search the project directories for the data 
-        /// file location and then override the configured setting with the absolute path if 
+        /// In order to handle this, we dynamically search the project directories for the data
+        /// file location and then override the configured setting with the absolute path if
         /// necessary.
         /// In a real-world scenario, you can just put the data file in your working directory
         /// or use an absolute path in the configuration file.
@@ -424,7 +427,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
                     out var ipiEngineOptions) == false)
             {
                 return;
-            } 
+            }
             var ipiEngineIndex = options.Elements.IndexOf(ipiEngineOptions);
             var dataFileConfigKey = $"PipelineOptions:Elements:{ipiEngineIndex}" +
                                     $":BuildParameters:DataFile";
@@ -474,7 +477,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
         {
             // Get the index of the device detection engine element in the config file so that
             // we can create an override key for it.
-            
+
             if (options.TryGetElementConfig(
                     nameof(DeviceDetectionHashEngine),
                     out var hashEngineOptions) == false)

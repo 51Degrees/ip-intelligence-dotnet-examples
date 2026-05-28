@@ -27,6 +27,7 @@ using NetTopologySuite.IO;
 using ProjNet.CoordinateSystems.Transformations;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Examples.OnPremise.Areas;
 
@@ -216,20 +217,42 @@ public static class Calculations
         MathTransform transform)
     {
         var factory = geometry.Factory;
-        var coordinates = new Coordinate[geometry.Coordinates.Length];
 
-        for (int i = 0; i < coordinates.Length; i++)
+        // geometry.Coordinates flattens exterior + all hole rings into one array,
+        // which breaks CreatePolygon for polygons with holes. Handle rings separately.
+        if (geometry is Polygon polygon)
         {
-            var transformed =
-                transform.Transform([
-                    geometry.Coordinates[i].X, 
-                    geometry.Coordinates[i].Y]);
-            coordinates[i] = new Coordinate(
-                transformed[0],
-                transformed[1]);
+            var shell = factory.CreateLinearRing(
+                TransformCoordinates(polygon.ExteriorRing.Coordinates, transform));
+            var holes = polygon.Holes
+                .Select(h => factory.CreateLinearRing(
+                    TransformCoordinates(h.Coordinates, transform)))
+                .ToArray();
+            return factory.CreatePolygon(shell, holes);
         }
 
-        return factory.CreatePolygon(coordinates);
+        return factory.CreatePolygon(
+            TransformCoordinates(geometry.Coordinates, transform));
+    }
+
+    private static Coordinate[] TransformCoordinates(
+        Coordinate[] source,
+        MathTransform transform)
+    {
+        var result = new Coordinate[source.Length];
+        for (int i = 0; i < source.Length; i++)
+        {
+            var t = transform.Transform([source[i].X, source[i].Y]);
+            result[i] = new Coordinate(t[0], t[1]);
+        }
+        // Ensure the ring is closed after transformation (guarding against
+        // floating-point drift on identical input coordinates).
+        if (result.Length > 0 &&
+            (result[0].X != result[^1].X || result[0].Y != result[^1].Y))
+        {
+            result[^1] = new Coordinate(result[0].X, result[0].Y);
+        }
+        return result;
     }
 
     /// <summary>
