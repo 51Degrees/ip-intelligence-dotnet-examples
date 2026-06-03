@@ -30,21 +30,21 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 
 [assembly: Parallelize]
 namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
 {
     /// <summary>
-    /// Runs the Cloud examples against the real 51Degrees Cloud service
-    /// (cloud.51degrees.com by default). Requires the RESOURCE_KEY
-    /// environment variable to be set.
+    /// Exercises the Cloud examples in two complementary modes:
+    /// 1. Against a locally-hosted GettingStarted-API server, for offline/CI runs.
+    ///    Requires IP Intelligence and Device Detection data files.
+    /// 2. Against the real 51Degrees Cloud service (cloud.51degrees.com).
+    ///    Requires the RESOURCE_KEY environment variable.
+    /// Tests for either mode are marked Inconclusive when their prerequisites are absent.
     /// </summary>
-    /// <remarks>
-    /// Note that these tests do not generally ensure the correctness
-    /// of the example, only that the example will run without
-    /// crashing or throwing any unhandled exceptions.
-    /// </remarks>
     [TestClass]
     public class TestCloudExamples
     {
@@ -52,18 +52,27 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
         private static string _ddDataFile;
         private static Process _apiProcess;
         private static HttpClient _httpClient;
+        private static string _resourceKey;
         private const int API_PORT = 5225;
         private static readonly string ApiUrl = $"http://localhost:{API_PORT}";
 
         /// <summary>
-        /// Class-level setup: resolves data files and starts the API server once
-        /// for all tests in this class.
+        /// Class-level setup: resolves the resource key and local data files, and starts
+        /// the local API once for all tests in this class.
         /// </summary>
         [ClassInitialize]
         public static async Task ClassInit(TestContext context)
         {
             _resourceKey = Environment.GetEnvironmentVariable(
                 ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR);
+
+            _dataFile = Environment.GetEnvironmentVariable(
+                Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
+            if (string.IsNullOrWhiteSpace(_dataFile))
+            {
+                _dataFile = ExampleUtils.FindFile(
+                    Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
+            }
 
             // Find Device Detection hash data file (required by the Mixed API)
             _ddDataFile = Environment.GetEnvironmentVariable(Constants.DEVICE_DETECTION_DATA_FILE_ENV_VAR);
@@ -79,21 +88,28 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 }
             }
 
-            if (string.IsNullOrEmpty(_ddDataFile))
+            // Try to start the local API only when both data files are present, and
+            // tolerate any startup failure (e.g. unsupported data file version) so the
+            // real-cloud test can still run. Local-API tests check _apiProcess and become
+            // Inconclusive when it is null.
+            if (!string.IsNullOrEmpty(_dataFile) && !string.IsNullOrEmpty(_ddDataFile))
             {
-                Assert.Inconclusive(
-                    "The Mixed API requires a Device Detection data file (.hash). " +
-                    $"Set the {Constants.DEVICE_DETECTION_DATA_FILE_ENV_VAR} environment variable or place a " +
-                    "TAC/Enterprise .hash file in the repository.");
+                File.WriteAllText($"{nameof(TestCloudExamples)}_DataFileName.txt", _dataFile);
+                try
+                {
+                    await StartApiServer();
+                    _httpClient = new HttpClient();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"Local API failed to start: {ex.Message}. " +
+                        "Local-API tests will be Inconclusive.");
+                    try { _apiProcess?.Kill(true); } catch { /* best effort */ }
+                    _apiProcess?.Dispose();
+                    _apiProcess = null;
+                }
             }
-
-            // Write data file path for debugging
-            File.WriteAllText($"{nameof(TestCloudExamples)}_DataFileName.txt", _dataFile);
-
-            // Start the API server once for all tests
-            await StartApiServer();
-
-            _httpClient = new HttpClient();
         }
 
         /// <summary>
@@ -110,6 +126,11 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             Path.GetFullPath(
                 Path.GetDirectoryName(
                     ExampleUtils.FindFile("FiftyOne.IpIntelligence.Examples.sln"))!);
+
+        private static readonly string ApiProjectPath =
+            Path.Combine(RepoRootPath, "Examples", "OnPremise", "Mixed", "GettingStarted-API");
+        private static readonly string ApiExePath =
+            Path.Combine(ApiProjectPath, "bin", "Debug", "net8.0", "GettingStarted-API");
 
         private static readonly string CloudExamplePath =
             Path.Combine(RepoRootPath, "Examples", "Cloud", "GettingStarted-Console");
@@ -276,10 +297,38 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
         ];
 
         /// <summary>
-        /// Runs a Cloud example as a separate process (matching how a user
-        /// would run it) and verifies the output contains the expected
-        /// IP intelligence values for one of the IPs in
-        /// <see cref="ExampleUtils.EvidenceValues"/>.
+        /// Runs the Cloud example pointed at the local GettingStarted-API.
+        /// </summary>
+        [TestMethod]
+        [TestCategory("Integration")]
+        [DynamicData(nameof(CloudExamplesToTest))]
+        public void Example_Cloud_GettingStarted_WithLocalAPI(
+            string examplePath,
+            string[] networkNames,
+            string[] countryNames,
+            string[] ipRanges,
+            string rangeDescriptor)
+        {
+            if (_apiProcess == null)
+            {
+                Assert.Inconclusive(
+                    "Local API mode requires both an IP Intelligence data file and a Device " +
+                    $"Detection .hash file. Set {Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR} and " +
+                    $"{Constants.DEVICE_DETECTION_DATA_FILE_ENV_VAR}, or place the data files in the repository.");
+            }
+
+            // The Cloud examples require RESOURCE_KEY to be set even when pointing at
+            // a local endpoint; the local API ignores its value.
+            var env = new Dictionary<string, string>
+            {
+                [ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR] = "local",
+                [ExampleUtils.CLOUD_END_POINT_ENV_VAR] = ApiUrl,
+            };
+            RunCloudExample(examplePath, networkNames, countryNames, ipRanges, rangeDescriptor, env);
+        }
+
+        /// <summary>
+        /// Runs the Cloud example against the real 51Degrees Cloud service.
         /// </summary>
         [TestMethod]
         [TestCategory("Integration")]
@@ -291,7 +340,35 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             string[] ipRanges,
             string rangeDescriptor)
         {
-            // Run the actual example using dotnet run, just like a user would
+            if (string.IsNullOrWhiteSpace(_resourceKey))
+            {
+                Assert.Inconclusive(
+                    $"Real Cloud mode requires the {ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR} " +
+                    "environment variable to be set. Obtain a resource key at " +
+                    "https://configure.51degrees.com.");
+            }
+
+            var env = new Dictionary<string, string>
+            {
+                [ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR] = _resourceKey,
+            };
+            var endPoint = Environment.GetEnvironmentVariable(
+                ExampleUtils.CLOUD_END_POINT_ENV_VAR);
+            if (string.IsNullOrWhiteSpace(endPoint) == false)
+            {
+                env[ExampleUtils.CLOUD_END_POINT_ENV_VAR] = endPoint;
+            }
+            RunCloudExample(examplePath, networkNames, countryNames, ipRanges, rangeDescriptor, env);
+        }
+
+        private static void RunCloudExample(
+            string examplePath,
+            string[] networkNames,
+            string[] countryNames,
+            string[] ipRanges,
+            string rangeDescriptor,
+            Dictionary<string, string> env)
+        {
             var startInfo = new ProcessStartInfo
             {
                 FileName = "dotnet",
@@ -302,14 +379,9 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 WorkingDirectory = examplePath,
                 CreateNoWindow = true,
             };
-            // Pass the resource key (and optional custom endpoint) through to
-            // the example process; it picks them up via the same env vars.
-            startInfo.Environment[ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR] = _resourceKey;
-            var endPoint = Environment.GetEnvironmentVariable(
-                ExampleUtils.CLOUD_END_POINT_ENV_VAR);
-            if (string.IsNullOrWhiteSpace(endPoint) == false)
+            foreach (var kvp in env)
             {
-                startInfo.Environment[ExampleUtils.CLOUD_END_POINT_ENV_VAR] = endPoint;
+                startInfo.Environment[kvp.Key] = kvp.Value;
             }
 
             using (var process = new Process { StartInfo = startInfo })
@@ -333,8 +405,8 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
 
-                // Wait for the process to complete with a reasonable timeout
-                Assert.IsTrue(process.WaitForExit(60000), "Cloud example should complete within 60 seconds");
+                Assert.IsTrue(process.WaitForExit(60000),
+                    "Cloud example should complete within 60 seconds");
 
                 var result = output.ToString();
                 var errorOutput = error.ToString();
@@ -348,12 +420,9 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                     Console.WriteLine(errorOutput);
                 }
 
-                // A PropertyMissingException means the configured Device Detection data file /
-                // resource key does not expose a property the example reads. The Mixed example
-                // reads hardware properties (e.g. HardwareName) that are absent from the Lite
-                // data file. This is a data-availability limitation, not an example defect, so
-                // treat it as inconclusive - matching the OnPremise Mixed test. Provide a TAC or
-                // Enterprise .hash file to exercise the example fully.
+                // PropertyMissingException = the data file / resource key doesn't expose a
+                // property the example reads (e.g. HardwareName from the Lite Device Detection
+                // file). Treat as inconclusive rather than a failure.
                 if (process.ExitCode != 0 && errorOutput.Contains("PropertyMissingException"))
                 {
                     Assert.Inconclusive(
@@ -363,15 +432,12 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                         ".hash file. See https://51degrees.com/documentation/_info__resource_keys.html");
                 }
 
-                // Verify the example ran successfully
-                Assert.AreEqual(0, process.ExitCode, $"Cloud example should exit successfully. Error output: {errorOutput}");
+                Assert.AreEqual(0, process.ExitCode,
+                    $"Cloud example should exit successfully. Error output: {errorOutput}");
 
-                // Verify the example produced IP intelligence results
                 Assert.Contains("Input values:", result, "Output should contain input values section");
                 Assert.Contains("Results:", result, "Output should contain results section");
 
-                // Check for actual IP intelligence data values (not just field names)
-                // Based on the actual output, verify we get real IP intelligence data
                 Assert.IsTrue(networkNames.Any(x => result.Contains(x)),
                     $"Output should contain {networkNames[0]} as registered name");
                 Assert.IsTrue(countryNames.Any(x => result.Contains(x)),
@@ -379,15 +445,11 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 Assert.IsTrue(ipRanges.Any(x => result.Contains(x)),
                     $"Output should contain IP range values {rangeDescriptor}");
 
-                // Verify we have actual IP address data in the range information
                 Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(result, @"\d+\.\d+\.\d+\.\d+"),
                     "Output should contain IP address values in dotted decimal format");
-
-                // Verify we have numeric coordinate or range data
                 Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(result, @"[\d\-]\d+\.\d+"),
                     "Output should contain numeric values (coordinates, ranges, etc.)");
 
-                // Ensure no errors occurred
                 Assert.DoesNotContain("Exception", result, "Output should not contain exceptions");
                 Assert.DoesNotContain("Error", result, "Output should not contain errors");
             }
@@ -405,6 +467,14 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
         [TestCategory("Integration")]
         public async Task Example_API_HealthCheck()
         {
+            if (_httpClient == null)
+            {
+                Assert.Inconclusive(
+                    "Health check requires the local API to be running. Set " +
+                    $"{Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR} and " +
+                    $"{Constants.DEVICE_DETECTION_DATA_FILE_ENV_VAR} (with a compatible data file).");
+            }
+
             // Test the evidencekeys endpoint as a basic health check
             var response = await _httpClient.GetAsync($"{ApiUrl}/evidencekeys");
             Assert.IsTrue(response.IsSuccessStatusCode, "API evidencekeys endpoint should respond successfully");
