@@ -20,8 +20,8 @@
   </ItemGroup>
 
   <ItemGroup>
-	<PackageReference Include="FiftyOne.IpIntelligence.Translation" Version="4.5.74" />
-	<PackageReference Include="FiftyOne.Pipeline.Web" Version="4.5.47" />
+	<PackageReference Include="FiftyOne.IpIntelligence.Translation" Version="4.5.75" />
+	<PackageReference Include="FiftyOne.Pipeline.Web" Version="4.5.49" />
 	<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.27" />
   </ItemGroup>
 
