@@ -21,6 +21,7 @@
  * ********************************************************************* */
 
 using FiftyOne.DeviceDetection;
+using FiftyOne.IpIntelligence.Translation.Data;
 using System.Collections.Generic;
 
 namespace FiftyOne.IpIntelligence.Examples.Mixed.Cloud.GettingStartedWeb.Model
@@ -29,10 +30,15 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.Cloud.GettingStartedWeb.Model
     {
         // Device Detection properties
         public IDeviceData Device { get; set; }
-        
+
         // IP Intelligence properties
         public IIpIntelligenceData IpData { get; set; }
-        
+
+        // Country-name translations from the cloud countries translation engine.
+        // Used to build the country dropdown (codes as <option> values, translated
+        // names as the visible text - the two All lists are index-aligned).
+        public ICountriesTranslationData Countries { get; set; }
+
         // Evidence used for detection
         public List<EvidenceModel> Evidence { get; set; }
         

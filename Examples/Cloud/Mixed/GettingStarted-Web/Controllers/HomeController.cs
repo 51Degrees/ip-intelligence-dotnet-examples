@@ -27,6 +27,7 @@ using Microsoft.Extensions.Logging;
 using FiftyOne.Pipeline.Core.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
 using FiftyOne.DeviceDetection;
+using FiftyOne.IpIntelligence.Translation.Data;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
@@ -65,7 +66,11 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.Cloud.GettingStartedWeb.Control
             
             // Get IP Intelligence results from the flow data
             model.IpData = flowData.Get<IIpIntelligenceData>();
-            
+
+            // Get the translated country lists from the cloud countries
+            // translation engine. These power the country dropdown in the view.
+            model.Countries = flowData.Get<ICountriesTranslationData>();
+
             // Check if a custom IP was provided via query parameter
             var clientIp = Request.Query["client-ip"].FirstOrDefault();
             if (!string.IsNullOrWhiteSpace(clientIp))
@@ -84,13 +89,15 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.Cloud.GettingStartedWeb.Control
             // Note: JavaScript for client-side evidence gathering is handled 
             // by the FiftyOneJS view component in the view
             
-            // Build device message
+            // Build device message. Each property is read defensively because a
+            // resource key may not grant every property - accessing one that is
+            // not in the key throws PropertyMissingException.
             if (model.Device != null)
             {
-                var deviceType = model.Device.DeviceType.HasValue ? model.Device.DeviceType.Value : "Unknown";
-                var browserName = model.Device.BrowserName.HasValue ? model.Device.BrowserName.Value : "Unknown";
-                var platformName = model.Device.PlatformName.HasValue ? model.Device.PlatformName.Value : "Unknown";
-                
+                var deviceType = SafeGet(() => model.Device.DeviceType.HasValue ? model.Device.DeviceType.Value : "Unknown");
+                var browserName = SafeGet(() => model.Device.BrowserName.HasValue ? model.Device.BrowserName.Value : "Unknown");
+                var platformName = SafeGet(() => model.Device.PlatformName.HasValue ? model.Device.PlatformName.Value : "Unknown");
+
                 model.DeviceMessage = $"You are using {browserName} on {platformName} ({deviceType})";
             }
             
@@ -114,6 +121,17 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.Cloud.GettingStartedWeb.Control
             return View(model);
         }
         
+        /// <summary>
+        /// Evaluate a property accessor, returning "Unknown" if the property is
+        /// not included in the resource key (which throws
+        /// PropertyMissingException) or otherwise cannot be read.
+        /// </summary>
+        private static string SafeGet(System.Func<string> get)
+        {
+            try { return get(); }
+            catch { return "Unknown"; }
+        }
+
         private void SetResponseHeaders(IFlowData flowData, IHeaderDictionary headers)
         {
             // Add Accept-CH header for client hints
