@@ -20,6 +20,7 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+using FiftyOne.IpIntelligence.Translation.Data;
 using FiftyOne.Pipeline.CloudRequestEngine.FlowElements;
 using FiftyOne.Pipeline.Core.Data;
 using Microsoft.AspNetCore.Http;
@@ -58,6 +59,13 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model
         
         public IReadOnlyList<string> CountryCodesGeographical { get; set; }
         public IReadOnlyList<string> CountryCodesPopulation { get; set; }
+
+        // The full ordered country lists produced by the cloud countries
+        // translation engine. CountryCodesGeographicalAll holds the ISO codes
+        // (used as the <option> values) and CountryNamesGeographicalAllTranslated
+        // holds the matching display names - the two lists are index-aligned.
+        public IReadOnlyList<string> CountryCodesGeographicalAll { get; set; }
+        public IReadOnlyList<string> CountryNamesGeographicalAllTranslated { get; set; }
 
         public IndexModel(IFlowData flowData, IHeaderDictionary responseHeaders)
         {
@@ -100,6 +108,14 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb.Model
             TimeZoneOffset = ipiData.TryGetValue(d => d.TimeZoneOffset.GetHumanReadable());
             CountryCodesGeographical = ipiData.TryGetValue(d => d.CountryCodesGeographical.GetHumanReadableList());
             CountryCodesPopulation = ipiData.TryGetValue(d => d.CountryCodesPopulation.GetHumanReadableList());
+
+            // Get the translated country lists from the cloud countries translation
+            // engine. These power the country dropdown in the view.
+            var countriesData = FlowData.Get<ICountriesTranslationData>();
+            CountryCodesGeographicalAll = countriesData.TryGetValue(
+                d => d.CountryCodesGeographicalAll.GetHumanReadableList());
+            CountryNamesGeographicalAllTranslated = countriesData.TryGetValue(
+                d => d.CountryNamesGeographicalAllTranslated.GetHumanReadableList());
         }
     }
 }

@@ -123,6 +123,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GettingStartedWeb
             // system can find the builders when it needs to.
             services.AddSingleton<CloudRequestEngineBuilder>();
             services.AddSingleton<IpiCloudEngineBuilder>();
+            services.AddSingleton<CloudCountriesTranslationEngineBuilder>();
             // Configure the services needed by device detection and create the 51Degrees Pipeline
             // instance that will be used to process requests.
             services.AddFiftyOne(Configuration);

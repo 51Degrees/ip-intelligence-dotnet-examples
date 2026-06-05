@@ -100,6 +100,30 @@
                 </ul>
             </td>
         </tr>
+        <tr class="lightyellow">
+            <td><b>Countries (geographical):</b></td>
+            <td>
+                @* Dropdown of all countries ordered by geographical weighting.
+                   Each option's value is the country code while its text is the
+                   translated country name - the two lists are index-aligned. *@
+                @if (Model.CountryCodesGeographicalAll != null
+                    && Model.CountryNamesGeographicalAllTranslated != null
+                    && Model.CountryCodesGeographicalAll.Count == Model.CountryNamesGeographicalAllTranslated.Count
+                    && Model.CountryCodesGeographicalAll.Count > 1)
+                {
+                    <select>
+                        @for (var i = 0; i < Model.CountryCodesGeographicalAll.Count; i++)
+                        {
+                            <option value="@Model.CountryCodesGeographicalAll[i]">@Model.CountryNamesGeographicalAllTranslated[i]</option>
+                        }
+                    </select>
+                }
+                else
+                {
+                    <span>(no country list available)</span>
+                }
+            </td>
+        </tr>
     </table>
     <br />
 
