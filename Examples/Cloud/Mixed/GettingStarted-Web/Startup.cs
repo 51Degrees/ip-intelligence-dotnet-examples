@@ -59,6 +59,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.Cloud.GettingStartedWeb
             // Add both Device Detection and IP Intelligence engine builders to services
             services.AddSingleton<DeviceDetectionCloudEngineBuilder>();
             services.AddSingleton<IpiCloudEngineBuilder>();
+            services.AddSingleton<CloudCountriesTranslationEngineBuilder>();
             services.AddSingleton<CloudRequestEngineBuilder>();
             
             // Configure the services needed by the combined pipeline and create the 51Degrees Pipeline
