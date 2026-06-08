@@ -31,7 +31,14 @@ using System.IO;
 using System.Text;
 using System.Threading;
 
-[assembly: Parallelize]
+// Run this assembly's tests serially. Each on-premise example builds its own
+// engine against the multi-gigabyte enterprise data file; running them in
+// parallel (the previous [assembly: Parallelize] behaviour) loads several such
+// engines at once and exhausts memory on CI runners, causing the job to time
+// out. Concurrency is still covered by
+// TestGettingStartedOnPremise.GettingStarted_ParallelProcessing_IsConsistent,
+// which exercises many concurrent requests against a single shared engine.
+[assembly: DoNotParallelize]
 namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise;
 
 /// <summary>

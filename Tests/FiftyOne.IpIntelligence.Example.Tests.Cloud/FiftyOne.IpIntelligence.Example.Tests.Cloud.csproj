@@ -8,9 +8,12 @@
     <Platforms>AnyCPU;x64;ARM64</Platforms>
 
     <Configurations>Debug;Release</Configurations>
-	
+
 	<DefineConstants>TRACE;NETCORE</DefineConstants>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- Bounded test/session timeouts (see Tests/test.runsettings). -->
+    <RunSettingsFilePath>$(MSBuildThisFileDirectory)..\test.runsettings</RunSettingsFilePath>
   </PropertyGroup>
 
   <ItemGroup>

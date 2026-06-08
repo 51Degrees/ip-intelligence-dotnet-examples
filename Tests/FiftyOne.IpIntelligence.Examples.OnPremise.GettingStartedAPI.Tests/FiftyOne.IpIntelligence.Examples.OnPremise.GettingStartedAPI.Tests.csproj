@@ -6,6 +6,9 @@
     <Platforms>AnyCPU;x64;ARM64</Platforms>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
+
+    <!-- Bounded test/session timeouts (see Tests/test.runsettings). -->
+    <RunSettingsFilePath>$(MSBuildThisFileDirectory)..\test.runsettings</RunSettingsFilePath>
   </PropertyGroup>
 
   <ItemGroup>
