@@ -16,13 +16,20 @@
 -->
 <RunSettings>
   <RunConfiguration>
-    <!-- Whole-session ceiling (ms) so a run can never hang the CI job. -->
-    <TestSessionTimeout>600000</TestSessionTimeout>
+    <!-- Whole-session ceiling (ms) so a run can never hang the CI job
+         indefinitely, while staying well under the 120-minute job timeout.
+         Must comfortably exceed the serial runtime of the on-premise suite on a
+         slow, cold CI runner. -->
+    <TestSessionTimeout>1200000</TestSessionTimeout>
   </RunConfiguration>
   <MSTest>
-    <!-- Per-test ceiling (ms). Generous because loading the enterprise data
-         file plus, e.g., enumerating all metadata can take well over a minute. -->
-    <TestTimeout>240000</TestTimeout>
+    <!-- Per-test ceiling (ms). Deliberately generous: the Metadata example
+         loads the multi-GB enterprise data file and enumerates every property
+         and value, which has been observed to take over four minutes on a cold
+         macOS CI runner. A tighter limit false-fails that legitimately slow
+         test, which then triggers a fail-fast cancellation of the whole matrix.
+         True hangs are still bounded (here, and by the 120-minute job timeout). -->
+    <TestTimeout>600000</TestTimeout>
     <!-- Run tests serially: only one multi-GB engine is loaded at a time.
          Concurrency itself is still covered by
          TestGettingStartedOnPremise.GettingStarted_ParallelProcessing_IsConsistent,
