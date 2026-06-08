@@ -56,11 +56,17 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             _resourceKey = Environment.GetEnvironmentVariable(
                 ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR);
 
-            Assert.IsFalse(
-                string.IsNullOrWhiteSpace(_resourceKey),
-                $"Environment variable '{ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR}' " +
-                $"is not set. Obtain a resource key at " +
-                $"https://configure.51degrees.com and export it to run this test.");
+            if (string.IsNullOrWhiteSpace(_resourceKey))
+            {
+                // Treat a missing resource key as inconclusive (skip) rather than
+                // a failure: this is an environment / credential limitation, not a
+                // fault in the example - consistent with the on-premise tests'
+                // handling of a missing license key.
+                Assert.Inconclusive(
+                    $"Environment variable '{ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR}' " +
+                    $"is not set. Obtain a resource key at " +
+                    $"https://configure.51degrees.com and export it to run this test.");
+            }
         }
 
         private static readonly string RepoRootPath =

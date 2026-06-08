@@ -30,6 +30,7 @@ using System.Data;
 namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise;
 
 [TestClass]
+[TestCategory(TestCategories.Unit)]
 public class TestAreas
 {
     private static readonly GeometryFactory _factor = new GeometryFactory();
