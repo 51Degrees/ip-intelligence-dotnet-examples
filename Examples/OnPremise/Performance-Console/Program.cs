@@ -83,9 +83,11 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
             public long GCCollections2 { get; set; }
         }
 
+        // Only LowMemory is benchmarked: the IP Intelligence data file is multiple
+        // gigabytes and must never be loaded entirely into memory, which is what the
+        // MaxPerformance profile would do.
         private static readonly PerformanceConfiguration[] _configs = new PerformanceConfiguration[]
         {
-            new PerformanceConfiguration(PerformanceProfiles.MaxPerformance, false),
             new PerformanceConfiguration(PerformanceProfiles.LowMemory, false),
         };
 

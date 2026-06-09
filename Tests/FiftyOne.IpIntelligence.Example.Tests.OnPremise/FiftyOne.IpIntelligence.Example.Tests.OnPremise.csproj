@@ -8,9 +8,14 @@
     <Platforms>AnyCPU;x64;ARM64</Platforms>
 
     <Configurations>Debug;Release</Configurations>
-	
+
 	<DefineConstants>TRACE;NETCORE</DefineConstants>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- Run the heavy on-premise integration tests serially with bounded
+         timeouts (see Tests/test.runsettings) so several multi-GB engines are
+         never loaded at once on CI runners. -->
+    <RunSettingsFilePath>$(MSBuildThisFileDirectory)..\test.runsettings</RunSettingsFilePath>
   </PropertyGroup>
 
   <ItemGroup>

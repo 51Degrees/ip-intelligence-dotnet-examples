@@ -8,9 +8,12 @@
     <Platforms>AnyCPU;x64;ARM64</Platforms>
 
     <Configurations>Debug;Release</Configurations>
-	
+
 	<DefineConstants>TRACE;NETCORE</DefineConstants>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- Bounded test/session timeouts (see Tests/test.runsettings). -->
+    <RunSettingsFilePath>$(MSBuildThisFileDirectory)..\test.runsettings</RunSettingsFilePath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +32,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Examples\Cloud\GettingStarted-Console\GettingStarted-Console.csproj" />
+    <!-- Referenced so the web example can be hosted in-process by TestCloudWebExample.
+         Brings in the ASP.NET Core framework transitively. -->
+    <ProjectReference Include="..\..\Examples\Cloud\GettingStarted-Web\GettingStarted-Web.csproj" />
   </ItemGroup>
 
 </Project>

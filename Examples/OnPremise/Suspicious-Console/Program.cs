@@ -64,12 +64,13 @@ public class Program
             // Note that we wrap the creation of a pipeline in a using to control its life cycle
             using (var pipeline = new IpiPipelineBuilder()
                 .UseOnPremise(dataFile, null, false)
-                // We use the max performance profile for optimal detection speed in this
-                // example. See the documentation for more detail on this and other
+                // Use the LowMemory profile so the (multi-gigabyte) IP Intelligence
+                // data file is paged from disk rather than loaded entirely into RAM.
+                // See the documentation for more detail on this and other
                 // configuration options.
                 // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
                 // https://51degrees.com/documentation/_features__usage_sharing.html
-                .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
+                .SetPerformanceProfile(PerformanceProfiles.LowMemory)
                 // inhibit sharing usage for this example, usually this should be set to "true"
                 .SetShareUsage(false)
                 // inhibit auto-update of the data file for this test
