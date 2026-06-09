@@ -67,11 +67,12 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
                 // If you already have a pipeline and just want to get a reference to the engine 
                 // then you can use `var engine = pipeline.GetElement<IpiOnPremiseEngine>();`
                 using (var ddEngine = new IpiOnPremiseEngineBuilder(loggerFactory)
-                    // We use the max performance profile for optimal detection speed in this
-                    // example. See the documentation for more detail on this and other
+                    // Use the LowMemory profile so the (multi-gigabyte) IP Intelligence
+                    // data file is paged from disk rather than loaded entirely into RAM.
+                    // See the documentation for more detail on this and other
                     // configuration options.
                     // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
-                    .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
+                    .SetPerformanceProfile(PerformanceProfiles.LowMemory)
                     // inhibit auto-update of the data file for this test
                     .SetAutoUpdate(false)
                     .SetDataFileSystemWatcher(false)

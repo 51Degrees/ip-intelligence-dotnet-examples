@@ -677,14 +677,14 @@ public class Program
             // Ensure that batch latency mode is always enabled.
             GCSettings.LatencyMode = GCLatencyMode.Batch;
 
-            // Build a new on-premise IP Intelligence engine with the max
-            // performance profile.
+            // Build a new on-premise IP Intelligence engine with the LowMemory
+            // profile so the large data file is paged from disk, not loaded into RAM.
             using var ipiEngine = new IpiOnPremiseEngineBuilder(loggerFactory)
-                // We use the max performance profile for optimal detection
-                // speed in this example. See the documentation for more detail
-                // on this and other configuration options.
+                // LowMemory keeps the (multi-gigabyte) IP Intelligence data file on
+                // disk rather than loading it entirely into memory. See the
+                // documentation for more detail on this and other configuration options.
                 // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
-                .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
+                .SetPerformanceProfile(PerformanceProfiles.LowMemory)
                 // inhibit auto-update of the data file for this test
                 .SetAutoUpdate(false)
                 .SetDataFileSystemWatcher(false)

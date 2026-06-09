@@ -68,7 +68,9 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
             {
                 // Create IP Intelligence engine
                 var ipEngine = new IpiOnPremiseEngineBuilder(loggerFactory)
-                    .SetPerformanceProfile(PerformanceProfiles.MaxPerformance)
+                    // LowMemory keeps the large IP Intelligence data file on disk
+                    // instead of loading it entirely into memory.
+                    .SetPerformanceProfile(PerformanceProfiles.LowMemory)
                     .SetAutoUpdate(false)
                     .SetDataFileSystemWatcher(false)
                     .Build(dataFile, false);
