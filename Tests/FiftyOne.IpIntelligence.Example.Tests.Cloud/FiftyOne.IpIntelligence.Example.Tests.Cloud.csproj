@@ -32,6 +32,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Examples\Cloud\GettingStarted-Console\GettingStarted-Console.csproj" />
+    <!-- Referenced so the web example can be hosted in-process by TestCloudWebExample.
+         Brings in the ASP.NET Core framework transitively. -->
+    <ProjectReference Include="..\..\Examples\Cloud\GettingStarted-Web\GettingStarted-Web.csproj" />
   </ItemGroup>
 
 </Project>
