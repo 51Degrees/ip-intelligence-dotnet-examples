@@ -38,7 +38,7 @@ using System.Linq;
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/GetAllProperties-Console/Program.cs).
 ///
-/// To run this example, create a Resource Key for free at https://configure.51degrees.com and supply it as the first command-line argument or via the RESOURCE_KEY environment variable. By default the pipeline talks to cloud.51degrees.com; set 51D_CLOUD_ENDPOINT to point at a self-hosted Cloud service instead.
+/// To run this example, create a Resource Key for free at https://configure.51degrees.com and supply it as the first command-line argument or via the 51DEGREES_RESOURCE_KEY environment variable. By default the pipeline talks to cloud.51degrees.com; set 51D_CLOUD_ENDPOINT to point at a self-hosted Cloud service instead.
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
 {
@@ -160,8 +160,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
             // Use the command line args to get the resource key if present.
             // Otherwise, get it from the environment variable.
             string resourceKey = args.Length > 0 ? args[0] :
-                Environment.GetEnvironmentVariable(
-                    ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR);
+                ExampleUtils.GetResourceKeyFromEnv();
 
             // Optional custom cloud endpoint via env var. If unset, the SDK
             // defaults to cloud.51degrees.com.

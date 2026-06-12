@@ -359,12 +359,13 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedConsole
                 }
             }
             
-            // If IP intelligence file not set, try to find it in priority order
+            // If IP intelligence file not set, check the environment variables for an
+            // explicit path, then try to find it in priority order
             if (ipDataFile == null)
             {
                 foreach (var fileName in Constants.IPI_FILE_NAMES)
                 {
-                    ipDataFile = IpIntelligence.Examples.ExampleUtils.FindFile(fileName);
+                    ipDataFile = IpIntelligence.Examples.ExampleUtils.FindDataFile(fileName);
                     if (ipDataFile != null) break;
                 }
             }

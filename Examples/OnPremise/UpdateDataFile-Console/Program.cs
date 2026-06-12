@@ -61,7 +61,8 @@ using System.Net.Http;
 /// # Command Line Usage
 /// The data file path is provided via the first command line argument. Here's how it works:
 /// 
-/// 1. First argument: Data file path (optional - defaults to Constants.ENTERPRISE_IPI_DATA_FILE_NAME)
+/// 1. First argument: Data file path (optional - checks the 51DEGREES_IPI_PATH and legacy
+///    IPINTELLIGENCEDATAFILE environment variables, then defaults to Constants.ENTERPRISE_IPI_DATA_FILE_NAME)
 /// 2. Second argument: License key (optional when using --data-update-url)
 /// 3. Option: --data-update-url for custom URL
 /// 
@@ -424,13 +425,34 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
         private const string KEY_SUBMISSION_ALT_PATH = $"as an environment variable named '{Constants.LICENSE_KEY_ENV_VAR}'";
         private const string KEY_SUBMISSION_PATHS = "as the second command line argument to this program, or " + KEY_SUBMISSION_ALT_PATH;
 
+        /// <summary>
+        /// When no data file is specified on the command line, check the
+        /// environment variables for an explicit path before falling back to
+        /// the default file name.
+        /// </summary>
+        private static string DefaultDataFilePath()
+        {
+            var dataFile = Environment.GetEnvironmentVariable(
+                Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
+            if (string.IsNullOrWhiteSpace(dataFile))
+            {
+                dataFile = Environment.GetEnvironmentVariable(
+                    Constants.LEGACY_IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
+            }
+            if (string.IsNullOrWhiteSpace(dataFile))
+            {
+                dataFile = Constants.ENTERPRISE_IPI_DATA_FILE_NAME;
+            }
+            return dataFile;
+        }
+
         public static int Main(string[] args)
         {
             Argument<string> dataFile = new(nameof(dataFile))
             {
                 Description = "Path to IPI data file.",
                 Arity = ArgumentArity.ZeroOrOne,
-                DefaultValueFactory = _ => Constants.ENTERPRISE_IPI_DATA_FILE_NAME,
+                DefaultValueFactory = _ => DefaultDataFilePath(),
             };
             Argument<string?> licenseKey = new(nameof(licenseKey))
             {

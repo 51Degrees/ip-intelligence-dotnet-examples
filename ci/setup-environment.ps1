@@ -40,6 +40,10 @@ dotnet dev-certs https
 
 $env:IPINTELLIGENCEDATAFILE = [IO.Path]::Combine($RepoPath, "ip-intelligence-data", "51Degrees-EnterpriseIpiV41.ipi")
 $env:RESOURCE_KEY = $Keys.TestResourceKey
+# Aligned environment variable names. These are checked first by the examples
+# and tests. The legacy names above are retained for backwards compatibility.
+${env:51DEGREES_IPI_PATH} = [IO.Path]::Combine($RepoPath, "ip-intelligence-data", "51Degrees-EnterpriseIpiV41.ipi")
+${env:51DEGREES_RESOURCE_KEY} = $Keys.TestResourceKey
 $env:IPINTELLIGENCELICENSEKEY_DOTNET = $Keys.DeviceDetection # TBD
 
 Write-Debug "env:IPINTELLIGENCEDATAFILE = <$($env:IPINTELLIGENCEDATAFILE)>"
