@@ -1,4 +1,4 @@
-# ![51Degrees](https://51degrees.com/img/logo.png?utm_source=github&utm_medium=repository&utm_content=readme_main&utm_campaign=dotnet-open-source "Data rewards the curious") IP Intelligence Engine Examples
+# ![51Degrees](https://51degrees.com/img/logo.png?utm_source=github&utm_medium=readme&utm_campaign=ip-intelligence-dotnet-examples&utm_content=readme.md&utm_term=top "Data rewards the curious") IP Intelligence Engine Examples
 
 This repository contains the examples for [[ip-intelligence-dotnet](https://github.com/51Degrees/ip-intelligence-dotnet/)].
 
@@ -69,7 +69,7 @@ dotnet add package FiftyOne.IpIntelligence --prerelease
 ## Cloud
 
 A resource key configured with the properties needed to run the cloud examples
-can be created for free [here](https://configure.51degrees.com/1QWJwHxl). To
+can be created for free [here](https://configure.51degrees.com/1QWJwHxl?utm_source=github&utm_medium=readme&utm_campaign=ip-intelligence-dotnet-examples&utm_content=readme.md&utm_term=cloud). To
 use the resource key in the examples it can be supplied as an environment
 variable called "51DEGREES_RESOURCE_KEY". The legacy environment variable
 names "RESOURCE_KEY" and "SUPER_RESOURCE_KEY" are still supported, with the
