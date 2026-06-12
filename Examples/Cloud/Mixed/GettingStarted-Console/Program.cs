@@ -50,7 +50,7 @@ using FiftyOne.DeviceDetection.Cloud.FlowElements;
 /// 
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/Mixed/GettingStarted-Console/Program.cs).
 ///
-/// To run this example, create a Resource Key for free at https://configure.51degrees.com and supply it via the appsettings.json file or the 51DEGREES_RESOURCE_KEY environment variable. By default the pipeline talks to cloud.51degrees.com; set 51D_CLOUD_ENDPOINT to point at a self-hosted Cloud service instead.
+/// To run this example, create a Resource Key at https://configure.51degrees.com and supply it via the appsettings.json file or the 51DEGREES_RESOURCE_KEY environment variable. By default the pipeline talks to cloud.51degrees.com; set 51D_CLOUD_ENDPOINT to point at a self-hosted Cloud service instead.
 ///
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
@@ -77,10 +77,20 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
                 using (var pipeline = new FiftyOnePipelineBuilder(loggerFactory, serviceProvider)
                     .BuildFromConfiguration(pipelineOptions))
                 {
+                    // Track whether any property is left without a value, which
+                    // is usually because the resource key does not include the
+                    // paid properties used by this example.
+                    bool missingValues = false;
+
                     // Carry out some sample detections
                     foreach (var values in CombinedEvidence)
                     {
-                        AnalyseEvidence(values, pipeline, output);
+                        missingValues |= AnalyseEvidence(values, pipeline, output);
+                    }
+
+                    if (missingValues)
+                    {
+                        output.WriteLine(ExampleUtils.PRICING_MESSAGE);
                     }
                 }
             }
@@ -134,9 +144,9 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
                 },
             ];
 
-            private void AnalyseEvidence(
+            private bool AnalyseEvidence(
                 Dictionary<string, object> evidence,
-                IPipeline pipeline, 
+                IPipeline pipeline,
                 TextWriter output)
             {
                 // FlowData is used to convey information through the pipeline
@@ -160,66 +170,78 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
                     data.Process();
 
                     message = new StringBuilder();
-                    
+
+                    // Track whether any property has no value so that the
+                    // caller can display a pricing message once after all
+                    // the results.
+                    bool missingValues = false;
+
                     // Get Device Detection results
                     message.AppendLine("\nDevice Detection Results:");
                     message.AppendLine("-" + new string('-', 24));
                     var device = data.Get<IDeviceData>();
-                    OutputDeviceData(device, message);
-                    
+                    OutputDeviceData(device, message, ref missingValues);
+
                     // Get IP Intelligence results
                     message.AppendLine("\nIP Intelligence Results:");
                     message.AppendLine("-" + new string('-', 23));
                     var ipData = data.Get<IIpIntelligenceData>();
-                    OutputIpData(ipData, message);
-                    
+                    OutputIpData(ipData, message, ref missingValues);
+
                     output.WriteLine(message.ToString());
+
+                    return missingValues;
                 }
             }
 
-            private void OutputDeviceData(IDeviceData device, StringBuilder message)
+            private void OutputDeviceData(IDeviceData device, StringBuilder message,
+                ref bool missingValues)
             {
-                OutputProperty("Mobile Device", device.IsMobile, message);
-                OutputProperty("Platform Name", device.PlatformName, message);
-                OutputProperty("Platform Version", device.PlatformVersion, message);
-                OutputProperty("Browser Name", device.BrowserName, message);
-                OutputProperty("Browser Version", device.BrowserVersion, message);
-                OutputProperty("Hardware Name", device.HardwareName, message);
-                OutputProperty("Hardware Vendor", device.HardwareVendor, message);
-                OutputProperty("Device Type", device.DeviceType, message);
-                OutputProperty("Screen Width", device.ScreenPixelsWidth, message);
-                OutputProperty("Screen Height", device.ScreenPixelsHeight, message);
+                OutputProperty("Mobile Device", device.IsMobile, message, ref missingValues);
+                OutputProperty("Platform Name", device.PlatformName, message, ref missingValues);
+                OutputProperty("Platform Version", device.PlatformVersion, message, ref missingValues);
+                OutputProperty("Browser Name", device.BrowserName, message, ref missingValues);
+                OutputProperty("Browser Version", device.BrowserVersion, message, ref missingValues);
+                OutputProperty("Hardware Name", device.HardwareName, message, ref missingValues);
+                OutputProperty("Hardware Vendor", device.HardwareVendor, message, ref missingValues);
+                OutputProperty("Device Type", device.DeviceType, message, ref missingValues);
+                OutputProperty("Screen Width", device.ScreenPixelsWidth, message, ref missingValues);
+                OutputProperty("Screen Height", device.ScreenPixelsHeight, message, ref missingValues);
             }
 
-            private void OutputIpData(IIpIntelligenceData ipData, StringBuilder message)
+            private void OutputIpData(IIpIntelligenceData ipData, StringBuilder message,
+                ref bool missingValues)
             {
-                OutputProperty("Country", ipData.Country, message);
-                OutputProperty("Country Code", ipData.CountryCode, message);
-                OutputProperty("Region", ipData.Region, message);
-                OutputProperty("State", ipData.State, message);
-                OutputProperty("Town", ipData.Town, message);
-                OutputProperty("Latitude", ipData.Latitude, message);
-                OutputProperty("Longitude", ipData.Longitude, message);
-                OutputProperty("Registered Name", ipData.RegisteredName, message);
-                OutputProperty("Registered Owner", ipData.RegisteredOwner, message);
-                OutputProperty("Registered Country", ipData.RegisteredCountry, message);
-                OutputProperty("IP Range Start", ipData.IpRangeStart, message);
-                OutputProperty("IP Range End", ipData.IpRangeEnd, message);
-                OutputProperty("Accuracy Radius", ipData.AccuracyRadiusMin, message);
-                OutputProperty("Time Zone Offset", ipData.TimeZoneOffset, message);
+                OutputProperty("Country", ipData.Country, message, ref missingValues);
+                OutputProperty("Country Code", ipData.CountryCode, message, ref missingValues);
+                OutputProperty("Region", ipData.Region, message, ref missingValues);
+                OutputProperty("State", ipData.State, message, ref missingValues);
+                OutputProperty("Town", ipData.Town, message, ref missingValues);
+                OutputProperty("Latitude", ipData.Latitude, message, ref missingValues);
+                OutputProperty("Longitude", ipData.Longitude, message, ref missingValues);
+                OutputProperty("Registered Name", ipData.RegisteredName, message, ref missingValues);
+                OutputProperty("Registered Owner", ipData.RegisteredOwner, message, ref missingValues);
+                OutputProperty("Registered Country", ipData.RegisteredCountry, message, ref missingValues);
+                OutputProperty("IP Range Start", ipData.IpRangeStart, message, ref missingValues);
+                OutputProperty("IP Range End", ipData.IpRangeEnd, message, ref missingValues);
+                OutputProperty("Accuracy Radius", ipData.AccuracyRadiusMin, message, ref missingValues);
+                OutputProperty("Time Zone Offset", ipData.TimeZoneOffset, message, ref missingValues);
             }
 
             private void OutputProperty<T>(string name,
                 IAspectPropertyValue<T> property,
-                StringBuilder message)
+                StringBuilder message,
+                ref bool missingValues)
             {
                 if (property == null)
                 {
                     message.AppendLine($"\t{name}: (not available)");
+                    missingValues = true;
                 }
                 else if (!property.HasValue)
                 {
                     message.AppendLine($"\t{name}: {property.NoValueMessage}");
+                    missingValues = true;
                 }
                 else
                 {
@@ -264,8 +286,11 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
                             $"service is accessed using a 'ResourceKey'. For more information " +
                             $"see " +
                             $"https://51degrees.com/documentation/_info__resource_keys.html. " +
-                            $"A resource key with the properties required by this example can be " +
-                            $"created for free at https://configure.51degrees.com/1QWJwHxl. " +
+                            $"A resource key with all the properties used by this example can " +
+                            $"be created at https://configure.51degrees.com/hYzn3TV3. A free " +
+                            $"resource key from https://configure.51degrees.com/Wkqxf3Bs will " +
+                            $"also work, but will only populate the free properties (Country, " +
+                            $"LocationConfidence, Ip and IpV6). " +
                             $"Once complete, populate the config file or environment variable " +
                             $"mentioned at the start of this message with the key.");
                     }

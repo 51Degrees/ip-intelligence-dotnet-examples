@@ -62,6 +62,13 @@ namespace FiftyOne.IpIntelligence.Examples
         public const string CLOUD_END_POINT_ENV_VAR = "51D_CLOUD_ENDPOINT";
 
         /// <summary>
+        /// Message displayed when one or more properties used by an example
+        /// have no value, which is usually because the resource key does not
+        /// include the paid properties that the example displays.
+        /// </summary>
+        public const string PRICING_MESSAGE = "Some properties used by this example are not available with a free resource key. See https://51degrees.com/pricing to get a paid subscription with more properties.";
+
+        /// <summary>
         /// Timeout used when searching for files.
         /// </summary>
         private const int FindFileTimeoutMs = 10000;

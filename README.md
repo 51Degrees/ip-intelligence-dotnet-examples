@@ -68,9 +68,34 @@ dotnet add package FiftyOne.IpIntelligence --prerelease
 
 ## Cloud
 
-A resource key configured with the properties needed to run the cloud examples
-can be created for free [here](https://configure.51degrees.com/1QWJwHxl). To
-use the resource key in the examples it can be supplied as an environment
+The cloud property tiers changed in May 2026. The examples and documentation
+now reflect what is free and what needs a paid subscription. Of the IP
+intelligence properties the examples display, the free tier includes only:
+
+- Country
+- LocationConfidence
+- Ip
+- IpV6
+
+A paid subscription is needed for the other properties the examples display:
+
+- CountryCode, CountryCode3
+- Region, State, Town, TimeZoneOffset
+- RegisteredName, RegisteredOwner, RegisteredCountry
+- IpRangeStart, IpRangeEnd
+- Latitude, Longitude, Areas, AccuracyRadiusMin, AccuracyRadiusMax
+- CountryCodesGeographical, CountryCodesPopulation
+- The translated country name properties
+
+A resource key selecting only the free tier properties can be created at
+[https://configure.51degrees.com/Wkqxf3Bs](https://configure.51degrees.com/Wkqxf3Bs).
+A resource key that also includes the paid properties used by the examples
+can be created at
+[https://configure.51degrees.com/hYzn3TV3](https://configure.51degrees.com/hYzn3TV3).
+See https://51degrees.com/pricing to get a paid subscription with more
+properties.
+
+To use the resource key in the examples it can be supplied as an environment
 variable called "51DEGREES_RESOURCE_KEY". The legacy environment variable
 names "RESOURCE_KEY" and "SUPER_RESOURCE_KEY" are still supported, with the
 aligned "51DEGREES_RESOURCE_KEY" name checked first.

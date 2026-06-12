@@ -75,10 +75,12 @@ using System.Web.UI;
 /// For example, the CloudRequestEngineBuilder. The methods available on the builder are 
 /// the same as those that will be available in the configuration file. 
 /// 
-/// Note that you will need to create a 'resource key' using our 
-/// [configurator](https://configure.51degrees.com/1QWJwHxl) site in order to get this example to 
+/// Note that you will need to create a 'resource key' using our
+/// [configurator](https://configure.51degrees.com/hYzn3TV3) site in order to get this example to
 /// work. The previous link will pre-populate the key with the properties that are used in this
-/// example.
+/// example. A free key created from the [free tier configuration](https://configure.51degrees.com/Wkqxf3Bs)
+/// will also work, but will only populate the free properties (Country, LocationConfidence, Ip
+/// and IpV6).
 /// See our [documentation](http://51degrees.com/documentation/4.4/_concepts__configurator.html) 
 /// for more detail on resource keys and the configurator site. Once created, the key will 
 /// need to be copied into the configuration file:
