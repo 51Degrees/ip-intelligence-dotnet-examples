@@ -1078,7 +1078,7 @@ public class Program
             // project space, or you may specify another file as a command line parameter.
             //
             // For testing, contact us to obtain an enterprise data file: https://51degrees.com/contact-us
-            Examples.ExampleUtils.FindFile(
+            Examples.ExampleUtils.FindDataFile(
                 Constants.ENTERPRISE_IPI_DATA_FILE_NAME)
         };
 

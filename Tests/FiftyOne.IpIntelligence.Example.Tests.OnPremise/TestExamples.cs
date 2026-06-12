@@ -49,7 +49,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.OnPremise;
 /// These are integration tests: each example builds a real on-premise IP
 /// Intelligence engine against the enterprise data file. They therefore
 /// require the data file to be present (located automatically, or via the
-/// <c>IPINTELLIGENCEDATAFILE</c> environment variable) and are comparatively
+/// <c>51DEGREES_IPI_PATH</c> environment variable) and are comparatively
 /// slow. They go beyond pure smoke testing by asserting on the example output
 /// (expected section headers, echoed IPv4 evidence and known property names)
 /// rather than just that the example does not crash.
@@ -86,13 +86,8 @@ public class TestExamples
             licenseKey: "!!YOUR_LICENSE_KEY!!";
 
         // Set IP Intelligence Data file
-        DataFile = Environment.GetEnvironmentVariable(
-            Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
-        if (string.IsNullOrWhiteSpace(DataFile))
-        {
-            DataFile = ExampleUtils.FindFile(
-                Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
-        }
+        DataFile = ExampleUtils.FindDataFile(
+            Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
 
         File.WriteAllText($"{nameof(TestExamples)}_DataFileName.txt", DataFile);
 

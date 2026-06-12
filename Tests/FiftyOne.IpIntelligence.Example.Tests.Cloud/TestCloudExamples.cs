@@ -37,8 +37,8 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
 {
     /// <summary>
     /// Runs the Cloud examples against the real 51Degrees Cloud service
-    /// (cloud.51degrees.com by default). Requires the RESOURCE_KEY
-    /// environment variable to be set.
+    /// (cloud.51degrees.com by default). Requires the 51DEGREES_RESOURCE_KEY
+    /// (or legacy SUPER_RESOURCE_KEY) environment variable to be set.
     /// </summary>
     /// <remarks>
     /// Note that these tests do not generally ensure the correctness
@@ -53,8 +53,7 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
         [TestInitialize]
         public void Init()
         {
-            _resourceKey = Environment.GetEnvironmentVariable(
-                ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR);
+            _resourceKey = ExampleUtils.GetResourceKeyFromEnv();
 
             Assert.IsFalse(
                 string.IsNullOrWhiteSpace(_resourceKey),

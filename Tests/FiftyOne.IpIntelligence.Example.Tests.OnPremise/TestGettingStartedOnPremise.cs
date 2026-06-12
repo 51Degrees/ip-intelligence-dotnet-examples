@@ -82,13 +82,8 @@ public class TestGettingStartedOnPremise
     [ClassInitialize]
     public static void ClassInit(TestContext context)
     {
-        _dataFile = Environment.GetEnvironmentVariable(
-            ExampleConstants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
-        if (string.IsNullOrWhiteSpace(_dataFile))
-        {
-            _dataFile = ExampleUtils.FindFile(
-                ExampleConstants.ENTERPRISE_IPI_DATA_FILE_NAME);
-        }
+        _dataFile = ExampleUtils.FindDataFile(
+            ExampleConstants.ENTERPRISE_IPI_DATA_FILE_NAME);
 
         if (string.IsNullOrWhiteSpace(_dataFile) || File.Exists(_dataFile) == false)
         {
