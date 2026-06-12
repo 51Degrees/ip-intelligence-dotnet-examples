@@ -429,13 +429,32 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI
             var dataFileConfigKey = $"PipelineOptions:Elements:{ipiEngineIndex}" +
                                     $":BuildParameters:DataFile";
 
-            // Use the command line argument if provided, otherwise use the appsettings.json value.
-            var dataFile = dataFileOverride ?? options.GetIpiDataFile();
+            // Use the command line argument if provided. Otherwise, an explicit data file
+            // path supplied in an environment variable takes precedence over the value in
+            // the configuration file. The aligned '51DEGREES_IPI_PATH' variable is checked
+            // first, followed by the legacy 'IPINTELLIGENCEDATAFILE' variable.
+            var dataFile = dataFileOverride;
+            if (string.IsNullOrWhiteSpace(dataFile))
+            {
+                dataFile = Environment.GetEnvironmentVariable(
+                    Examples.Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
+            }
+            if (string.IsNullOrWhiteSpace(dataFile))
+            {
+                dataFile = Environment.GetEnvironmentVariable(
+                    Examples.Constants.LEGACY_IP_INTELLIGENCE_DATA_FILE_ENV_VAR);
+            }
+            if (string.IsNullOrWhiteSpace(dataFile))
+            {
+                dataFile = options.GetIpiDataFile();
+            }
             var foundDataFile = false;
             if (string.IsNullOrEmpty(dataFile))
             {
-                throw new Exception($"A data file must be specified as a command line argument " +
-                    $"or in the appsettings.json file.");
+                throw new Exception($"A data file must be specified as a command line " +
+                    $"argument, in the appsettings.json file, or in the " +
+                    $"'{Examples.Constants.IP_INTELLIGENCE_DATA_FILE_ENV_VAR}' environment " +
+                    $"variable.");
             }
             // The data file location provided in the configuration may be using an absolute or
             // relative path. If it is relative then search for a matching file using the

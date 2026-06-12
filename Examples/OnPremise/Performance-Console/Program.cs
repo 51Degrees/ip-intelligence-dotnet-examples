@@ -377,7 +377,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Performance
                     // Note that the Lite data file is only used for illustration, and has limited accuracy
                     // and capabilities. Find out about the Enterprise data file on our pricing page:
                     // https://51degrees.com/pricing
-                    Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
+                    Examples.ExampleUtils.FindDataFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
                 // Do the same for the yaml evidence file.
                 var evidenceFile = options.EvidenceFile != null ? options.EvidenceFile :
                     // This file contains the 20,000 most commonly seen combinations of header values 

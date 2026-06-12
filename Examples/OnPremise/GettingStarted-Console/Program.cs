@@ -241,7 +241,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedConsole
             // Use the supplied path for the data file or find the lite file that is included
             // in the repository.
             var dataFile = args.Length > 0 ? args[0] :
-                Examples.ExampleUtils.FindFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
+                Examples.ExampleUtils.FindDataFile(Constants.ENTERPRISE_IPI_DATA_FILE_NAME);
 
             // Configure a logger to output to the console.
             var loggerFactory = LoggerFactory.Create(b => b.AddConsole());

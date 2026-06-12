@@ -110,8 +110,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.Cloud.GettingStartedWeb
                 var resourceKeyConfigKey = $"PipelineOptions:Elements:{cloudEngineIndex}" +
                     $":BuildParameters:ResourceKey";
 
-                string resourceKey = Environment.GetEnvironmentVariable(
-                        ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR);
+                string resourceKey = ExampleUtils.GetResourceKeyFromEnv();
 
                 if (string.IsNullOrEmpty(resourceKey) == false)
                 {
