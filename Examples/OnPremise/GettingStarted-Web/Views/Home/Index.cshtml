@@ -30,17 +30,6 @@
 <link rel="stylesheet" href="~/css/examples-main.min.css" />
 
 <div class="c-eg-page">
-    <h2 class="c-eg-page__title">IP intelligence web integration example</h2>
-    <p class="c-eg-page__lead">
-        This example demonstrates the use of the Pipeline API to perform IP intelligence lookups
-        within a simple ASP.NET Core web project.
-    </p>
-
-    <noscript>
-        <div class="c-eg-alert">
-            WARNING: JavaScript is disabled in your browser.
-        </div>
-    </noscript>
     @if (DateTime.UtcNow > Model.DataFile.DataPublishedDateTime.AddDays(ExampleUtils.DataFileAgeWarning))
     {
         <div class="c-eg-alert">
@@ -52,6 +41,17 @@
             daily updates, on our <a href="https://51degrees.com/pricing?utm_source=code&amp;utm_medium=example&amp;utm_campaign=ip-intelligence-dotnet-examples&amp;utm_content=examples-onpremise-gettingstarted-web-views-home-index.cshtml&amp;utm_term=ip-intelligence-web-integration-example">pricing page</a>.
         </div>
     }
+    <h2 class="c-eg-page__title">IP intelligence web integration example</h2>
+    <p class="c-eg-page__lead">
+        This example demonstrates the use of the Pipeline API to perform IP intelligence lookups
+        within a simple ASP.NET Core web project.
+    </p>
+
+    <noscript>
+        <div class="c-eg-alert">
+            WARNING: JavaScript is disabled in your browser.
+        </div>
+    </noscript>
 
     <div id="content">
         <h3 class="c-eg-page__heading">IP intelligence lookup</h3>
