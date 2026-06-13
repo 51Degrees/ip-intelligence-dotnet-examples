@@ -68,7 +68,7 @@ using System.Threading.Tasks;
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/Metrics-Console/Program.cs). 
 /// 
 /// This example requires an enterprise IP Intelligence data file (.ipi). 
-/// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us).
+/// To obtain an enterprise data file for testing, please [contact us](https://51degrees.com/contact-us?utm_source=code&amp;utm_medium=example&amp;utm_campaign=ip-intelligence-dotnet-examples&amp;utm_content=examples-onpremise-metrics-console-program.cs&amp;utm_term=header).
 /// 
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
@@ -683,7 +683,7 @@ public class Program
                 // LowMemory keeps the (multi-gigabyte) IP Intelligence data file on
                 // disk rather than loading it entirely into memory. See the
                 // documentation for more detail on this and other configuration options.
-                // https://51degrees.com/documentation/_features__automatic_datafile_updates.html
+                // https://51degrees.com/documentation/_features__automatic_datafile_updates.html?utm_source=code&utm_medium=example&utm_campaign=ip-intelligence-dotnet-examples&utm_content=examples-onpremise-metrics-console-program.cs&utm_term=run
                 .SetPerformanceProfile(PerformanceProfiles.LowMemory)
                 // inhibit auto-update of the data file for this test
                 .SetAutoUpdate(false)
@@ -1077,7 +1077,7 @@ public class Program
             // In this example, by default, the 51degrees IP Intelligence data file needs to be somewhere in the
             // project space, or you may specify another file as a command line parameter.
             //
-            // For testing, contact us to obtain an enterprise data file: https://51degrees.com/contact-us
+            // For testing, contact us to obtain an enterprise data file: https://51degrees.com/contact-us?utm_source=code&utm_medium=example&utm_campaign=ip-intelligence-dotnet-examples&utm_content=examples-onpremise-metrics-console-program.cs&utm_term=main
             Examples.ExampleUtils.FindDataFile(
                 Constants.ENTERPRISE_IPI_DATA_FILE_NAME)
         };
