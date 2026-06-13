@@ -49,5 +49,9 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Mod
         // Messages for display
         public string DeviceMessage { get; set; }
         public string IpMessage { get; set; }
+
+        // True when the IP Intelligence engine is running against the free 'Lite'
+        // data file. Used to surface the contact-us message in the view.
+        public bool IsLiteDataFile { get; set; }
     }
 }
