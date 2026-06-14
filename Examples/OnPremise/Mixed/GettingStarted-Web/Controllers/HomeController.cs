@@ -21,6 +21,7 @@
  * ********************************************************************* */
 
 using FiftyOne.DeviceDetection;
+using FiftyOne.IpIntelligence.Engine.OnPremise.FlowElements;
 using FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Model;
 using FiftyOne.IpIntelligence.Translation.Data;
 using FiftyOne.Pipeline.Core.Data;
@@ -95,6 +96,11 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb.Con
 
             model.TranslationData = flowData.Get<ICountriesTranslationData>();
             model.CodeTranslationData = flowData.Get<ICountryCodeTranslationData>();
+
+            // Determine whether the free 'Lite' IP Intelligence data file is in use
+            // so the view can surface a contact-us message for on-premise users.
+            var ipiEngine = flowData.Pipeline.GetElement<IpiOnPremiseEngine>();
+            model.IsLiteDataFile = ipiEngine?.DataSourceTier == "Lite";
 
             // Check if a custom IP was provided via query parameter
             var clientIp = Request.Query["client-ip"].FirstOrDefault();
