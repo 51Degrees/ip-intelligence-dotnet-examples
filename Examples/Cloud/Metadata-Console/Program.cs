@@ -32,26 +32,26 @@ using FiftyOne.Pipeline.Engines.Data;
 /// <summary>
 /// @example Cloud/Metadata-Console/Program.cs
 ///
-/// The Cloud service exposes metadata that can provide additional information about the various 
+/// The Cloud service exposes metadata that can provide additional information about the various
 /// properties that might be returned.
 /// This example shows how to access this data and display the values available.
-/// 
+///
 /// A list of the properties will be displayed, along with some additional information about each
 /// property. Note that this is the list of properties used by the supplied resource key, rather
 /// than all properties that can be returned by the Cloud service.
-/// 
-/// In addition, the evidence keys that are accepted by the service are listed. These are the 
+///
+/// In addition, the evidence keys that are accepted by the service are listed. These are the
 /// keys that, when added to the evidence collection in flow data, could have some impact on the
 /// result that is returned.
-/// 
-/// Bear in mind that this is a list of ALL evidence keys accepted by all products offered by the 
+///
+/// Bear in mind that this is a list of ALL evidence keys accepted by all products offered by the
 /// cloud. If you are only using a single product (for example - device detection) then not all
 /// of these keys will be relevant.
-/// 
+///
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/Metadata-Console/Program.cs).
 ///
-/// To run this example, create a Resource Key for free at https://configure.51degrees.com?utm_source=code&amp;utm_medium=example&amp;utm_campaign=ip-intelligence-dotnet-examples&amp;utm_content=examples-cloud-metadata-console-program.cs&amp;utm_term=header and supply it as the first command-line argument or via the 51DEGREES_RESOURCE_KEY environment variable. By default the pipeline talks to cloud.51degrees.com; set 51D_CLOUD_ENDPOINT to point at a self-hosted Cloud service instead.
-/// 
+/// To run this example, create a Resource Key for free at https://configure.51degrees.com?utm_source=code&amp;utm_medium=example&amp;utm_campaign=ip-intelligence-dotnet-examples&amp;utm_content=examples-cloud-metadata-console-program.cs&amp;utm_term=header and supply it as the first command-line argument or via the _51DEGREES_RESOURCE_KEY environment variable. By default the pipeline talks to cloud.51degrees.com; set 51D_CLOUD_ENDPOINT to point at a self-hosted Cloud service instead.
+///
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
 /// - [Microsoft.Extensions.Logging.Console](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Console/)
@@ -124,7 +124,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Metadata
                 foreach (var property in engine.Properties)
                 {
                     // Output some details about the property.
-                    // If we're outputting to console then we also add some formatting to make it 
+                    // If we're outputting to console then we also add some formatting to make it
                     // more readable.
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.BackgroundColor = ConsoleColor.DarkRed;
@@ -132,7 +132,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Metadata
                     Console.ResetColor();
                     var typeName = GetPrettyTypeName(
                         typeof(IAspectPropertyValue).IsAssignableFrom(property.Type)
-                            ? property.Type.GenericTypeArguments[0] 
+                            ? property.Type.GenericTypeArguments[0]
                             : property.Type);
                     output.WriteLine($"[Category: {property.Category}] ({typeName})");
                 }

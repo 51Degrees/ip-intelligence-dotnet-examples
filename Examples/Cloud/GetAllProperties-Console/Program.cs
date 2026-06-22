@@ -27,18 +27,18 @@ using System.Collections;
 using System.Linq;
 /// <summary>
 /// @example Cloud/GetAllProperties-Console/Program.cs
-/// 
+///
 /// This example shows how to retrieve all available IP Intelligence properties from the 51Degrees Cloud service.
-/// 
+///
 /// You will learn:
-/// 
+///
 /// 1. How to create a Pipeline that uses 51Degrees Cloud IP Intelligence
 /// 2. How to process an IP address and retrieve all available properties
 /// 3. How to enumerate through all the properties returned by the service
-/// 
+///
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/GetAllProperties-Console/Program.cs).
 ///
-/// To run this example, create a Resource Key for free at https://configure.51degrees.com?utm_source=code&amp;utm_medium=example&amp;utm_campaign=ip-intelligence-dotnet-examples&amp;utm_content=examples-cloud-getallproperties-console-program.cs&amp;utm_term=header and supply it as the first command-line argument or via the 51DEGREES_RESOURCE_KEY environment variable. By default the pipeline talks to cloud.51degrees.com; set 51D_CLOUD_ENDPOINT to point at a self-hosted Cloud service instead.
+/// To run this example, create a Resource Key for free at https://configure.51degrees.com?utm_source=code&amp;utm_medium=example&amp;utm_campaign=ip-intelligence-dotnet-examples&amp;utm_content=examples-cloud-getallproperties-console-program.cs&amp;utm_term=header and supply it as the first command-line argument or via the _51DEGREES_RESOURCE_KEY environment variable. By default the pipeline talks to cloud.51degrees.com; set 51D_CLOUD_ENDPOINT to point at a self-hosted Cloud service instead.
 /// </summary>
 namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
 {
@@ -94,7 +94,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
             }
 
             /// <summary>
-            /// Convert the given value into a human-readable string representation 
+            /// Convert the given value into a human-readable string representation
             /// </summary>
             /// <param name="propertyValue">
             /// Property value object to be converted
@@ -114,7 +114,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.GetAllProperties
                 {
                     if (aspectPropertyValue.HasValue)
                     {
-                        // Get the type and value parameters from the 
+                        // Get the type and value parameters from the
                         // AspectPropertyValue instance.
                         basePropetyType = basePropetyType.GenericTypeArguments[0];
                         basePropertyValue = aspectPropertyValue.Value;

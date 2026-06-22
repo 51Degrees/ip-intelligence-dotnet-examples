@@ -34,60 +34,60 @@ using System.Net.Http;
 
 /// <summary>
 /// @example OnPremise/UpdateDataFile-Console/Program.cs
-/// 
+///
 /// This example illustrates various parameters that can be adjusted when using the on-premise
 /// IP Intelligence engine, and controls when a new data file is sought and when it is loaded by
 /// the IP Intelligence software.
-/// 
+///
 /// Three main aspects are demonstrated:
 /// - Update on Start-Up
 /// - Filesystem Watcher
 /// - Daily auto-update
-/// 
+///
 /// # Testing Requirements
 /// To test this example, you need to:
 /// 1. Host an IP Intelligence data file (.ipi) at a custom URL accessible to this application
 /// 2. Provide that custom URL using the --data-update-url parameter
 /// 3. No license key is required when using a custom URL
-/// 
+///
 /// For local testing, you can use the GettingStarted-API example which exposes a local URL
 /// for downloading the gzipped data file. See the Command Line Usage section below for examples.
-/// 
+///
 /// For production use, you will eventually need to use a Distributor service and license key
 /// to keep your data file updated.
-/// 
+///
 /// To obtain access to enterprise data files for hosting, please contact us at https://51degrees.com/contact-us?utm_source=code&amp;utm_medium=example&amp;utm_campaign=ip-intelligence-dotnet-examples&amp;utm_content=examples-onpremise-updatedatafile-console-program.cs&amp;utm_term=header
-/// 
+///
 /// # Command Line Usage
 /// The data file path is provided via the first command line argument. Here's how it works:
-/// 
-/// 1. First argument: Data file path (optional - checks the 51DEGREES_IPI_PATH and legacy
+///
+/// 1. First argument: Data file path (optional - checks the _51DEGREES_IPI_PATH and legacy
 ///    IPINTELLIGENCEDATAFILE environment variables, then defaults to Constants.ENTERPRISE_IPI_DATA_FILE_NAME)
 /// 2. Second argument: License key (optional when using --data-update-url)
 /// 3. Option: --data-update-url for custom URL
-/// 
+///
 /// So to run the example, you would use:
-/// 
+///
 /// ```
 /// # With data file path and custom URL (no license key needed)
 /// ./UpdateDataFile /path/to/datafile.ipi --data-update-url http://localhost:5225/download-ipi-gz
-/// 
-/// # With just custom URL (uses default data file name)  
+///
+/// # With just custom URL (uses default data file name)
 /// ./UpdateDataFile --data-update-url http://localhost:5225/download-ipi-gz
-/// 
+///
 /// # With license key (no custom URL)
 /// ./UpdateDataFile /path/to/datafile.ipi your-license-key
 /// ```
-/// 
+///
 /// # Update on Start-Up
 /// You can configure the pipeline builder to download an Enterprise data file on start-up.
-/// 
+///
 /// ## Pre-Requisites
 /// - a license key
 /// - a file location for the download
 ///      - this may be an existing file - which will be overwritten
 ///      - or if it does not exist must end in ".ipi" and must be in an existing directory
-///      
+///
 /// ## Configuration
 /// - the pipeline must be configured to use a temp file
 /// ``` {c#}
@@ -98,7 +98,7 @@ using System.Net.Http;
 /// ``` {c#}
 ///      .setDataUpdateOnStartup(true)
 /// ```
-/// 
+///
 /// # File System Watcher
 /// You can configure the pipeline builder to watch for changes to the currently loaded
 /// IP Intelligence data file, and to replace the file currently in use with the new one. This is
@@ -109,13 +109,13 @@ using System.Net.Http;
 /// ## Pre-Requisites
 /// - a license key
 /// - the file location of the existing file
-/// 
+///
 /// ## Configuration
 /// - the pipeline must be configured to use a temp file
 /// ``` {c#}
 ///    .UseOnPremise(dataFilename, true)
 /// ```
-/// 
+///
 /// ## Daily auto-update
 /// Enterprise data files are usually created four times a week. Each data file contains a date
 /// for when the next data file is expected. You can configure the pipeline so that it starts
@@ -126,7 +126,7 @@ using System.Net.Http;
 /// ## Pre-Requisites
 /// - a license key
 /// - the file location of the existing file
-/// 
+///
 /// ## Configuration
 /// - the pipeline must be configured with a license key and the 'use temp file' flag must be set.
 /// ``` {c#}
@@ -143,7 +143,7 @@ using System.Net.Http;
 /// ``` {c#}
 ///    .SetUpdateRandomisationMax(10*60)
 /// ```
-/// 
+///
 /// # Location
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/master/Examples/OnPremise/UpdateDataFile-Console/Program.cs).
 /// </summary>
@@ -182,7 +182,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
             /// <param name="engineBuilder">
             /// A builder used to create an on-premise IP Intelligence engine.
             /// Generally, we wouldn't need this in addition to the pipeline builder above.
-            /// In this example, we use it to check information about the data file before 
+            /// In this example, we use it to check information about the data file before
             /// creating the full pipeline.
             /// </param>
             /// <param name="completionListener">
@@ -190,7 +190,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
             /// completed.
             /// </param>
             /// <param name="logger"></param>
-            public Example(IpiPipelineBuilder pipelineBuilder, 
+            public Example(IpiPipelineBuilder pipelineBuilder,
                 IpiOnPremiseEngineBuilder engineBuilder,
                 CompletionListener completionListener,
                 ILogger<Example> logger)
@@ -206,8 +206,8 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
             /// </summary>
             /// <param name="dataFile">
             /// Path to a data file to use in this example. May be absolute or relative.
-            /// If relative, the example will search for a matching file in the project 
-            /// directories. 
+            /// If relative, the example will search for a matching file in the project
+            /// directories.
             /// </param>
             /// <param name="licenseKey">
             /// The license key to use when requesting a data file update.
@@ -301,16 +301,16 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                         // between checks to see if the file has changed to 1 second.
                         // By default, this is 30 mins.
                         .SetUpdatePollingInterval(1);
-                    
+
                     if (dataUpdateUrl is not null)
                     {
                         builder.SetDataUpdateUrl(dataUpdateUrl);
                         builder.SetDataUpdateVerifyMd5(false);
                     }
-                    
+
                     // Build the pipeline.
                     using var pipeline = builder.Build();
-                    
+
                     // thread blocks till update checking is complete - or if there is an
                     // exception we don't get this far
                     Logger.LogInformation("Update on start-up complete - status - " +
@@ -421,7 +421,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                 return dataFile;
             }
         }
-        
+
         private const string KEY_SUBMISSION_ALT_PATH = $"as an environment variable named '{Constants.LICENSE_KEY_ENV_VAR}'";
         private const string KEY_SUBMISSION_PATHS = "as the second command line argument to this program, or " + KEY_SUBMISSION_ALT_PATH;
 
@@ -467,13 +467,13 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
             };
             dataUpdateUrl.Validators.Add(url =>
             {
-                if(url.Tokens.FirstOrDefault()?.Value is { } urlString 
+                if(url.Tokens.FirstOrDefault()?.Value is { } urlString
                    && !Uri.IsWellFormedUriString(urlString, UriKind.Absolute))
                 {
                     url.AddError($"Value provided for '{dataUpdateUrl.Name}' is not a valid absolute URL.");
                 }
             });
-            
+
             var rootCommand = new RootCommand("Data file update sample.");
 
             rootCommand.Arguments.Add(dataFile);
@@ -485,30 +485,30 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                 string dataFilePath = parseResult.GetValue(dataFile)!;
                 string? licenseKeyValue = parseResult.GetValue(licenseKey);
                 string? dataUpdateUrlValue = parseResult.GetValue(dataUpdateUrl);
-                
+
                 // Validate license key only if no custom data update URL is provided
                 if (string.IsNullOrWhiteSpace(licenseKeyValue))
                 {
                     licenseKeyValue = Environment.GetEnvironmentVariable(Constants.LICENSE_KEY_ENV_VAR);
                 }
-                
+
                 if (string.IsNullOrWhiteSpace(licenseKeyValue) && string.IsNullOrWhiteSpace(dataUpdateUrlValue))
                 {
                     Console.Error.WriteLine("In order to test this example you will need a 51Degrees " +
                                           "Enterprise license which can be obtained on a trial basis or purchased " +
                                           "from our pricing page https://51degrees.com/pricing?utm_source=code&utm_medium=example&utm_campaign=ip-intelligence-dotnet-examples&utm_content=examples-onpremise-updatedatafile-console-program.cs&utm_term=license-key-or-update-url-required. You must supply the " +
-                                          "license key " + KEY_SUBMISSION_PATHS + 
+                                          "license key " + KEY_SUBMISSION_PATHS +
                                           ", or provide a custom data update URL using --data-update-url");
                     return 1;
                 }
-                
+
                 // Work out where the data file is if we don't have an absolute path.
                 if (!string.IsNullOrWhiteSpace(dataFilePath) && !Path.IsPathRooted(dataFilePath))
                 {
                     var fullPath = Examples.ExampleUtils.FindFile(dataFilePath);
                     dataFilePath = fullPath ?? Path.Combine(Directory.GetCurrentDirectory(), dataFilePath);
                 }
-                
+
                 Initialize(
                     dataFilePath,
                     licenseKeyValue!,
@@ -531,7 +531,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.UpdateDataFile
                     .AddConsole()
                     // Only display messages @ warning or above.
                     // Or info and above if the come from this example.
-                    // This filters out some messages from the Pipeline that would otherwise 
+                    // This filters out some messages from the Pipeline that would otherwise
                     // make this example harder to follow.
                     .AddFilter((c, l) =>
                         (l >= LogLevel.Warning

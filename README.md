@@ -29,10 +29,10 @@ Both data files should be obtained from the respective repositories:
 The on-premise examples need an IP Intelligence data file. The examples locate
 the file in the following order:
 
-1. The "51DEGREES_IPI_PATH" environment variable, which can be set to an
+1. The "_51DEGREES_IPI_PATH" environment variable, which can be set to an
    explicit path to the data file. The legacy "IPINTELLIGENCEDATAFILE"
    environment variable is also still supported, and is checked after
-   "51DEGREES_IPI_PATH".
+   "_51DEGREES_IPI_PATH".
 2. A search of the folder hierarchy, walking up from the working directory,
    for the expected data file name.
 3. The free 'Lite' data file in its expected location, which is the
@@ -41,7 +41,7 @@ the file in the following order:
 
 ## 📦 NuGet Package
 
-Examples currently depend on a pre-release version of the [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence) package.  
+Examples currently depend on a pre-release version of the [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence) package.
 
 ❗Make sure to enable pre-release packages when installing it:
 * Using the .NET CLI:
@@ -71,13 +71,13 @@ dotnet add package FiftyOne.IpIntelligence --prerelease
 A resource key configured with the properties needed to run the cloud examples
 can be created for free [here](https://configure.51degrees.com/1QWJwHxl?utm_source=github&utm_medium=readme&utm_campaign=ip-intelligence-dotnet-examples&utm_content=readme.md&utm_term=cloud). To
 use the resource key in the examples it can be supplied as an environment
-variable called "51DEGREES_RESOURCE_KEY". The legacy environment variable
+variable called "_51DEGREES_RESOURCE_KEY". The legacy environment variable
 names "RESOURCE_KEY" and "SUPER_RESOURCE_KEY" are still supported, with the
-aligned "51DEGREES_RESOURCE_KEY" name checked first.
+aligned "_51DEGREES_RESOURCE_KEY" name checked first.
 
-* In order to test cloud examples against a custom endpoint - you need to launch `OnPremise/Mixed/GettingStarted-API` example 
-and keep it running while launching other examples.  Depending on the IDE you use this can be either done conveniently from the IDE, or 
-just using `dotnet run` in the `OnPremise/Mixed/GettingStarted-API` directory from the command line.  
+* In order to test cloud examples against a custom endpoint - you need to launch `OnPremise/Mixed/GettingStarted-API` example
+and keep it running while launching other examples.  Depending on the IDE you use this can be either done conveniently from the IDE, or
+just using `dotnet run` in the `OnPremise/Mixed/GettingStarted-API` directory from the command line.
 
 | Example                          | Target               | Use case                                                                  |
 | -------------------------------- | -------------------- | ------------------------------------------------------------------------- |

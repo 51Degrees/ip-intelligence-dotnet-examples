@@ -42,7 +42,7 @@ namespace FiftyOne.IpIntelligence.Examples
         public const string GEOIP_COMPARISON_EVIDENCE_FILE_NAME = "geoip_comparison_evidence.csv";
 
         /// <summary>
-        /// Environment variable key for the license key file to use for the 
+        /// Environment variable key for the license key file to use for the
         /// tests.
         /// </summary>
         public const string LICENSE_KEY_ENV_VAR = "IPINTELLIGENCELICENSEKEY_DOTNET";
@@ -52,7 +52,7 @@ namespace FiftyOne.IpIntelligence.Examples
         /// IP Intelligence data file. This aligned name is checked first,
         /// before any legacy variable names.
         /// </summary>
-        public const string IP_INTELLIGENCE_DATA_FILE_ENV_VAR = "51DEGREES_IPI_PATH";
+        public const string IP_INTELLIGENCE_DATA_FILE_ENV_VAR = "_51DEGREES_IPI_PATH";
 
         /// <summary>
         /// Legacy environment variable key used to supply an explicit path to
@@ -68,7 +68,7 @@ namespace FiftyOne.IpIntelligence.Examples
         public const string EVIDENCE_FILE_ENV_VAR = "EVIDENCEFILE";
 
         /// <summary>
-        /// Environment variable key for the geo ip truth 
+        /// Environment variable key for the geo ip truth
         /// evidence file to use for the tests.
         /// </summary>
         public const string GEOIP_TRUTH_EVIDENCE_FILE_ENV_VAR = "GEOIPEVIDENCEFILE";

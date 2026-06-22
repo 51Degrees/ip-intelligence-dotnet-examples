@@ -44,7 +44,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
 
         /// <summary>
         /// Used by unit tests to run the example in an almost identical manner
-        /// to a developer using the example. Returns the task that the web 
+        /// to a developer using the example. Returns the task that the web
         /// server is running in so that the test can trigger the cancellation
         /// token and then wait for the server to shutdown before finishing.
         /// </summary>
@@ -79,12 +79,12 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
         /// <summary>
         /// Typically, something like this will not be necessary.
         /// The IP Intelligence API will accept an absolute or relative path for the data file.
-        /// However, if a relative path is specified, it will only look in the current working 
+        /// However, if a relative path is specified, it will only look in the current working
         /// directory.
-        /// In our examples, we have many different projects and we don't want to have a copy of 
+        /// In our examples, we have many different projects and we don't want to have a copy of
         /// the data file for every single one.
-        /// In order to handle this, we dynamically search the project directories for the data 
-        /// file location and then override the configured setting with the absolute path if 
+        /// In order to handle this, we dynamically search the project directories for the data
+        /// file location and then override the configured setting with the absolute path if
         /// necessary.
         /// In a real-world scenario, you can just put the data file in your working directory
         /// or use an absolute path in the configuration file.
@@ -114,7 +114,7 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedWeb
 
             // Use the command line argument if provided. Otherwise, an explicit data file
             // path supplied in an environment variable takes precedence over the value in
-            // the configuration file. The aligned '51DEGREES_IPI_PATH' variable is checked
+            // the configuration file. The aligned '_51DEGREES_IPI_PATH' variable is checked
             // first, followed by the legacy 'IPINTELLIGENCEDATAFILE' variable.
             var dataFile = dataFileOverride;
             if (string.IsNullOrWhiteSpace(dataFile))
