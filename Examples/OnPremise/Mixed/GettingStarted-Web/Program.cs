@@ -36,19 +36,19 @@ using Microsoft.Extensions.Hosting;
 
 /// <summary>
 /// @example OnPremise/Mixed/GettingStarted-Web/Program.cs
-/// 
-/// This example demonstrates using both Device Detection and IP Intelligence 
-/// engines in a single web application pipeline. The engines process evidence 
+///
+/// This example demonstrates using both Device Detection and IP Intelligence
+/// engines in a single web application pipeline. The engines process evidence
 /// in parallel for optimal performance.
-/// 
-/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/OnPremise/Mixed/GettingStarted-Web/Program.cs). 
-/// 
+///
+/// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/OnPremise/Mixed/GettingStarted-Web/Program.cs).
+///
 /// Required data files:
 /// - Device Detection data file (.hash format)
 /// - IP Intelligence data file (.ipi format)
-/// 
+///
 /// The paths to the data files should be provided as command line parameters
-/// 
+///
 /// Required NuGet Dependencies:
 /// - [FiftyOne.DeviceDetection](https://www.nuget.org/packages/FiftyOne.DeviceDetection/)
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
@@ -66,7 +66,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
 
         /// <summary>
         /// Used by unit tests to run the example in an almost identical manner
-        /// to a developer using the example. Returns the task that the web 
+        /// to a developer using the example. Returns the task that the web
         /// server is running in so that the test can trigger the cancellation
         /// token and then wait for the server to shutdown before finishing.
         /// </summary>
@@ -102,12 +102,12 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
         /// <summary>
         /// Typically, something like this will not be necessary.
         /// The IP Intelligence API will accept an absolute or relative path for the data file.
-        /// However, if a relative path is specified, it will only look in the current working 
+        /// However, if a relative path is specified, it will only look in the current working
         /// directory.
-        /// In our examples, we have many different projects and we don't want to have a copy of 
+        /// In our examples, we have many different projects and we don't want to have a copy of
         /// the data file for every single one.
-        /// In order to handle this, we dynamically search the project directories for the data 
-        /// file location and then override the configured setting with the absolute path if 
+        /// In order to handle this, we dynamically search the project directories for the data
+        /// file location and then override the configured setting with the absolute path if
         /// necessary.
         /// In a real-world scenario, you can just put the data file in your working directory
         /// or use an absolute path in the configuration file.
@@ -147,7 +147,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
 
             // Use the command line argument if provided. Otherwise, an explicit data file
             // path supplied in an environment variable takes precedence over the value in
-            // the configuration file. The aligned '51DEGREES_IPI_PATH' variable is checked
+            // the configuration file. The aligned '_51DEGREES_IPI_PATH' variable is checked
             // first, followed by the legacy 'IPINTELLIGENCEDATAFILE' variable.
             var dataFile = dataFileOverride;
             if (string.IsNullOrWhiteSpace(dataFile))
@@ -173,7 +173,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedWeb
                     $"variable.");
             }
             // The data file location provided in the configuration may be using an absolute or
-            // relative path. If it is relative then search for a matching file using the 
+            // relative path. If it is relative then search for a matching file using the
             // ExampleUtils.FindFile function.
             if (Path.IsPathRooted(dataFile) == false)
             {

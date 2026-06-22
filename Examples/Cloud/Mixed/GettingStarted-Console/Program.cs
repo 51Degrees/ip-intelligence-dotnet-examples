@@ -41,16 +41,16 @@ using FiftyOne.DeviceDetection.Cloud.FlowElements;
 /// @example Cloud/Mixed/GettingStarted-Console/Program.cs
 ///
 /// This example demonstrates using both Device Detection and IP Intelligence from the 51Degrees Cloud service.
-/// 
+///
 /// You will learn:
-/// 
+///
 /// 1. How to create a Pipeline that uses both 51Degrees Cloud Device Detection and IP Intelligence
 /// 2. How to pass input data (User-Agent and IP address) to the Pipeline
 /// 3. How to retrieve device and IP intelligence results from a single pipeline
-/// 
+///
 /// This example is available in full on [GitHub](https://github.com/51Degrees/ip-intelligence-dotnet-examples/blob/main/Examples/Cloud/Mixed/GettingStarted-Console/Program.cs).
 ///
-/// To run this example, create a Resource Key for free at https://configure.51degrees.com?utm_source=code&amp;utm_medium=example&amp;utm_campaign=ip-intelligence-dotnet-examples&amp;utm_content=examples-cloud-mixed-gettingstarted-console-program.cs&amp;utm_term=header and supply it via the appsettings.json file or the 51DEGREES_RESOURCE_KEY environment variable. By default the pipeline talks to cloud.51degrees.com; set 51D_CLOUD_ENDPOINT to point at a self-hosted Cloud service instead.
+/// To run this example, create a Resource Key for free at https://configure.51degrees.com?utm_source=code&amp;utm_medium=example&amp;utm_campaign=ip-intelligence-dotnet-examples&amp;utm_content=examples-cloud-mixed-gettingstarted-console-program.cs&amp;utm_term=header and supply it via the appsettings.json file or the _51DEGREES_RESOURCE_KEY environment variable. By default the pipeline talks to cloud.51degrees.com; set 51D_CLOUD_ENDPOINT to point at a self-hosted Cloud service instead.
 ///
 /// Required NuGet Dependencies:
 /// - [FiftyOne.IpIntelligence](https://www.nuget.org/packages/FiftyOne.IpIntelligence/)
@@ -136,7 +136,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
 
             private void AnalyseEvidence(
                 Dictionary<string, object> evidence,
-                IPipeline pipeline, 
+                IPipeline pipeline,
                 TextWriter output)
             {
                 // FlowData is used to convey information through the pipeline
@@ -160,19 +160,19 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
                     data.Process();
 
                     message = new StringBuilder();
-                    
+
                     // Get Device Detection results
                     message.AppendLine("\nDevice Detection Results:");
                     message.AppendLine("-" + new string('-', 24));
                     var device = data.Get<IDeviceData>();
                     OutputDeviceData(device, message);
-                    
+
                     // Get IP Intelligence results
                     message.AppendLine("\nIP Intelligence Results:");
                     message.AppendLine("-" + new string('-', 23));
                     var ipData = data.Get<IIpIntelligenceData>();
                     OutputIpData(ipData, message);
-                    
+
                     output.WriteLine(message.ToString());
                 }
             }
@@ -228,7 +228,7 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
             }
 
             /// <summary>
-            /// This Run method is called by the example test to avoid the need to duplicate the 
+            /// This Run method is called by the example test to avoid the need to duplicate the
             /// service provider setup logic.
             /// </summary>
             /// <param name="options"></param>
@@ -244,14 +244,14 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
                     // Add an HttpClient instance. This is used for making requests to the
                     // Cloud service.
                     .AddSingleton<HttpClient>()
-                    // Add the builders that will be needed to create the engines specified in the 
+                    // Add the builders that will be needed to create the engines specified in the
                     // configuration file.
                     .AddSingleton<CloudRequestEngineBuilder>()
                     .AddSingleton<IpiCloudEngineBuilder>()
                     .AddSingleton<DeviceDetectionCloudEngineBuilder>()
                     .BuildServiceProvider())
                 {
-                    // Get the resource key setting from the config file. 
+                    // Get the resource key setting from the config file.
                     var resourceKey = options.GetResourceKey();
 
                     // If we don't have a resource key then log an error.
@@ -296,13 +296,13 @@ namespace FiftyOne.IpIntelligence.Examples.Cloud.Mixed.GettingStartedConsole
             // misnamed configuration keys.
             section.Bind(options, (o) => { o.ErrorOnUnknownConfiguration = true; });
 
-            // Get the resource key setting from the config file. 
+            // Get the resource key setting from the config file.
             var resourceKeyFromConfig = options.GetResourceKey();
             var configHasKey = string.IsNullOrWhiteSpace(resourceKeyFromConfig) == false &&
                     resourceKeyFromConfig.StartsWith("!!") == false;
 
             // If no resource key is specified in the config file then override it with the key
-            // from the environment variable / command line. 
+            // from the environment variable / command line.
             if (configHasKey == false)
             {
                 options.SetResourceKey(resourceKey);

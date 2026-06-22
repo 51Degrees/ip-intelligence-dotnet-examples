@@ -37,7 +37,7 @@ namespace FiftyOne.IpIntelligence.Examples
         /// to use when running cloud examples. This aligned name is checked
         /// first, before any legacy variable names.
         /// </summary>
-        public const string CLOUD_RESOURCE_KEY_ENV_VAR = "51DEGREES_RESOURCE_KEY";
+        public const string CLOUD_RESOURCE_KEY_ENV_VAR = "_51DEGREES_RESOURCE_KEY";
 
         /// <summary>
         /// The legacy environment variable key used to get the resource key
@@ -156,9 +156,9 @@ namespace FiftyOne.IpIntelligence.Examples
         }
 
         /// <summary>
-        /// Uses a background task to search for the specified filename within the working 
+        /// Uses a background task to search for the specified filename within the working
         /// directory.
-        /// If the file cannot be found, the algorithm will move to the parent directory and 
+        /// If the file cannot be found, the algorithm will move to the parent directory and
         /// repeat the process.
         /// This continues until the file is found or a timeout is triggered.
         /// </summary>
@@ -309,7 +309,7 @@ namespace FiftyOne.IpIntelligence.Examples
         {
             try
             {
-                if (key == null) 
+                if (key == null)
                 {
                     return true;
                 }
@@ -375,7 +375,7 @@ namespace FiftyOne.IpIntelligence.Examples
 
         /// <summary>
         /// Get the resource key from the environment. The aligned
-        /// '51DEGREES_RESOURCE_KEY' variable is checked first, followed by
+        /// '_51DEGREES_RESOURCE_KEY' variable is checked first, followed by
         /// the legacy 'RESOURCE_KEY' and 'SUPER_RESOURCE_KEY' variables.
         /// </summary>
         /// <returns>
@@ -401,7 +401,7 @@ namespace FiftyOne.IpIntelligence.Examples
         /// <summary>
         /// Get the resource key from the environment and run the action with
         /// the value, or an empty string if no resource key is set. The
-        /// aligned '51DEGREES_RESOURCE_KEY' variable is checked first,
+        /// aligned '_51DEGREES_RESOURCE_KEY' variable is checked first,
         /// followed by the legacy 'RESOURCE_KEY' and 'SUPER_RESOURCE_KEY'
         /// variables.
         /// </summary>
