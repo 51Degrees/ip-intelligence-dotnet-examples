@@ -27,7 +27,9 @@ using FiftyOne.IpIntelligence.Examples;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -391,6 +393,105 @@ public class TestExamples
                 "specified in the TestHashExamples.Init method or by setting an Environment " +
                 $"variable called '{Constants.LICENSE_KEY_ENV_VAR}'");
         }
+    }
+
+    /// <summary>
+    /// Test the Performance Example.
+    /// Runs the benchmark over a tiny, self-contained evidence set on a single
+    /// thread (just enough to prove the example executes and produces results,
+    /// without turning the test into a real performance run) and asserts the
+    /// returned benchmark results show detections were processed.
+    /// </summary>
+    [TestMethod]
+    public void Example_OnPremise_Performance()
+    {
+        VerifyDataFileAvailable();
+
+        var evidenceFile = WriteTempEvidenceYaml(
+            "82.12.34.23",
+            "116.154.188.222",
+            "8.8.8.8");
+        List<Examples.OnPremise.Performance.Program.BenchmarkResult> results = null;
+        try
+        {
+            // LowMemory is the only profile the example benchmarks (the data
+            // file must never be loaded entirely into memory); request only a
+            // single property to keep the run light.
+            var config = new Examples.OnPremise.Performance.PerformanceConfiguration(
+                FiftyOne.Pipeline.Engines.PerformanceProfiles.LowMemory, false);
+            RunResilient(() =>
+                results = Examples.OnPremise.Performance.Program.Example.Run(
+                    DataFile, evidenceFile, config, OutputWriter, (ushort)1));
+        }
+        finally
+        {
+            File.Delete(evidenceFile);
+        }
+
+        Assert.IsNotNull(results,
+            "Performance example should return benchmark results.");
+        Assert.IsGreaterThan(0, results.Count,
+            "Performance example should return at least one benchmark result.");
+        Assert.IsGreaterThan(0, results.Sum(r => r.Count),
+            "Performance example should have processed at least one detection.");
+    }
+
+    /// <summary>
+    /// Test the combined (device detection + IP intelligence) GettingStarted
+    /// Example. This additionally requires a device detection data file; when
+    /// one is not available the test reports inconclusive (rather than failing)
+    /// so the gap is visible without masquerading as a regression.
+    /// </summary>
+    [TestMethod]
+    public void Example_OnPremise_MixedGettingStarted()
+    {
+        VerifyDataFileAvailable();
+
+        var deviceDataFile = FindDeviceDataFile();
+        if (string.IsNullOrWhiteSpace(deviceDataFile) ||
+            File.Exists(deviceDataFile) == false)
+        {
+            Assert.Inconclusive(
+                "The combined example also requires a device detection data file " +
+                "(one of " +
+                $"'{string.Join("', '", Examples.Mixed.OnPremise.GettingStartedConsole.Constants.HASH_FILE_NAMES)}'). " +
+                "It was not found. Supply it (CI fetches it as an asset) to run " +
+                "this test.");
+        }
+
+        var example =
+            new Examples.Mixed.OnPremise.GettingStartedConsole.Program.Example();
+        RunResilient(() =>
+            example.Run(deviceDataFile, DataFile, new LoggerFactory(), OutputWriter));
+
+        var output = OutputString.ToString();
+        Assert.Contains("Input values:", output,
+            "Combined output should echo the input evidence.");
+        Assert.Contains("Device Detection Results:", output,
+            "Combined output should contain the device detection section.");
+        Assert.Contains("IP Intelligence Results:", output,
+            "Combined output should contain the IP intelligence section.");
+        Assert.Contains("62.61.32.31", output,
+            "Combined output should echo back the IPv4 evidence it analyses.");
+    }
+
+    /// <summary>
+    /// Locate a device detection data file using the same candidate file names
+    /// and search the combined example itself uses. Returns null when none can
+    /// be found.
+    /// </summary>
+    private static string FindDeviceDataFile()
+    {
+        foreach (var fileName in
+            Examples.Mixed.OnPremise.GettingStartedConsole.Constants.HASH_FILE_NAMES)
+        {
+            var path = ExampleUtils.FindFile(fileName);
+            if (string.IsNullOrWhiteSpace(path) == false)
+            {
+                return path;
+            }
+        }
+        return null;
     }
 
     /// <summary>
