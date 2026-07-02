@@ -107,11 +107,11 @@ The **Mixed examples** demonstrate how to combine Device Detection and IP Intell
 
 Automated tests live in the `Tests/` folder and run as part of CI:
 
-| Test project                                            | Covers                                              |
-| ------------------------------------------------------- | --------------------------------------------------- |
-| `FiftyOne.IpIntelligence.Example.Tests.Cloud`           | The Cloud console examples and Cloud web examples   |
-| `FiftyOne.IpIntelligence.Example.Tests.OnPremise`       | The on-premise console examples                     |
-| `FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI.Tests` | The on-premise `Mixed/GettingStarted-API` example |
+| Test project                                                         | Covers                                              |
+| ---------------------------------------------------------------------| --------------------------------------------------- |
+| `FiftyOne.IpIntelligence.Example.Tests.Cloud`                        | The Cloud console examples and Cloud web examples   |
+| `FiftyOne.IpIntelligence.Example.Tests.OnPremise`                    | The on-premise console examples                     |
+| `FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI.Tests` | The on-premise `Mixed/GettingStarted-API` example   |
 
 Most runnable examples have an associated test. The exceptions, and why:
 
