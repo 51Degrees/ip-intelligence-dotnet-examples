@@ -27,6 +27,7 @@ using FiftyOne.Pipeline.Engines;
 using FiftyOne.Pipeline.Engines.FiftyOne.Data;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -116,16 +117,43 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metadata
 
             }
 
+            // The IP Intelligence data file can contain tens of millions of
+            // profiles. Enumerating every one can take a long time.
+            // To keep this example responsive, stop after this many profiles and
+            // report the counts gathered so far.
+            private const long MaxProfilesToCount = 50000;
+
             private void OutputProfileDetails(IpiOnPremiseEngine ddEngine, TextWriter output)
             {
-                // Group the profiles by component and then output the number of profiles 
-                // for each component.
-                var groups = ddEngine.Profiles.GroupBy(p => p.Component.Name);
+                // Count the profiles per component in a single streaming pass,
+                // stopping once the limit is reached.
+                var countsByComponent = new Dictionary<string, long>();
+                long total = 0;
+                foreach (var profile in ddEngine.Profiles)
+                {
+                    var componentName = profile.Component.Name;
+                    countsByComponent.TryGetValue(componentName, out var current);
+                    countsByComponent[componentName] = current + 1;
+                    if (++total >= MaxProfilesToCount)
+                    {
+                        break;
+                    }
+                }
+
+                var limitReached = total >= MaxProfilesToCount;
                 output.WriteLine();
                 output.WriteLine($"Profile counts:");
-                foreach (var group in groups)
+                foreach (var entry in countsByComponent)
                 {
-                    output.WriteLine($"{group.Key} Profiles: {group.Count()}");
+                    // When the limit was hit these are lower bounds, so flag them.
+                    output.WriteLine(
+                        $"{entry.Key} Profiles: {entry.Value}{(limitReached ? "+" : "")}");
+                }
+                if (limitReached)
+                {
+                    output.WriteLine(
+                        $"(stopped after {MaxProfilesToCount} profiles to stay " +
+                        "responsive.");
                 }
             }
 
