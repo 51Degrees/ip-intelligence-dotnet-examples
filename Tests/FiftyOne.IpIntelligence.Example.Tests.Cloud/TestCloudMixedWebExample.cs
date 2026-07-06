@@ -51,7 +51,11 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud;
 /// string, this test asserts the page renders successfully with the expected 
 /// structure rather than a specific geographic result.
 /// </remarks>
+// The web example tests all bind the same localhost port and switch the
+// process-wide current directory, so they cannot run in parallel with
+// each other.
 [TestClass]
+[DoNotParallelize]
 public class TestCloudMixedWebExample
 {
     // The example binds Constants.AllUrls; this is its plain-HTTP endpoint,

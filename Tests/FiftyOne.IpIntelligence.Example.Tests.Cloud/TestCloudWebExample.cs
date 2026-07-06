@@ -51,7 +51,11 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
     /// relative to the current directory, so the test runs it from the
     /// example's own directory.
     /// </remarks>
+    // The web example tests all bind the same localhost port and switch the
+    // process-wide current directory, so they cannot run in parallel with
+    // each other.
     [TestClass]
+    [DoNotParallelize]
     public class TestCloudWebExample
     {
         // A public IPv4 address known to resolve to the United Kingdom - the
