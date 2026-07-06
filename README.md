@@ -102,3 +102,42 @@ The **Mixed examples** demonstrate how to combine Device Detection and IP Intell
   - Client-side evidence collection for enhanced device detection
   - Client hints support for improved browser detection
   - All device detection and IP intelligence properties displayed
+
+## Testing
+
+Automated tests live in the `Tests/` folder and run as part of CI:
+
+| Test project                                                         | Covers                                              |
+| ---------------------------------------------------------------------| --------------------------------------------------- |
+| `FiftyOne.IpIntelligence.Example.Tests.Cloud`                        | The Cloud console examples and Cloud web examples   |
+| `FiftyOne.IpIntelligence.Example.Tests.OnPremise`                    | The on-premise console examples                     |
+| `FiftyOne.IpIntelligence.Examples.OnPremise.GettingStartedAPI.Tests` | The on-premise `Mixed/GettingStarted-API` example   |
+
+Most runnable examples have an associated test. The exceptions, and why:
+
+- **`Cloud/Framework-Web` and `OnPremise/Framework-Web`** are legacy **.NET
+  Framework 4.6.2** ASP.NET (MVC / full-framework) applications. They are excluded
+  from the cross-platform `net10.0` solution filter
+  (`FiftyOne.IpIntelligence.Examples.Core.slnf`) and from the CI test run (which
+  targets .NET on Linux, macOS and Windows), cannot be hosted in-process by the
+  `net10.0` test harness, and are therefore verified by compilation only.
+- **`OnPremise/GettingStarted-Web` and `OnPremise/Mixed/GettingStarted-Web`** are
+  exercised manually rather than by an automated test. Unlike the Cloud web
+  examples (which are tested in-process), these resolve their on-premise data file
+  through a relative-path configuration override; hosting them in-process from the
+  test project corrupts the pipeline element configuration. They run correctly
+  when launched normally (`dotnet run`), which is how they should be verified
+  until the in-process hosting issue is addressed.
+
+### Test prerequisites
+
+The example tests are integration tests and need the same inputs the examples do:
+
+- **Cloud example tests** require a resource key in the `51DEGREES_RESOURCE_KEY`
+  environment variable (see the [Cloud](#cloud) section). Without it these tests
+  fail with a message explaining how to obtain one.
+- **On-premise example tests** require the enterprise IP Intelligence data file
+  (located automatically, or via `51DEGREES_IPI_PATH`) and the **Mixed** examples
+  additionally require a device detection data file. When a required data file is
+  absent, those tests report **inconclusive** rather than failing, so the gap is
+  visible without being masked as a regression.

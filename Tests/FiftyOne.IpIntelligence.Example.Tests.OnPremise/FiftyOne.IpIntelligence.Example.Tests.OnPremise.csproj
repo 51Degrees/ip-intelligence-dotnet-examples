@@ -38,6 +38,8 @@
     <ProjectReference Include="..\..\Examples\OnPremise\UpdateDataFile-Console\UpdateDataFile-Console.csproj" />
     <ProjectReference Include="..\..\Examples\OnPremise\Compare-Console\Compare-Console.csproj" />
     <ProjectReference Include="..\..\Examples\OnPremise\Suspicious-Console\Suspicious-Console.csproj" />
+    <ProjectReference Include="..\..\Examples\OnPremise\Performance-Console\Performance-Console.csproj" />
+    <ProjectReference Include="..\..\Examples\OnPremise\Mixed\GettingStarted-Console\GettingStarted-Console.csproj" />
   </ItemGroup>
 
 </Project>

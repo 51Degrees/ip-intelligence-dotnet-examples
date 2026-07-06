@@ -31,6 +31,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 [assembly: Parallelize]
 namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
@@ -71,6 +72,10 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             Path.Combine(RepoRootPath, "Examples", "Cloud", "GettingStarted-Console");
         private static readonly string MixedCloudExamplePath =
             Path.Combine(RepoRootPath, "Examples", "Cloud", "Mixed", "GettingStarted-Console");
+        private static readonly string GetAllPropertiesExamplePath =
+            Path.Combine(RepoRootPath, "Examples", "Cloud", "GetAllProperties-Console");
+        private static readonly string MetadataExamplePath =
+            Path.Combine(RepoRootPath, "Examples", "Cloud", "Metadata-Console");
 
         public static IEnumerable<object[]> CloudExamplesToTest =>
         [
@@ -127,6 +132,91 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
             string[] ipRanges,
             string rangeDescriptor)
         {
+            var (exitCode, result, errorOutput) = RunCloudExampleProcess(examplePath);
+
+            Assert.AreEqual(0, exitCode,
+                $"Cloud example should exit successfully. Error output: {errorOutput}");
+
+            Assert.Contains("Input values:", result,
+                "Output should contain input values section");
+            Assert.Contains("Results:", result,
+                "Output should contain results section");
+
+            Assert.IsTrue(networkNames.Any(x => result.Contains(x)),
+                $"Output should contain {networkNames[0]} as registered name");
+            Assert.IsTrue(countryNames.Any(x => result.Contains(x)),
+                $"Output should contain {countryNames[0]} as country or code");
+            Assert.IsTrue(ipRanges.Any(x => result.Contains(x)),
+                $"Output should contain IP range values {rangeDescriptor}");
+
+            Assert.IsTrue(Regex.IsMatch(result, @"\d+\.\d+\.\d+\.\d+"),
+                "Output should contain IP address values in dotted decimal format");
+
+            Assert.IsTrue(Regex.IsMatch(result, @"[\d\-]\d+\.\d+"),
+                "Output should contain numeric values (coordinates, ranges, etc.)");
+
+            Assert.DoesNotContain("Exception", result,
+                "Output should not contain exceptions");
+            Assert.DoesNotContain("Error", result,
+                "Output should not contain errors");
+        }
+
+        /// <summary>
+        /// Runs the GetAllProperties Cloud example and verifies it lists the
+        /// property values returned for the analysed IP address.
+        /// </summary>
+        [TestMethod]
+        public void Example_Cloud_GetAllProperties()
+        {
+            var (exitCode, result, errorOutput) =
+                RunCloudExampleProcess(GetAllPropertiesExamplePath);
+
+            Assert.AreEqual(0, exitCode,
+                $"GetAllProperties example should exit successfully. " +
+                $"Error output: {errorOutput}");
+
+            Assert.Contains("What property values are associated with", result,
+                "Output should introduce the property values for an IP address.");
+            Assert.IsTrue(
+                Regex.IsMatch(result, @".+ = .+"),
+                "Output should list properties as 'name = value' pairs.");
+            Assert.DoesNotContain("Unhandled exception", result,
+                "Output should not contain an unhandled exception.");
+        }
+
+        /// <summary>
+        /// Runs the Metadata Cloud example and verifies it prints the engine
+        /// metadata sections (accepted evidence keys and the property listing).
+        /// </summary>
+        [TestMethod]
+        public void Example_Cloud_Metadata()
+        {
+            var (exitCode, result, errorOutput) =
+                RunCloudExampleProcess(MetadataExamplePath);
+
+            Assert.AreEqual(0, exitCode,
+                $"Metadata example should exit successfully. " +
+                $"Error output: {errorOutput}");
+
+            Assert.Contains("Accepted evidence keys:", result,
+                "Metadata output should list the accepted evidence keys.");
+            Assert.Contains("Property -", result,
+                "Metadata output should list the available properties.");
+            Assert.DoesNotContain("Unhandled exception", result,
+                "Output should not contain an unhandled exception.");
+        }
+
+        /// <summary>
+        /// Runs a Cloud console example exactly as a user would (via
+        /// <c>dotnet run</c> in the example's own directory), passing the
+        /// resource key and optional custom endpoint through the same
+        /// environment variables the example reads. Standard input is closed so
+        /// examples that pause for a key press (guarded by
+        /// <see cref="Console.IsInputRedirected"/>) do not block the test.
+        /// </summary>
+        private (int ExitCode, string Output, string Error) RunCloudExampleProcess(
+            string examplePath)
+        {
             var startInfo = new ProcessStartInfo
             {
                 FileName = "dotnet",
@@ -134,11 +224,10 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                RedirectStandardInput = true,
                 WorkingDirectory = examplePath,
                 CreateNoWindow = true,
             };
-            // Pass the resource key (and optional custom endpoint) through to
-            // the example process; it picks them up via the same env vars.
             startInfo.Environment[ExampleUtils.CLOUD_RESOURCE_KEY_ENV_VAR] = _resourceKey;
             var endPoint = Environment.GetEnvironmentVariable(
                 ExampleUtils.CLOUD_END_POINT_ENV_VAR);
@@ -147,68 +236,46 @@ namespace FiftyOne.IpIntelligence.Example.Tests.Cloud
                 startInfo.Environment[ExampleUtils.CLOUD_END_POINT_ENV_VAR] = endPoint;
             }
 
-            using (var process = new Process { StartInfo = startInfo })
+            using var process = new Process { StartInfo = startInfo };
+            var output = new StringBuilder();
+            var error = new StringBuilder();
+
+            process.OutputDataReceived += (sender, e) =>
             {
-                var output = new StringBuilder();
-                var error = new StringBuilder();
+                if (e.Data != null)
+                    output.AppendLine(e.Data);
+            };
 
-                process.OutputDataReceived += (sender, e) =>
-                {
-                    if (e.Data != null)
-                        output.AppendLine(e.Data);
-                };
+            process.ErrorDataReceived += (sender, e) =>
+            {
+                if (e.Data != null)
+                    error.AppendLine(e.Data);
+            };
 
-                process.ErrorDataReceived += (sender, e) =>
-                {
-                    if (e.Data != null)
-                        error.AppendLine(e.Data);
-                };
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            // Signal end-of-input so the example never waits for a key press.
+            process.StandardInput.Close();
 
-                process.Start();
-                process.BeginOutputReadLine();
-                process.BeginErrorReadLine();
+            Assert.IsTrue(process.WaitForExit(60000),
+                "Cloud example should complete within 60 seconds");
+            // Block until the async output handlers have flushed everything.
+            process.WaitForExit();
 
-                Assert.IsTrue(process.WaitForExit(60000),
-                    "Cloud example should complete within 60 seconds");
+            var result = output.ToString();
+            var errorOutput = error.ToString();
 
-                var result = output.ToString();
-                var errorOutput = error.ToString();
+            Console.WriteLine("Cloud Example Output:");
+            Console.WriteLine(result);
 
-                Console.WriteLine("Cloud Example Output:");
-                Console.WriteLine(result);
-
-                if (!string.IsNullOrEmpty(errorOutput))
-                {
-                    Console.WriteLine("Cloud Example Error Output:");
-                    Console.WriteLine(errorOutput);
-                }
-
-                Assert.AreEqual(0, process.ExitCode,
-                    $"Cloud example should exit successfully. Error output: {errorOutput}");
-
-                Assert.Contains("Input values:", result,
-                    "Output should contain input values section");
-                Assert.Contains("Results:", result,
-                    "Output should contain results section");
-
-                Assert.IsTrue(networkNames.Any(x => result.Contains(x)),
-                    $"Output should contain {networkNames[0]} as registered name");
-                Assert.IsTrue(countryNames.Any(x => result.Contains(x)),
-                    $"Output should contain {countryNames[0]} as country or code");
-                Assert.IsTrue(ipRanges.Any(x => result.Contains(x)),
-                    $"Output should contain IP range values {rangeDescriptor}");
-
-                Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(result, @"\d+\.\d+\.\d+\.\d+"),
-                    "Output should contain IP address values in dotted decimal format");
-
-                Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(result, @"[\d\-]\d+\.\d+"),
-                    "Output should contain numeric values (coordinates, ranges, etc.)");
-
-                Assert.DoesNotContain("Exception", result,
-                    "Output should not contain exceptions");
-                Assert.DoesNotContain("Error", result,
-                    "Output should not contain errors");
+            if (!string.IsNullOrEmpty(errorOutput))
+            {
+                Console.WriteLine("Cloud Example Error Output:");
+                Console.WriteLine(errorOutput);
             }
+
+            return (process.ExitCode, result, errorOutput);
         }
     }
 }
