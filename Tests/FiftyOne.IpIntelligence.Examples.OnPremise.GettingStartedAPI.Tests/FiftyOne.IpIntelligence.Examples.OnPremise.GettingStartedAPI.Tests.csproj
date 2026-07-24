@@ -13,8 +13,8 @@
 
   <ItemGroup>
     <PackageReference Include="FiftyOne.Common.TestHelpers" Version="5.1.8" />
-    <PackageReference Include="FiftyOne.DeviceDetection.Hash.Engine.OnPremise" Version="4.5.127" />
-    <PackageReference Include="FiftyOne.Pipeline.Engines.TestHelpers" Version="4.5.71" />
+    <PackageReference Include="FiftyOne.DeviceDetection.Hash.Engine.OnPremise" Version="4.5.129" />
+    <PackageReference Include="FiftyOne.Pipeline.Engines.TestHelpers" Version="4.5.72" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="4.1.0" />
     <PackageReference Include="MSTest.TestFramework" Version="4.1.0" />
