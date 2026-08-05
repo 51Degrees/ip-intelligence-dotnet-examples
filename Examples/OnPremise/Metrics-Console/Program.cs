@@ -43,6 +43,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -90,6 +91,19 @@ public static class Extensions
     /// Proportion of the ranges in the data file to return, where 1 is 100%
     /// and returns every range.
     /// </param>
+    /// <param name="maxProfilesWithoutRange">
+    /// Give up once this many profiles in a row have produced no range. Zero
+    /// scans every profile in the data file.
+    ///
+    /// The ranges sit together near the start of the file and are followed by
+    /// a long run of profiles that carry none - measured on an enterprise file
+    /// as 601,443 ranges within the first 603,531 profiles, then 993,628 more
+    /// profiles yielding nothing. Scanning that run costs the majority of a
+    /// complete pass and cannot add anything to the analysis.
+    ///
+    /// Only 2,088 profiles before the last range produced nothing, so any
+    /// limit well above that cannot cut the scan short while ranges remain.
+    /// </param>
     /// <param name="logger">
     /// Reports how far through the profiles the scan has got. Long runs of
     /// profiles carry no usable range, so without this the example looks like
@@ -99,6 +113,7 @@ public static class Extensions
         ValidRanges(
             this IpiOnPremiseEngine engine,
             double rangePercentage = 1,
+            int maxProfilesWithoutRange = 0,
             ILogger logger = null)
     {
         var network = engine.Components.Single(i =>
@@ -108,10 +123,12 @@ public static class Extensions
         var random = new Random();
         var scanned = 0;
         var found = 0;
+        var sinceFound = 0;
         var nextLog = DateTime.UtcNow.Add(_logScan);
         foreach (var profile in engine.Profiles)
         {
             scanned++;
+            sinceFound++;
             if (DateTime.UtcNow >= nextLog)
             {
                 logger?.LogInformation(
@@ -119,6 +136,23 @@ public static class Extensions
                     scanned,
                     found);
                 nextLog = DateTime.UtcNow.Add(_logScan);
+            }
+
+            // Stop once the ranges have clearly run out. Only applied after a
+            // range has been found so that a file which opens with a long run
+            // of profiles carrying none is still scanned.
+            if (maxProfilesWithoutRange > 0 &&
+                found > 0 &&
+                sinceFound > maxProfilesWithoutRange)
+            {
+                profile.Dispose();
+                logger?.LogInformation(
+                    "Stopped scanning after '{0}' profiles in a row produced " +
+                    "no range, having found '{1}' in '{2}' profiles",
+                    sinceFound,
+                    found,
+                    scanned);
+                yield break;
             }
 
             // Decide whether to keep the profile before reading any of its
@@ -136,6 +170,7 @@ public static class Extensions
             if (range.Item1 != null && range.Item2 != null)
             {
                 found++;
+                sinceFound = 0;
                 yield return range;
             }
             profile.Dispose();
@@ -406,6 +441,32 @@ public class Program
     /// its cost with it.
     /// </summary>
     private const double DEFAULT_RANGE_PERCENTAGE = 1;
+
+    /// <summary>
+    /// The performance profile the engine is built with.
+    ///
+    /// This example walks the profile metadata of the whole data file, which
+    /// is a very different workload to detection. Reading the property values
+    /// of a profile measured 166 a second under LowMemory against 2,013 a
+    /// second under MaxPerformance on the same file - paging the data back
+    /// from disk dominates everything else the example does. MaxPerformance
+    /// holds the data file in memory, so it needs as much free RAM as the
+    /// file is large; drop to Balanced or LowMemory where that is not
+    /// available.
+    /// </summary>
+    private const PerformanceProfiles DEFAULT_PERFORMANCE_PROFILE =
+        PerformanceProfiles.MaxPerformance;
+
+    /// <summary>
+    /// Give up scanning once this many profiles in a row have produced no
+    /// range. Zero scans every profile in the data file.
+    ///
+    /// See <see cref="Extensions.ValidRanges"/> for the measurements behind
+    /// this. The margin is wide: on the file it was measured against, the
+    /// longest run of profiles without a range before the last range was
+    /// 2,088.
+    /// </summary>
+    private const int DEFAULT_MAX_PROFILES_WITHOUT_RANGE = 100_000;
 
     public class Counter
     {
@@ -770,6 +831,16 @@ public class Program
         public double RangePercentage;
 
         /// <summary>
+        /// Give up scanning after this many profiles in a row with no range.
+        /// </summary>
+        public int MaxProfilesWithoutRange;
+
+        /// <summary>
+        /// Performance profile the engine is built with.
+        /// </summary>
+        public PerformanceProfiles PerformanceProfile;
+
+        /// <summary>
         /// Logger factory for reporting progress.
         /// </summary>
         public ILoggerFactory LoggerFactory;
@@ -789,16 +860,33 @@ public class Program
         protected override async Task ExecuteAsync(
             CancellationToken stoppingToken)
         {
-            await Example.Run(
-                configuration.DataFile,
-                configuration.LoggerFactory,
-                configuration.Output,
-                configuration.SamplePercentage,
-                configuration.MaxSamplesPerRange,
-                configuration.RangePercentage,
-                configuration.Condition,
-                stoppingToken);
-            hostApplicationLifetime.StopApplication();
+            try
+            {
+                await Example.Run(
+                    configuration.DataFile,
+                    configuration.LoggerFactory,
+                    configuration.Output,
+                    configuration.SamplePercentage,
+                    configuration.MaxSamplesPerRange,
+                    configuration.RangePercentage,
+                    configuration.MaxProfilesWithoutRange,
+                    configuration.PerformanceProfile,
+                    configuration.Condition,
+                    stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                // The metrics have already been written by this point. Report
+                // the failure rather than leaving it unhandled, which would
+                // end the process without the summary below.
+                configuration.LoggerFactory
+                    .CreateLogger<Worker>()
+                    .LogError(ex, "The metrics run did not complete");
+            }
+            finally
+            {
+                hostApplicationLifetime.StopApplication();
+            }
         }
     }
 
@@ -825,6 +913,16 @@ public class Program
         /// Percentage of the ranges in the data file to include. The cheapest
         /// way to shorten a run - see <see cref="DEFAULT_RANGE_PERCENTAGE"/>.
         /// </param>
+        /// <param name="maxProfilesWithoutRange">
+        /// Give up scanning once this many profiles in a row have produced no
+        /// range. Zero scans every profile - see
+        /// <see cref="DEFAULT_MAX_PROFILES_WITHOUT_RANGE"/>.
+        /// </param>
+        /// <param name="performanceProfile">
+        /// Profile the engine is built with. Dominates how long the scan of
+        /// the data file takes - see
+        /// <see cref="DEFAULT_PERFORMANCE_PROFILE"/>.
+        /// </param>
         /// <param name="condition">
         /// Function used to determine if an IP address range should be
         /// included.
@@ -842,6 +940,8 @@ public class Program
             double samplePercentage,
             int maxSamplesPerRange,
             double rangePercentage,
+            int maxProfilesWithoutRange,
+            PerformanceProfiles performanceProfile,
             Func<(string, string), bool> condition,
             CancellationToken stoppingToken,
             ILogger logger = null)
@@ -851,14 +951,11 @@ public class Program
             // Ensure that batch latency mode is always enabled.
             GCSettings.LatencyMode = GCLatencyMode.Batch;
 
-            // Build a new on-premise IP Intelligence engine with the LowMemory
-            // profile so the large data file is paged from disk, not loaded into RAM.
+            // Build a new on-premise IP Intelligence engine. See the
+            // documentation for more detail on this and other configuration options.
+            // https://51degrees.com/documentation/_features__automatic_datafile_updates.html?utm_source=code&utm_medium=example&utm_campaign=ip-intelligence-dotnet-examples&utm_content=examples-onpremise-metrics-console-program.cs&utm_term=run
             using var ipiEngine = new IpiOnPremiseEngineBuilder(loggerFactory)
-                // LowMemory keeps the (multi-gigabyte) IP Intelligence data file on
-                // disk rather than loading it entirely into memory. See the
-                // documentation for more detail on this and other configuration options.
-                // https://51degrees.com/documentation/_features__automatic_datafile_updates.html?utm_source=code&utm_medium=example&utm_campaign=ip-intelligence-dotnet-examples&utm_content=examples-onpremise-metrics-console-program.cs&utm_term=run
-                .SetPerformanceProfile(PerformanceProfiles.LowMemory)
+                .SetPerformanceProfile(performanceProfile)
                 // inhibit auto-update of the data file for this test
                 .SetAutoUpdate(false)
                 .SetDataFileSystemWatcher(false)
@@ -888,7 +985,10 @@ public class Program
                 dataFileTier,
                 dataFilePublishDate);
 
-            logger.LogInformation("Server GC: '{0}'", GCSettings.IsServerGC);
+            logger.LogInformation(
+                "Server GC: '{0}', performance profile: '{1}'",
+                GCSettings.IsServerGC,
+                performanceProfile);
 
             // Create the data set structure to rapidly retrieve the data
             // needed to calculate the metrics and to determine the valid
@@ -933,11 +1033,12 @@ public class Program
 
             // Use the main thread as the producer adding ranges for the
             // consumers to process.
-            AddRanges(
+            var scanFailure = await AddRanges(
                 ipiEngine,
                 logger, 
                 ranges,
                 rangePercentage,
+                maxProfilesWithoutRange,
                 condition,
                 consumers,
                 stoppingToken);
@@ -968,6 +1069,14 @@ public class Program
             ExampleUtils.CheckDataFile(
                 ipiEngine,
                 loggerFactory.CreateLogger<Program>());
+
+            // Report a scan that stopped early only now that the metrics it
+            // did gather have been written out. The caller needs to know the
+            // analysis does not cover the whole data file.
+            if (scanFailure != null)
+            {
+                ExceptionDispatchInfo.Capture(scanFailure).Throw();
+            }
         }
 
         /// <summary>
@@ -1031,11 +1140,17 @@ public class Program
                 })];
         }
 
-        private async static void AddRanges(
+        /// <returns>
+        /// The failure that stopped the scan early, or null if it ran to the
+        /// end. Returned rather than thrown so that the metrics gathered
+        /// before the failure can still be written out.
+        /// </returns>
+        private async static Task<Exception> AddRanges(
             IpiOnPremiseEngine ipiEngine,
             ILogger logger,
             Channel<(string, string)> ranges,
             double rangePercentage,
+            int maxProfilesWithoutRange,
             Func<(string, string), bool> condition,
             Consumer[] consumers,
             CancellationToken stoppingToken)
@@ -1046,38 +1161,59 @@ public class Program
             var nextLog = lastLog.Add(_logBuild);
             var lastProcessorTime = process.TotalProcessorTime;
             var source = condition == null ?
-                ipiEngine.ValidRanges(rangePercentage, logger) :
-                ipiEngine.ValidRanges(rangePercentage, logger)
+                ipiEngine.ValidRanges(
+                    rangePercentage, maxProfilesWithoutRange, logger) :
+                ipiEngine.ValidRanges(
+                    rangePercentage, maxProfilesWithoutRange, logger)
                     .Where(i => condition(i));
-            foreach (var range in source.TakeWhile(_ => 
-                stoppingToken.IsCancellationRequested == false))
+            try
             {
-                try
+                foreach (var range in source.TakeWhile(_ => 
+                    stoppingToken.IsCancellationRequested == false))
                 {
-                    await ranges.Writer.WaitToWriteAsync(stoppingToken);
-                    await ranges.Writer.WriteAsync(range, stoppingToken);
-                    added++;
-                    if (DateTime.UtcNow >= nextLog)
+                    try
                     {
-                        nextLog = Log(
-                            logger, 
-                            ranges, 
-                            consumers, 
-                            process, 
-                            added, 
-                            ref lastLog,
-                            ref lastProcessorTime, 
-                            range);
+                        await ranges.Writer.WaitToWriteAsync(stoppingToken);
+                        await ranges.Writer.WriteAsync(range, stoppingToken);
+                        added++;
+                        if (DateTime.UtcNow >= nextLog)
+                        {
+                            nextLog = Log(
+                                logger, 
+                                ranges, 
+                                consumers, 
+                                process, 
+                                added, 
+                                ref lastLog,
+                                ref lastProcessorTime, 
+                                range);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Do nothing and exit as if the ranges had been fully
+                        // consumed.
                     }
                 }
-                catch (OperationCanceledException)
-                {
-                    // Do nothing and exit as if the ranges had been fully
-                    // consumed.
-                }
             }
-            ranges.Writer.Complete();
+            catch (Exception ex)
+            {
+                // The engine can fail part way through enumerating profiles.
+                // Report it and finish with the ranges found so far - the
+                // metrics gathered up to this point are still worth writing,
+                // and this used to take the whole process down with it.
+                logger.LogError(
+                    ex,
+                    "Stopped looking for ranges after '{0}'",
+                    added);
+                return ex;
+            }
+            finally
+            {
+                ranges.Writer.Complete();
+            }
             logger.LogInformation("Finished adding '{0}' ranges", added);
+            return null;
         }
 
         private static DateTime Log(
@@ -1260,6 +1396,16 @@ public class Program
         configuration.RangePercentage = args.Length > 4 ?
             double.Parse(args[4]) :
             DEFAULT_RANGE_PERCENTAGE;
+
+        // Get the point at which to give up scanning, or use the default.
+        configuration.MaxProfilesWithoutRange = args.Length > 6 ?
+            int.Parse(args[6]) :
+            DEFAULT_MAX_PROFILES_WITHOUT_RANGE;
+
+        // Get the performance profile, or use the default.
+        configuration.PerformanceProfile = args.Length > 5 ?
+            Enum.Parse<PerformanceProfiles>(args[5], true) :
+            DEFAULT_PERFORMANCE_PROFILE;
 
         // Only include IP addresses with periods in them. i.e. IPv4. There are
         // too many IPv6 addresses for the metrics example to complete in a 
