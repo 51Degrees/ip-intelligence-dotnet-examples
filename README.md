@@ -55,15 +55,30 @@ dotnet add package FiftyOne.IpIntelligence --prerelease
 
 | Example                          | Target               | Use case                                                                |
 | -------------------------------- | -------------------- | ----------------------------------------------------------------------- |
+| Compare-Console                  | .NET 10.0            | Compare IP-to-location results against known and true records.          |
 | Framework-Web                    | .NET Framework 4.6.2 | ASP.NET Framework project.                                              |
-| GettingStarted-Console           | .NET 8.0             | Simple console app.                                                     |
-| GettingStarted-Web               | .NET 8.0             | ASP.NET Core project.                                                   |
-| Metadata-Console                 | .NET 8.0             | Accessing data file's metadata (e.g. listing properties).               |
-| OfflineProcessing-Console        | .NET 8.0             | Batch-processing of IP addresses from a YAML file.                      |
-| Performance-Console              | .NET 8.0             | "Clock-time" benchmark for assessing detection speed.                   |
-| UpdateDataFile-Console           | .NET 8.0             | Auto-update features: Daily / on Start-Up / Filesystem Watcher          |
-| **Mixed/GettingStarted-Console** | **.NET 8.0**         | **Combined Device Detection and IP Intelligence console app.**          |
-| **Mixed/GettingStarted-Web**     | **.NET 8.0**         | **Combined Device Detection and IP Intelligence ASP.NET Core project.** |
+| GettingStarted-Console           | .NET 10.0            | Simple console app.                                                     |
+| GettingStarted-Web               | .NET 10.0            | ASP.NET Core project.                                                   |
+| Metadata-Console                 | .NET 10.0            | Accessing data file's metadata (e.g. listing properties).               |
+| Metrics-Console                  | .NET 10.0            | Analysis of the location data in a data file, grouped and output as CSV.|
+| OfflineProcessing-Console        | .NET 10.0            | Batch-processing of IP addresses from a YAML file.                      |
+| Performance-Console              | .NET 10.0            | "Clock-time" benchmark for assessing detection speed.                   |
+| Suspicious-Console               | .NET 10.0            | Using diversity properties to assess how suspicious an IP address is.   |
+| UpdateDataFile-Console           | .NET 10.0            | Auto-update features: Daily / on Start-Up / Filesystem Watcher          |
+| **Mixed/GettingStarted-Console** | **.NET 10.0**        | **Combined Device Detection and IP Intelligence console app.**          |
+| **Mixed/GettingStarted-Web**     | **.NET 10.0**        | **Combined Device Detection and IP Intelligence ASP.NET Core project.** |
+
+`Compare-Console`, `Metrics-Console` and `Suspicious-Console` need an enterprise
+data file; the lite file in the `ip-intelligence-data` submodule does not carry
+the location data they analyse.
+
+`Metrics-Console` samples the address ranges in the data file rather than
+visiting every address. The sample is controlled by two optional command line
+arguments after the data file and output path: the proportion of each range to
+sample (1 is 100%), and the most addresses to take from any one range. The
+per-range cap is what bounds the run - a single IPv6 range holds more addresses
+than could ever be enumerated, so the proportion on its own does not limit the
+work.
 
 
 ## Cloud
@@ -82,12 +97,12 @@ just using `dotnet run` in the `OnPremise/Mixed/GettingStarted-API` directory fr
 | Example                          | Target               | Use case                                                                  |
 | -------------------------------- | -------------------- | ------------------------------------------------------------------------- |
 | Framework-Web                    | .NET Framework 4.6.2 | ASP.NET Framework project.                                                |
-| GettingStarted-Console           | .NET 8.0             | Simple console app.                                                       |
-| GettingStarted-Web               | .NET 8.0             | ASP.NET Core project.                                                     |
-| Metadata-Console                 | .NET 8.0             | Get the available properties and evidence keys information from the Cloud |
-| GetAllProperties                 | .NET 8.0             | Get all the available properties for an IP address from the Cloud         |
-| **Mixed/GettingStarted-Console** | **.NET 8.0**         | **Combined Device Detection and IP Intelligence console app.**            |
-| **Mixed/GettingStarted-Web**     | **.NET 8.0**         | **Combined Device Detection and IP Intelligence ASP.NET Core project.**   |
+| GettingStarted-Console           | .NET 10.0            | Simple console app.                                                       |
+| GettingStarted-Web               | .NET 10.0            | ASP.NET Core project.                                                     |
+| Metadata-Console                 | .NET 10.0            | Get the available properties and evidence keys information from the Cloud |
+| GetAllProperties                 | .NET 10.0            | Get all the available properties for an IP address from the Cloud         |
+| **Mixed/GettingStarted-Console** | **.NET 10.0**        | **Combined Device Detection and IP Intelligence console app.**            |
+| **Mixed/GettingStarted-Web**     | **.NET 10.0**        | **Combined Device Detection and IP Intelligence ASP.NET Core project.**   |
 
 
 ### Mixed Examples

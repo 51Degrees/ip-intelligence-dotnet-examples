@@ -57,10 +57,11 @@ using System.Threading.Tasks;
 /// 
 /// Depending on the available processor cores the example can take a long time
 /// to complete.
-/// 
-/// The sample of IP addresses used in the metrics can be adjusted as a
-/// parameter.
-/// 
+///
+/// The sample of IP addresses used in the metrics can be adjusted with the
+/// sample percentage and the cap on the addresses taken from any one range,
+/// both supplied as command line parameters.
+///
 /// This example is primarily designed for those who are interested in 
 /// verifying the published metrics associated with 51Degrees' 
 /// IP intelligence service.
@@ -78,21 +79,45 @@ namespace FiftyOne.IpIntelligence.Examples.OnPremise.Metrics;
 
 public static class Extensions
 {
+    /// <summary>
+    /// Time interval to wait between logging profile scan progress.
+    /// </summary>
+    private static readonly TimeSpan _logScan = TimeSpan.FromSeconds(30);
+
+    /// <param name="engine"></param>
+    /// <param name="logger">
+    /// Reports how far through the profiles the scan has got. Long runs of
+    /// profiles carry no usable range, so without this the example looks like
+    /// it has stopped whenever it is working through one of them.
+    /// </param>
     public static IEnumerable<(string, string)>
-        ValidRanges(this IpiOnPremiseEngine engine)
+        ValidRanges(this IpiOnPremiseEngine engine, ILogger logger = null)
     {
         var network = engine.Components.Single(i =>
             "Network".Equals(
                 i.Name,
                 StringComparison.InvariantCultureIgnoreCase));
+        var scanned = 0;
+        var found = 0;
+        var nextLog = DateTime.UtcNow.Add(_logScan);
         foreach (var profile in engine.Profiles)
         {
             var range = GetRange(network, profile);
+            scanned++;
             if (range.Item1 != null && range.Item2 != null)
             {
+                found++;
                 yield return range;
             }
             profile.Dispose();
+            if (DateTime.UtcNow >= nextLog)
+            {
+                logger?.LogInformation(
+                    "Scanned '{0}' profiles finding '{1}' ranges",
+                    scanned,
+                    found);
+                nextLog = DateTime.UtcNow.Add(_logScan);
+            }
         }
     }
 
@@ -135,35 +160,117 @@ public static class Extensions
     }
 
     /// <summary>
-    /// Increments the IP address in the buffer by 1.
+    /// Returns the IP addresses to include in the metrics for the inclusive
+    /// range provided.
+    ///
+    /// The addresses are drawn at random rather than by walking the range so
+    /// that the work is proportional to the number of addresses wanted. An
+    /// IPv6 range holds far too many addresses to visit each one, so a range
+    /// walk would never finish however small the sample percentage was.
     /// </summary>
-    /// <param name="buffer">The IP address bytes to increment</param>
-    /// <returns>
-    /// True if successful, false if overflow (address was max value)
-    /// </returns>
-    public static bool TryGetNextAddress(Span<byte> buffer)
+    /// <param name="startIp">First address in the range.</param>
+    /// <param name="endIp">Last address in the range.</param>
+    /// <param name="samplePercentage">
+    /// Proportion of the range to sample where 1 is 100%. At 1 or above every
+    /// address in the range is returned.
+    /// </param>
+    /// <param name="maxSamplesPerRange">
+    /// Most addresses to return for the range.
+    /// </param>
+    /// <param name="random"></param>
+    /// <returns></returns>
+    public static IEnumerable<IPAddress> Sample(
+        IPAddress startIp,
+        IPAddress endIp,
+        double samplePercentage,
+        int maxSamplesPerRange,
+        Random random)
     {
-        for (int i = buffer.Length - 1; i >= 0; i--)
+        var ipv6 = startIp.AddressFamily != AddressFamily.InterNetwork;
+        var start = ToUInt128(startIp);
+        var end = ToUInt128(endIp);
+        if (end < start)
         {
-            if (buffer[i] < byte.MaxValue)
-            {
-                buffer[i]++;
-                return true;
-            }
-            buffer[i] = 0;
+            yield break;
         }
-        return false; // Overflow
+
+        // The last offset from the start of the range. The range is inclusive
+        // so it contains span + 1 addresses.
+        var span = end - start;
+
+        // Return every address when a complete analysis is wanted.
+        if (samplePercentage >= 1)
+        {
+            for (UInt128 offset = 0; offset <= span; offset++)
+            {
+                yield return ToIpAddress(start + offset, ipv6);
+            }
+            yield break;
+        }
+
+        var count = GetSampleCount(span, samplePercentage, maxSamplesPerRange);
+        for (var i = 0; i < count; i++)
+        {
+            yield return ToIpAddress(start + NextOffset(random, span), ipv6);
+        }
     }
 
     /// <summary>
-    /// Compares two IP addresses represented as byte spans.
+    /// The number of addresses to sample from a range containing
+    /// <paramref name="span"/> + 1 addresses. Always at least one so that
+    /// every range is represented in the metrics.
     /// </summary>
-    /// <param name="a">First IP address bytes</param>
-    /// <param name="b">Second IP address bytes</param>
-    /// <returns>True if they are equal</returns>
-    public static bool IpEquals(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
+    private static int GetSampleCount(
+        UInt128 span,
+        double samplePercentage,
+        int maxSamplesPerRange)
     {
-        return a.SequenceEqual(b);
+        var count = ((double)span + 1) * samplePercentage;
+        if (count >= maxSamplesPerRange)
+        {
+            return maxSamplesPerRange;
+        }
+        return Math.Max(1, (int)Math.Ceiling(count));
+    }
+
+    /// <summary>
+    /// A random offset between 0 and <paramref name="span"/> inclusive.
+    /// </summary>
+    private static UInt128 NextOffset(Random random, UInt128 span)
+    {
+        if (span == 0)
+        {
+            return 0;
+        }
+        Span<byte> bytes = stackalloc byte[16];
+        random.NextBytes(bytes);
+        var value = new UInt128(
+            BitConverter.ToUInt64(bytes[..8]),
+            BitConverter.ToUInt64(bytes[8..]));
+        return span == UInt128.MaxValue ? value : value % (span + 1);
+    }
+
+    private static UInt128 ToUInt128(IPAddress ip)
+    {
+        Span<byte> bytes = stackalloc byte[16];
+        ip.TryWriteBytes(bytes, out var written);
+        UInt128 value = 0;
+        for (var i = 0; i < written; i++)
+        {
+            value = (value << 8) | bytes[i];
+        }
+        return value;
+    }
+
+    private static IPAddress ToIpAddress(UInt128 value, bool ipv6)
+    {
+        Span<byte> bytes = stackalloc byte[ipv6 ? 16 : 4];
+        for (var i = bytes.Length - 1; i >= 0; i--)
+        {
+            bytes[i] = (byte)value;
+            value >>= 8;
+        }
+        return new IPAddress(bytes);
     }
 
     /// <summary>
@@ -254,6 +361,18 @@ public class Program
     /// processing.
     /// </summary>
     private const double DEFAULT_SAMPLE_PERCENTAGE = 0.1;
+
+    /// <summary>
+    /// The most IP addresses that will be sampled from any single range.
+    ///
+    /// A single IPv6 range in the data file can contain more addresses than
+    /// could be enumerated in any practical amount of time (a /48 holds over
+    /// 10^24), so the sample percentage on its own is not enough to bound the
+    /// work. Capping the sample per range is what keeps the elapsed time
+    /// proportional to the number of ranges rather than the size of the
+    /// address space.
+    /// </summary>
+    private const int DEFAULT_MAX_SAMPLES_PER_RANGE = 8;
 
     public class Counter
     {
@@ -608,6 +727,11 @@ public class Program
         public double SamplePercentage;
 
         /// <summary>
+        /// Maximum number of IP addresses sampled from a single range.
+        /// </summary>
+        public int MaxSamplesPerRange;
+
+        /// <summary>
         /// Logger factory for reporting progress.
         /// </summary>
         public ILoggerFactory LoggerFactory;
@@ -632,6 +756,7 @@ public class Program
                 configuration.LoggerFactory,
                 configuration.Output,
                 configuration.SamplePercentage,
+                configuration.MaxSamplesPerRange,
                 configuration.Condition,
                 stoppingToken);
             hostApplicationLifetime.StopApplication();
@@ -653,6 +778,10 @@ public class Program
         /// <param name="samplePercentage">
         /// Percentage of possible IP addresses to include in the metric.
         /// </param>
+        /// <param name="maxSamplesPerRange">
+        /// Most IP addresses to sample from any single range. Needed to bound
+        /// the work for the very large IPv6 ranges.
+        /// </param>
         /// <param name="condition">
         /// Function used to determine if an IP address range should be
         /// included.
@@ -668,6 +797,7 @@ public class Program
             ILoggerFactory loggerFactory,
             TextWriter output,
             double samplePercentage,
+            int maxSamplesPerRange,
             Func<(string, string), bool> condition,
             CancellationToken stoppingToken,
             ILogger logger = null)
@@ -693,8 +823,12 @@ public class Program
                 .SetProperties(
                     typeof(Key).GetProperties().Select(i => i.Name).Concat(
                         AreaIndex.Properties).ToList())
-                // Optimize for the expected parallel workload.
-                .SetConcurrency((ushort)Environment.ProcessorCount)
+                // Optimize for the expected parallel workload. One handle per
+                // consumer, plus one for the producer, which reads profile
+                // metadata from the same pool while the consumers are
+                // querying. Sizing the pool to the consumers alone exhausts it
+                // and fails the run with "Insufficient handles available".
+                .SetConcurrency((ushort)(Environment.ProcessorCount + 1))
                 .Build(dataFile, false);
             using var pipeline = new PipelineBuilder(loggerFactory)
                 .AddFlowElement(ipiEngine)
@@ -744,11 +878,14 @@ public class Program
                 factory,
                 ranges,
                 samplePercentage,
+                maxSamplesPerRange,
                 stoppingToken);
             logger.LogInformation(
-                "Created '{0}' consumer processors sampling '{1:P2}' of IPs",
+                "Created '{0}' consumer processors sampling '{1:P2}' of IPs " +
+                "up to '{2}' per range",
                 consumers.Length,
-                samplePercentage);
+                samplePercentage,
+                maxSamplesPerRange);
 
             // Use the main thread as the producer adding ranges for the
             // consumers to process.
@@ -828,6 +965,7 @@ public class Program
                 KeyFactory factory,
                 Channel<(string, string)> ranges,
                 double samplePercentage,
+                int maxSamplesPerRange,
                 CancellationToken stoppingToken)
         {
             return [.. Enumerable.Range(
@@ -842,6 +980,7 @@ public class Program
                         ranges,
                         consumer,
                         samplePercentage,
+                        maxSamplesPerRange,
                         stoppingToken);
                     return consumer;
                 })];
@@ -861,8 +1000,8 @@ public class Program
             var nextLog = lastLog.Add(_logBuild);
             var lastProcessorTime = process.TotalProcessorTime;
             var source = condition == null ?
-                ipiEngine.ValidRanges() :
-                ipiEngine.ValidRanges().Where(i => condition(i));
+                ipiEngine.ValidRanges(logger) :
+                ipiEngine.ValidRanges(logger).Where(i => condition(i));
             foreach (var range in source.TakeWhile(_ => 
                 stoppingToken.IsCancellationRequested == false))
             {
@@ -937,7 +1076,7 @@ public class Program
                 qps,
                 process.Threads.Count,
                 process.HandleCount,
-                process.WorkingSet64 / 1000);
+                process.WorkingSet64 / 1_000_000);
 
             // Reset the count of queries to IPI.
             foreach (var consumer in consumers)
@@ -959,16 +1098,11 @@ public class Program
                 Channel<(string, string)> ranges,
                 Consumer consumer,
                 double samplePercentage,
+                int maxSamplesPerRange,
                 CancellationToken stoppingToken)
         {
             var random = new Random();
             var groups = new Dictionary<Key, Metric>();
-            var buffer4a = new byte[4];
-            var buffer4b = new byte[4];
-            var buffer6a = new byte[16];
-            var buffer6b = new byte[16];
-            byte[] currentIpBuffer;
-            byte[] currentEndBuffer;
             try
             {
                 await foreach (var range in ranges.Reader.ReadAllAsync(
@@ -978,51 +1112,29 @@ public class Program
                     var startIp = IPAddress.Parse(range.Item1);
                     var endIp = IPAddress.Parse(range.Item2);
 
-                    // Get a previously allocated byte array for this family.
-                    switch (startIp.AddressFamily)
+                    foreach (var ip in Extensions.Sample(
+                        startIp,
+                        endIp,
+                        samplePercentage,
+                        maxSamplesPerRange,
+                        random))
                     {
-                        case AddressFamily.InterNetwork:
-                            currentIpBuffer = buffer4a;
-                            currentEndBuffer = buffer4b;
-                            break;
-                        default:
-                            currentIpBuffer = buffer6a;
-                            currentEndBuffer = buffer6b;
-                            break;
-                    }
-
-                    // Add the current range bytes to these buffers.
-                    startIp.TryWriteBytes(currentIpBuffer, out _);
-                    endIp.TryWriteBytes(currentEndBuffer, out _);
-
-                    while (!Extensions.IpEquals(
-                        currentIpBuffer,
-                        currentEndBuffer) &&
-                        stoppingToken.IsCancellationRequested == false)
-                    {
-                        if (random.NextDouble() <= samplePercentage)
+                        if (stoppingToken.IsCancellationRequested)
                         {
-                            // Only allocate IPAddress object when we
-                            // actually need to process it
-                            var ip = new IPAddress(currentIpBuffer);
-                            ProcessIp(
-                                pipeline,
-                                dataSet,
-                                groups,
-                                factory,
-                                ip);
-                            consumer.Count++;
+                            break;
                         }
-
-                        // Increment to next IP address (operates on stack
-                        // buffer, no allocation)
-                        if (!Extensions.TryGetNextAddress(currentIpBuffer))
-                            break; // Overflow, reached maximum IP
+                        ProcessIp(
+                            pipeline,
+                            dataSet,
+                            groups,
+                            factory,
+                            ip);
+                        consumer.Count++;
                     }
                 }
             }
-            catch (OperationCanceledException) 
-            { 
+            catch (OperationCanceledException)
+            {
                 // Do nothing.
             }
             return groups;
@@ -1091,6 +1203,12 @@ public class Program
             double.Parse(args[2]) :
             DEFAULT_SAMPLE_PERCENTAGE;
 
+        // Get the cap on the addresses sampled from a single range, or use
+        // the default.
+        configuration.MaxSamplesPerRange = args.Length > 3 ?
+            int.Parse(args[3]) :
+            DEFAULT_MAX_SAMPLES_PER_RANGE;
+
         // Only include IP addresses with periods in them. i.e. IPv4. There are
         // too many IPv6 addresses for the metrics example to complete in a 
         // short time frame.
@@ -1116,6 +1234,13 @@ public class Program
             var builder = Host.CreateApplicationBuilder([]);
             builder.Services.AddSingleton(configuration);
             builder.Services.AddHostedService<Worker>();
+            // Stopping the example is meant to write out the metrics gathered
+            // so far. The default shutdown timeout is far too short for that,
+            // and when it expires the host disposes the engine while the
+            // worker is still using it, which loses the output and takes the
+            // process down with it.
+            builder.Services.Configure<HostOptions>(o =>
+                o.ShutdownTimeout = TimeSpan.FromMinutes(5));
             using var host = builder.Build();
             host.Run();
         }

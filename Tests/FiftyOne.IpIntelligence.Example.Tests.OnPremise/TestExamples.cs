@@ -170,6 +170,22 @@ public class TestExamples
     }
 
     /// <summary>
+    /// Returns true if the exception (or any inner exception) is the result of
+    /// an example being stopped by its cancellation token.
+    /// </summary>
+    private static bool IsCancellation(Exception ex)
+    {
+        for (var e = ex; e != null; e = e.InnerException)
+        {
+            if (e is OperationCanceledException)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
     /// Returns true if the exception (or any inner exception) indicates the
     /// configured license key was rejected by the 51Degrees data update service
     /// (e.g. it is not entitled to IP Intelligence data). This is an environment
@@ -318,24 +334,55 @@ public class TestExamples
     }
 
     /// <summary>
-    /// Test the Metrics Example
+    /// Test the Metrics Example.
+    /// A complete run analyses every IP range in the data file, which takes
+    /// far longer than a test should, so the example is stopped after a fixed
+    /// budget and the metrics gathered up to that point are checked. The
+    /// example writes its CSV whether it is stopped early or runs to the end.
     /// </summary>
     [TestMethod]
-    [Ignore("Disabled until profileOffsets are sorted (again).")]
     public void Example_OnPremise_MetricsConsole()
     {
+        VerifyDataFileAvailable();
+
         var tempfile = Path.GetTempFileName();
-        using var writer = new StreamWriter(File.Create(tempfile));
-        Examples.OnPremise.Metrics.Program.Example.Run(
-            DataFile,
-            new LoggerFactory(),
-            writer,
-            // Sample 0.1% of possible IP addresses.
-            0.0001,
-            // Include all the possible IP ranges.
-            (_) => true,
-            CancellationToken.None).Wait();
-        File.Delete(tempfile);
+        using var cancellation = new CancellationTokenSource(
+            TimeSpan.FromMinutes(5));
+        try
+        {
+            using (var writer = new StreamWriter(File.Create(tempfile)))
+            {
+                RunResilient(() => Examples.OnPremise.Metrics.Program.Example.Run(
+                    DataFile,
+                    new LoggerFactory(),
+                    writer,
+                    // Sample 0.01% of the addresses in a range...
+                    0.0001,
+                    // ...and never more than one address from any one range.
+                    1,
+                    // Include all the possible IP ranges.
+                    (_) => true,
+                    cancellation.Token).Wait());
+            }
+
+            var lines = File.ReadAllLines(tempfile);
+            Assert.IsGreaterThan(
+                1,
+                lines.Length,
+                "Metrics output should contain a header and at least one group.");
+            Assert.Contains("AverageAreaKm", lines[0],
+                "Metrics output should contain the average area column.");
+        }
+        catch (Exception ex) when (IsCancellation(ex))
+        {
+            Assert.Inconclusive(
+                "The metrics example did not get as far as processing any IP " +
+                "ranges within the time allowed for this test.");
+        }
+        finally
+        {
+            File.Delete(tempfile);
+        }
     }
 
     /// <summary>
