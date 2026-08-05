@@ -166,12 +166,19 @@ public static class Extensions
                 continue;
             }
 
-            // Reading the values of a profile can fail where the ones before
-            // it read cleanly. On the file this was written against every
-            // profile from index 1,602,768 of 35,007,545 fails this way, so
-            // the last readable profile is the real end of the scan. Stop
-            // there rather than letting it end the run - everything found so
-            // far is still a complete analysis of what can be read.
+            // The enumeration yields more entries than the data file holds
+            // profiles, and reading the values of one of the surplus entries
+            // fails. Values are found by indexing the profile id into a
+            // collection, and on the file this was written against that
+            // collection holds 35,007,545 while the enumeration yields the
+            // same number of entries - so every entry whose id is past it
+            // fails, starting at index 1,602,768 with id 35,007,548 where the
+            // one before it, id 35,007,525, reads cleanly.
+            //
+            // The last entry that reads is therefore the last real profile,
+            // and the ranges found up to it are the whole data file rather
+            // than part of it. Stop there instead of letting the failure end
+            // the run.
             (string, string) range = default;
             Exception unreadable = null;
             try

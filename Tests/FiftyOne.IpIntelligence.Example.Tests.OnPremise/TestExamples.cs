@@ -170,27 +170,6 @@ public class TestExamples
     }
 
     /// <summary>
-    /// Returns true if the exception (or any inner exception) is the native
-    /// reader running off the end of a collection in the data file. Seen while
-    /// enumerating profile metadata, where it indicates the profile offsets in
-    /// the file are not in the order the reader requires - a fault in the
-    /// export that produced the file, not in the code reading it.
-    /// </summary>
-    private static bool IsProfileCollectionError(Exception ex)
-    {
-        for (var e = ex; e != null; e = e.InnerException)
-        {
-            if (e.Message.Contains(
-                "Index used to retrieve an item from a collection was out of range",
-                StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /// <summary>
     /// Returns true if the exception (or any inner exception) is the result of
     /// an example being stopped by its cancellation token.
     /// </summary>
@@ -408,15 +387,6 @@ public class TestExamples
             Assert.Inconclusive(
                 "The metrics example did not get as far as processing any IP " +
                 "ranges within the time allowed for this test.");
-        }
-        catch (Exception ex) when (IsProfileCollectionError(ex))
-        {
-            Assert.Inconclusive(
-                "The profile collection in the data file could not be read to " +
-                "the end. The profile offsets in the file are not ordered as " +
-                "the reader requires, which is a fault in the export that " +
-                "produced the file rather than in this example. " +
-                $"Details: {ex.Message}");
         }
         finally
         {
