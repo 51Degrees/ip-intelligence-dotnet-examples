@@ -58,9 +58,10 @@ using System.Threading.Tasks;
 /// Depending on the available processor cores the example can take a long time
 /// to complete.
 ///
-/// The sample of IP addresses used in the metrics can be adjusted with the
-/// sample percentage and the cap on the addresses taken from any one range,
-/// both supplied as command line parameters.
+/// The sample used in the metrics can be adjusted with the sample percentage,
+/// the cap on the addresses taken from any one range, and the percentage of
+/// ranges to include, all supplied as command line parameters. The last of
+/// these is the most effective way to shorten a run.
 ///
 /// This example is primarily designed for those who are interested in 
 /// verifying the published metrics associated with 51Degrees' 
@@ -85,31 +86,32 @@ public static class Extensions
     private static readonly TimeSpan _logScan = TimeSpan.FromSeconds(30);
 
     /// <param name="engine"></param>
+    /// <param name="rangePercentage">
+    /// Proportion of the ranges in the data file to return, where 1 is 100%
+    /// and returns every range.
+    /// </param>
     /// <param name="logger">
     /// Reports how far through the profiles the scan has got. Long runs of
     /// profiles carry no usable range, so without this the example looks like
     /// it has stopped whenever it is working through one of them.
     /// </param>
     public static IEnumerable<(string, string)>
-        ValidRanges(this IpiOnPremiseEngine engine, ILogger logger = null)
+        ValidRanges(
+            this IpiOnPremiseEngine engine,
+            double rangePercentage = 1,
+            ILogger logger = null)
     {
         var network = engine.Components.Single(i =>
             "Network".Equals(
                 i.Name,
                 StringComparison.InvariantCultureIgnoreCase));
+        var random = new Random();
         var scanned = 0;
         var found = 0;
         var nextLog = DateTime.UtcNow.Add(_logScan);
         foreach (var profile in engine.Profiles)
         {
-            var range = GetRange(network, profile);
             scanned++;
-            if (range.Item1 != null && range.Item2 != null)
-            {
-                found++;
-                yield return range;
-            }
-            profile.Dispose();
             if (DateTime.UtcNow >= nextLog)
             {
                 logger?.LogInformation(
@@ -118,6 +120,25 @@ public static class Extensions
                     found);
                 nextLog = DateTime.UtcNow.Add(_logScan);
             }
+
+            // Decide whether to keep the profile before reading any of its
+            // property values. Reading them costs around a hundred times more
+            // than stepping over the profile (measured at 2,300 profiles a
+            // second against 246,000 to enumerate them), so skipping here is
+            // what makes a smaller sample of ranges actually run faster.
+            if (rangePercentage < 1 && random.NextDouble() > rangePercentage)
+            {
+                profile.Dispose();
+                continue;
+            }
+
+            var range = GetRange(network, profile);
+            if (range.Item1 != null && range.Item2 != null)
+            {
+                found++;
+                yield return range;
+            }
+            profile.Dispose();
         }
     }
 
@@ -373,6 +394,18 @@ public class Program
     /// address space.
     /// </summary>
     private const int DEFAULT_MAX_SAMPLES_PER_RANGE = 8;
+
+    /// <summary>
+    /// The percentage of the ranges in the data file to include, where 1 is
+    /// 100%.
+    ///
+    /// This is the most effective control over how long the example takes.
+    /// Reading the property values that make up a range costs around a
+    /// hundred times more than stepping over the profile that holds it, so
+    /// discarding a range before those values are read takes almost all of
+    /// its cost with it.
+    /// </summary>
+    private const double DEFAULT_RANGE_PERCENTAGE = 1;
 
     public class Counter
     {
@@ -732,6 +765,11 @@ public class Program
         public int MaxSamplesPerRange;
 
         /// <summary>
+        /// Percentage of the ranges in the data file to include.
+        /// </summary>
+        public double RangePercentage;
+
+        /// <summary>
         /// Logger factory for reporting progress.
         /// </summary>
         public ILoggerFactory LoggerFactory;
@@ -757,6 +795,7 @@ public class Program
                 configuration.Output,
                 configuration.SamplePercentage,
                 configuration.MaxSamplesPerRange,
+                configuration.RangePercentage,
                 configuration.Condition,
                 stoppingToken);
             hostApplicationLifetime.StopApplication();
@@ -782,6 +821,10 @@ public class Program
         /// Most IP addresses to sample from any single range. Needed to bound
         /// the work for the very large IPv6 ranges.
         /// </param>
+        /// <param name="rangePercentage">
+        /// Percentage of the ranges in the data file to include. The cheapest
+        /// way to shorten a run - see <see cref="DEFAULT_RANGE_PERCENTAGE"/>.
+        /// </param>
         /// <param name="condition">
         /// Function used to determine if an IP address range should be
         /// included.
@@ -798,6 +841,7 @@ public class Program
             TextWriter output,
             double samplePercentage,
             int maxSamplesPerRange,
+            double rangePercentage,
             Func<(string, string), bool> condition,
             CancellationToken stoppingToken,
             ILogger logger = null)
@@ -893,6 +937,7 @@ public class Program
                 ipiEngine,
                 logger, 
                 ranges,
+                rangePercentage,
                 condition,
                 consumers,
                 stoppingToken);
@@ -990,6 +1035,7 @@ public class Program
             IpiOnPremiseEngine ipiEngine,
             ILogger logger,
             Channel<(string, string)> ranges,
+            double rangePercentage,
             Func<(string, string), bool> condition,
             Consumer[] consumers,
             CancellationToken stoppingToken)
@@ -1000,8 +1046,9 @@ public class Program
             var nextLog = lastLog.Add(_logBuild);
             var lastProcessorTime = process.TotalProcessorTime;
             var source = condition == null ?
-                ipiEngine.ValidRanges(logger) :
-                ipiEngine.ValidRanges(logger).Where(i => condition(i));
+                ipiEngine.ValidRanges(rangePercentage, logger) :
+                ipiEngine.ValidRanges(rangePercentage, logger)
+                    .Where(i => condition(i));
             foreach (var range in source.TakeWhile(_ => 
                 stoppingToken.IsCancellationRequested == false))
             {
@@ -1208,6 +1255,11 @@ public class Program
         configuration.MaxSamplesPerRange = args.Length > 3 ?
             int.Parse(args[3]) :
             DEFAULT_MAX_SAMPLES_PER_RANGE;
+
+        // Get the percentage of ranges to include, or use the default.
+        configuration.RangePercentage = args.Length > 4 ?
+            double.Parse(args[4]) :
+            DEFAULT_RANGE_PERCENTAGE;
 
         // Only include IP addresses with periods in them. i.e. IPv4. There are
         // too many IPv6 addresses for the metrics example to complete in a 

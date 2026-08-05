@@ -360,6 +360,9 @@ public class TestExamples
                     0.0001,
                     // ...and never more than one address from any one range.
                     1,
+                    // Take a hundredth of the ranges. Discarding a range
+                    // before its values are read is what keeps this short.
+                    0.01,
                     // Include all the possible IP ranges.
                     (_) => true,
                     cancellation.Token).Wait());

@@ -73,12 +73,24 @@ data file; the lite file in the `ip-intelligence-data` submodule does not carry
 the location data they analyse.
 
 `Metrics-Console` samples the address ranges in the data file rather than
-visiting every address. The sample is controlled by two optional command line
-arguments after the data file and output path: the proportion of each range to
-sample (1 is 100%), and the most addresses to take from any one range. The
-per-range cap is what bounds the run - a single IPv6 range holds more addresses
-than could ever be enumerated, so the proportion on its own does not limit the
-work.
+visiting every address. Three optional command line arguments follow the data
+file and output path:
+
+| Argument | Default | Effect |
+| -------- | ------- | ------ |
+| Sample percentage      | 0.1 | Proportion of each range to sample, where 1 is 100% and analyses every address in the range. |
+| Max samples per range  | 8   | Most addresses taken from any one range. |
+| Range percentage       | 1   | Proportion of the ranges in the data file to include. |
+
+The per-range cap is what makes a run finish at all: a single IPv6 range holds
+more addresses than could ever be enumerated, so the sample percentage on its
+own does not limit the work.
+
+The range percentage is the most effective control over how long a run takes.
+Reading the property values that make up one range costs around a hundred times
+more than stepping over the profile that holds it, so discarding a range before
+those values are read takes almost all of its cost with it. Lower it when a run
+over the whole data file is longer than you need.
 
 
 ## Cloud
