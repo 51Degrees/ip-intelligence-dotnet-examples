@@ -166,14 +166,41 @@ public static class Extensions
                 continue;
             }
 
-            var range = GetRange(network, profile);
+            // Reading the values of a profile can fail where the ones before
+            // it read cleanly. On the file this was written against every
+            // profile from index 1,602,768 of 35,007,545 fails this way, so
+            // the last readable profile is the real end of the scan. Stop
+            // there rather than letting it end the run - everything found so
+            // far is still a complete analysis of what can be read.
+            (string, string) range = default;
+            Exception unreadable = null;
+            try
+            {
+                range = GetRange(network, profile);
+            }
+            catch (Exception ex)
+            {
+                unreadable = ex;
+            }
+            profile.Dispose();
+
+            if (unreadable != null)
+            {
+                logger?.LogWarning(
+                    unreadable,
+                    "Stopped scanning at profile '{0}', whose values could " +
+                    "not be read. Found '{1}' ranges before it",
+                    scanned,
+                    found);
+                yield break;
+            }
+
             if (range.Item1 != null && range.Item2 != null)
             {
                 found++;
                 sinceFound = 0;
                 yield return range;
             }
-            profile.Dispose();
         }
     }
 
