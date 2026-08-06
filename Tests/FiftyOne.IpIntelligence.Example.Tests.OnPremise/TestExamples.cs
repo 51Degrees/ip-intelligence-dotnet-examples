@@ -334,6 +334,52 @@ public class TestExamples
     }
 
     /// <summary>
+    /// Test the LocationAnalysis Example.
+    /// Runs the analysis with a very low sample percentage and a bounded
+    /// run time so the test completes quickly, then asserts that a CSV
+    /// report with the expected header and at least one data row was
+    /// produced.
+    /// </summary>
+    [TestMethod]
+    public void Example_OnPremise_LocationAnalysisConsole()
+    {
+        VerifyDataFileAvailable();
+
+        var tempfile = Path.GetTempFileName();
+        try
+        {
+            using (var writer = new StreamWriter(File.Create(tempfile)))
+            using (var cancellationSource =
+                new CancellationTokenSource(TimeSpan.FromMinutes(3)))
+            {
+                RunResilient(() =>
+                    Examples.OnPremise.LocationAnalysis.Program.Example.Run(
+                        DataFile,
+                        writer,
+                        new LoggerFactory(),
+                        // Sample 0.05% of the address space so the test
+                        // completes quickly.
+                        0.0005,
+                        null,
+                        cancellationSource.Token));
+            }
+
+            var lines = File.ReadAllLines(tempfile);
+            Assert.IsGreaterThan(1, lines.Length,
+                "The location analysis should write a header and at least " +
+                "one group row.");
+            Assert.Contains("IpCount", lines[0],
+                "The CSV header should contain the IpCount column.");
+            Assert.Contains("AverageAreaSqKm", lines[0],
+                "The CSV header should contain the AverageAreaSqKm column.");
+        }
+        finally
+        {
+            File.Delete(tempfile);
+        }
+    }
+
+    /// <summary>
     /// Test the Metrics Example.
     /// A complete run analyses every IP range in the data file, which takes
     /// far longer than a test should, so the example is stopped after a fixed

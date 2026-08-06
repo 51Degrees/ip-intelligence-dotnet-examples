@@ -59,8 +59,9 @@ dotnet add package FiftyOne.IpIntelligence --prerelease
 | Framework-Web                    | .NET Framework 4.6.2 | ASP.NET Framework project.                                              |
 | GettingStarted-Console           | .NET 10.0            | Simple console app.                                                     |
 | GettingStarted-Web               | .NET 10.0            | ASP.NET Core project.                                                   |
+| LocationAnalysis-Console         | .NET 10.0            | Analysis of the location data in a data file, grouped and output as CSV.|
 | Metadata-Console                 | .NET 10.0            | Accessing data file's metadata (e.g. listing properties).               |
-| Metrics-Console                  | .NET 10.0            | Analysis of the location data in a data file, grouped and output as CSV.|
+| Metrics-Console                  | .NET 10.0            | Geographic area metrics per group, sampled across the data file.        |
 | OfflineProcessing-Console        | .NET 10.0            | Batch-processing of IP addresses from a YAML file.                      |
 | Performance-Console              | .NET 10.0            | "Clock-time" benchmark for assessing detection speed.                   |
 | Suspicious-Console               | .NET 10.0            | Using diversity properties to assess how suspicious an IP address is.   |
@@ -70,7 +71,8 @@ dotnet add package FiftyOne.IpIntelligence --prerelease
 
 `Compare-Console`, `Metrics-Console` and `Suspicious-Console` need an enterprise
 data file; the lite file in the `ip-intelligence-data` submodule does not carry
-the location data they analyse.
+the location data they analyse. `LocationAnalysis-Console` runs against the lite
+file too, reporting the properties it does not carry as `NotAvailable`.
 
 `Metrics-Console` samples the address ranges in the data file rather than
 visiting every address. Optional command line arguments follow the data file and
