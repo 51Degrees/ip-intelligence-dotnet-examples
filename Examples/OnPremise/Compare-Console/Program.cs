@@ -293,21 +293,44 @@ public class Program
         /// <returns>Allow passing in of an external logger
         /// for automated comparison</returns>
         public static async Task Run(
-            string dataFile, 
+            string dataFile,
             string csvTruthFile,
             TextWriter output,
             ILoggerFactory loggerFactory,
             CancellationToken stoppingToken,
             ILogger logger = null)
         {
-            logger ??= loggerFactory.CreateLogger<Example>();
+            using var ipiEngine = BuildEngine(dataFile, loggerFactory);
+            await Run(
+                ipiEngine,
+                csvTruthFile,
+                output,
+                loggerFactory,
+                stoppingToken,
+                logger);
+        }
 
+        /// <summary>
+        /// Builds the on-premise IP Intelligence engine used by the example.
+        /// Exposed so callers comparing many truth files against the same
+        /// data file can build the engine once and pass it to
+        /// <see cref="Run(IpiOnPremiseEngine, string, TextWriter,
+        /// ILoggerFactory, CancellationToken, ILogger)"/> for each file.
+        /// The caller is responsible for disposing the returned engine.
+        /// </summary>
+        /// <param name="dataFile"></param>
+        /// <param name="loggerFactory"></param>
+        /// <returns></returns>
+        public static IpiOnPremiseEngine BuildEngine(
+            string dataFile,
+            ILoggerFactory loggerFactory)
+        {
             // Ensure that batch latency mode is always enabled.
             GCSettings.LatencyMode = GCLatencyMode.Batch;
 
             // Build a new on-premise IP Intelligence engine with the LowMemory
             // profile so the large data file is paged from disk, not loaded into RAM.
-            using var ipiEngine = new IpiOnPremiseEngineBuilder(loggerFactory)
+            return new IpiOnPremiseEngineBuilder(loggerFactory)
                 // LowMemory keeps the (multi-gigabyte) IP Intelligence data file on
                 // disk rather than loading it entirely into memory. See the
                 // documentation for more detail on this and other configuration options.
@@ -325,6 +348,32 @@ public class Program
                 // Optimize for the expected parallel workload.
                 .SetConcurrency((ushort)Environment.ProcessorCount)
                 .Build(dataFile, false);
+        }
+
+        /// <summary>
+        /// Runs the Compare console example against an already built engine.
+        /// The engine is not disposed, the caller retains ownership.
+        /// </summary>
+        /// <param name="ipiEngine"></param>
+        /// <param name="csvTruthFile"></param>
+        /// <param name="output"></param>
+        /// <param name="loggerFactory"></param>
+        /// <param name="stoppingToken"></param>
+        /// <param name="logger"></param>
+        /// <returns>Allow passing in of an external logger
+        /// for automated comparison</returns>
+        public static async Task Run(
+            IpiOnPremiseEngine ipiEngine,
+            string csvTruthFile,
+            TextWriter output,
+            ILoggerFactory loggerFactory,
+            CancellationToken stoppingToken,
+            ILogger logger = null)
+        {
+            logger ??= loggerFactory.CreateLogger<Example>();
+
+            // Ensure that batch latency mode is always enabled.
+            GCSettings.LatencyMode = GCLatencyMode.Batch;
 
             // Build a pipeline to consumer the IP intelligence engine. Needed
             // so that flowdata can be used to pass evidence in and get
