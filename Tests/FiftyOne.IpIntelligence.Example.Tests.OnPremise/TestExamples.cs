@@ -392,6 +392,16 @@ public class TestExamples
         VerifyDataFileAvailable();
 
         var tempfile = Path.GetTempFileName();
+        // This budget is always spent in full - the example never runs out of
+        // ranges first - so the test's runtime is this value plus the cost of
+        // unwinding. It has to stay clear of the CI blame hang timeout, which is
+        // the only ceiling above it that applies on CI and which used to be set
+        // to this same 5 minutes; see ci/run-unit-tests.ps1 before changing it.
+        //
+        // Note that a runner slow enough to still be building the area index
+        // when this fires reports Inconclusive below rather than asserting on
+        // any metrics, which leaves CI green. Shortening this budget makes that
+        // outcome more likely.
         using var cancellation = new CancellationTokenSource(
             TimeSpan.FromMinutes(5));
         try
