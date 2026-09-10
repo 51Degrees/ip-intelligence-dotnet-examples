@@ -11,15 +11,27 @@
   bound the overall runtime so a stuck test fails cleanly instead of hanging the
   runner.
 
-  Referenced from each test project's <RunSettingsFilePath> so it is applied by
-  `dotnet test` regardless of how CI invokes the tests.
+  Referenced from each test project's <RunSettingsFilePath>, so it applies to
+  MSBuild-driven runs - `dotnet test` against a project or the solution, and the
+  IDE test runners.
+
+  It does NOT currently apply in CI. ci/run-unit-tests.ps1 selects built
+  assemblies by name, so common-ci invokes `dotnet test` against an assembly
+  path with the no-build switch. That bypasses MSBuild, which is what would
+  otherwise turn <RunSettingsFilePath> into a settings argument, so none of the
+  settings below are in force there. The only per-test ceiling on CI is vstest's
+  blame hang timeout, set and explained in ci/run-unit-tests.ps1. Treat the
+  timeouts below as local/IDE guards until that wiring is fixed.
+
+  (Keep this comment free of double hyphens: they are not legal inside an XML
+  comment, and a malformed file here breaks every MSBuild-driven test run.)
 -->
 <RunSettings>
   <RunConfiguration>
-    <!-- Whole-session ceiling (ms) so a run can never hang the CI job
-         indefinitely, while staying well under the 120-minute job timeout.
-         Must comfortably exceed the serial runtime of the on-premise suite on a
-         slow, cold CI runner. -->
+    <!-- Whole-session ceiling (ms) so a local or IDE run cannot hang
+         indefinitely. Must comfortably exceed the serial runtime of the
+         on-premise suite on a slow, cold machine. On CI nothing bounds the
+         session but the job timeout; see the note above. -->
     <TestSessionTimeout>1200000</TestSessionTimeout>
   </RunConfiguration>
   <MSTest>
@@ -27,10 +39,13 @@
          loads the multi-GB enterprise data file and enumerates every property
          and value, which has been observed to take over four minutes on a cold
          macOS CI runner. A tighter limit false-fails that legitimately slow
-         test, which then triggers a fail-fast cancellation of the whole matrix.
-         True hangs are still bounded (here, and by the 120-minute job timeout). -->
+         test. True hangs are bounded here for local and IDE runs, and on CI by
+         the blame hang timeout in ci/run-unit-tests.ps1. -->
     <TestTimeout>600000</TestTimeout>
-    <!-- Run tests serially: only one multi-GB engine is loaded at a time.
+    <!-- Belt and braces for running tests serially, so that only one multi-GB
+         engine is loaded at a time. The actual guarantee comes from the
+         [assembly: DoNotParallelize] in TestExamples.cs, which unlike this file
+         does apply on CI.
          Concurrency itself is still covered by
          TestGettingStartedOnPremise.GettingStarted_ParallelProcessing_IsConsistent,
          which exercises many concurrent requests against a single shared engine. -->
