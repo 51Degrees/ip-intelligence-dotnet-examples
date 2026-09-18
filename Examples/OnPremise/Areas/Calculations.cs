@@ -176,11 +176,11 @@ public static class Calculations
             {
                 for (var i = 0; i < intersect.NumGeometries; i++)
                 {
-                    if (geo.GetGeometryN(i).Area > 0)
+                    if (intersect.GetGeometryN(i).Area > 0)
                     {
                         area += GetArea(
                             geo,
-                            geo.GetGeometryN(i),
+                            intersect.GetGeometryN(i),
                             rectangle.Transformation);
                     }
                 }
@@ -215,21 +215,55 @@ public static class Calculations
         Geometry geometry,
         MathTransform transform)
     {
-        var factory = geometry.Factory;
-        var coordinates = new Coordinate[geometry.Coordinates.Length];
+        // A multipolygon or collection can arrive holding a single piece,
+        // for example from the TopologyException fallback or the intersection
+        // of a collection. Each polygon in it is transformed on its own.
+        if (geometry is not Polygon polygon)
+        {
+            var parts = new List<Geometry>();
+            for (var i = 0; i < geometry.NumGeometries; i++)
+            {
+                var part = geometry.GetGeometryN(i);
+                if (part.Dimension == Dimension.Surface)
+                {
+                    parts.Add(TransformGeometry(part, transform));
+                }
+            }
+            return geometry.Factory.BuildGeometry(parts);
+        }
+
+        // The outer boundary and each hole are separate rings. Joining their
+        // points into one ring does not close, so they are handled apart.
+        var holes = new LinearRing[polygon.NumInteriorRings];
+        for (var i = 0; i < holes.Length; i++)
+        {
+            holes[i] = TransformRing(
+                (LinearRing)polygon.GetInteriorRingN(i), transform);
+        }
+        return polygon.Factory.CreatePolygon(
+            TransformRing((LinearRing)polygon.ExteriorRing, transform),
+            holes);
+    }
+
+    private static LinearRing TransformRing(
+        LinearRing ring,
+        MathTransform transform)
+    {
+        var source = ring.Coordinates;
+        var coordinates = new Coordinate[source.Length];
 
         for (int i = 0; i < coordinates.Length; i++)
         {
             var transformed =
                 transform.Transform([
-                    geometry.Coordinates[i].X, 
-                    geometry.Coordinates[i].Y]);
+                    source[i].X,
+                    source[i].Y]);
             coordinates[i] = new Coordinate(
                 transformed[0],
                 transformed[1]);
         }
 
-        return factory.CreatePolygon(coordinates);
+        return ring.Factory.CreateLinearRing(coordinates);
     }
 
     /// <summary>
