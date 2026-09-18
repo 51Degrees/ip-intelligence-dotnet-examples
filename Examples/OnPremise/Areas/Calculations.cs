@@ -26,6 +26,7 @@ using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
 using ProjNet.CoordinateSystems.Transformations;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Examples.OnPremise.Areas;
@@ -47,6 +48,18 @@ public static class Calculations
     /// Parses the WKT string into geometries.
     /// </summary>
     private static readonly WKTReader _wktReader = new();
+
+    /// <summary>
+    /// Parsed geometry and area in square meters for each WKT string seen,
+    /// so that an area is only worked out once.
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, (Geometry, double)>
+        _wktAreas = new();
+
+    /// <summary>
+    /// Number of WKT strings with a cached area.
+    /// </summary>
+    public static int CachedWktCount => _wktAreas.Count;
 
     /// <summary>
     /// A grid of latitude and longitude rectangles. Used to work out the
@@ -74,10 +87,17 @@ public static class Calculations
         double latitude,
         double longitude)
     {
-        var geo = _wktReader.Read(wkt);
+        var (geo, area) = _wktAreas.GetOrAdd(wkt, key =>
+        {
+            var parsed = _wktReader.Read(key);
+            return (parsed, parsed == null ? 0 : GetAreas(parsed));
+        });
         if (geo != null)
         {
-            return GetAreas(geo, latitude, longitude);
+            return new(
+                (int)Math.Round(area / 1_000_000),
+                geo.NumGeometries,
+                geo.Contains(new Point(longitude, latitude)));
         }
         return new(0,0,false);
     }
@@ -176,11 +196,11 @@ public static class Calculations
             {
                 for (var i = 0; i < intersect.NumGeometries; i++)
                 {
-                    if (geo.GetGeometryN(i).Area > 0)
+                    if (intersect.GetGeometryN(i).Area > 0)
                     {
                         area += GetArea(
                             geo,
-                            geo.GetGeometryN(i),
+                            intersect.GetGeometryN(i),
                             rectangle.Transformation);
                     }
                 }
@@ -215,21 +235,52 @@ public static class Calculations
         Geometry geometry,
         MathTransform transform)
     {
-        var factory = geometry.Factory;
-        var coordinates = new Coordinate[geometry.Coordinates.Length];
+        // Transform each polygon of a collection on its own.
+        if (geometry is not Polygon polygon)
+        {
+            var parts = new List<Geometry>();
+            for (var i = 0; i < geometry.NumGeometries; i++)
+            {
+                var part = geometry.GetGeometryN(i);
+                if (part.Dimension == Dimension.Surface)
+                {
+                    parts.Add(TransformGeometry(part, transform));
+                }
+            }
+            return geometry.Factory.BuildGeometry(parts);
+        }
+
+        // The outer boundary and each hole are transformed as separate rings.
+        var holes = new LinearRing[polygon.NumInteriorRings];
+        for (var i = 0; i < holes.Length; i++)
+        {
+            holes[i] = TransformRing(
+                (LinearRing)polygon.GetInteriorRingN(i), transform);
+        }
+        return polygon.Factory.CreatePolygon(
+            TransformRing((LinearRing)polygon.ExteriorRing, transform),
+            holes);
+    }
+
+    private static LinearRing TransformRing(
+        LinearRing ring,
+        MathTransform transform)
+    {
+        var source = ring.Coordinates;
+        var coordinates = new Coordinate[source.Length];
 
         for (int i = 0; i < coordinates.Length; i++)
         {
             var transformed =
                 transform.Transform([
-                    geometry.Coordinates[i].X, 
-                    geometry.Coordinates[i].Y]);
+                    source[i].X,
+                    source[i].Y]);
             coordinates[i] = new Coordinate(
                 transformed[0],
                 transformed[1]);
         }
 
-        return factory.CreatePolygon(coordinates);
+        return ring.Factory.CreateLinearRing(coordinates);
     }
 
     /// <summary>

@@ -395,6 +395,10 @@ public class Program
             var truth = new BlockingCollection<Truth>(
                 Environment.ProcessorCount);
 
+            // Stopped by the caller, or by a consumer that failed.
+            using var stopping = CancellationTokenSource
+                .CreateLinkedTokenSource(stoppingToken);
+
             // Create consumers that are used to add the result to the truth.
             // These run in parallel to ensure best performance as the IPI and 
             // area calculations can be time consuming compared to reading new
@@ -402,14 +406,14 @@ public class Program
             var consumers = CreateConsumers(
                 pipeline,
                 truth,
-                stoppingToken);
+                stopping);
             logger.LogInformation(
                 "Created '{0}' consumer processors",
                 consumers.Length);
 
             // Use the main thread as the producer adding truths for the
             // consumers to process.
-            AddTruth(logger, source, truth, consumers, stoppingToken);
+            AddTruth(logger, source, truth, consumers, stopping.Token);
 
             // Create the write for the destination output.
             using var writer = new CsvWriter(
@@ -444,12 +448,14 @@ public class Program
         /// </summary>
         /// <param name="pipeline"></param>
         /// <param name="truth"></param>
-        /// <param name="stoppingToken"></param>
+        /// <param name="stopping">
+        /// Cancelled when a consumer fails so that the producer stops too.
+        /// </param>
         /// <returns></returns>
         private static Consumer[] CreateConsumers(
             IPipeline pipeline,
             BlockingCollection<Truth> truth,
-            CancellationToken stoppingToken)
+            CancellationTokenSource stopping)
         {
             return Enumerable.Range(
                 0,
@@ -457,10 +463,20 @@ public class Program
                 {
                     var consumer = new Consumer();
                     consumer.Task = Task.Factory.StartNew(() =>
-                        ProcessTruth(
-                            pipeline,
-                            truth,
-                            stoppingToken),
+                        {
+                            try
+                            {
+                                return ProcessTruth(
+                                    pipeline,
+                                    truth,
+                                    stopping.Token);
+                            }
+                            catch
+                            {
+                                stopping.Cancel();
+                                throw;
+                            }
+                        },
                         TaskCreationOptions.LongRunning);
                     return consumer;
                 }).ToArray();
