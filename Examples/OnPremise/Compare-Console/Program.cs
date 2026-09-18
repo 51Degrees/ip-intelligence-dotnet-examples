@@ -395,9 +395,7 @@ public class Program
             var truth = new BlockingCollection<Truth>(
                 Environment.ProcessorCount);
 
-            // Stopped by the caller, or by a consumer that failed. Without
-            // the second case the producer would wait for ever on a full
-            // collection once every consumer had gone.
+            // Stopped by the caller, or by a consumer that failed.
             using var stopping = CancellationTokenSource
                 .CreateLinkedTokenSource(stoppingToken);
 
@@ -451,8 +449,7 @@ public class Program
         /// <param name="pipeline"></param>
         /// <param name="truth"></param>
         /// <param name="stopping">
-        /// Cancelled when a consumer fails, so that the producer stops and
-        /// the failure is seen where the consumer's task is awaited.
+        /// Cancelled when a consumer fails so that the producer stops too.
         /// </param>
         /// <returns></returns>
         private static Consumer[] CreateConsumers(

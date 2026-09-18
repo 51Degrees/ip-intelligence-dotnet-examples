@@ -83,8 +83,7 @@ public class TestAreas
     [TestMethod]
     public void TestPolygonSplitByGridCell()
     {
-        // A U shape whose arms cross into the next grid cell, where they
-        // are two separate pieces.
+        // A U shape whose arms lie in a different grid cell to its base.
         var shape = _factor.CreatePolygon([
             new Coordinate(0.2, 50.5),
             new Coordinate(0.8, 50.5),
@@ -110,12 +109,24 @@ public class TestAreas
 
         var actual = Calculations.GetAreas(shape, 0, 0);
 
-        // Each area is rounded to whole square kilometres on its own.
         Assert.AreEqual(
             (double)Calculations.GetAreas(whole, 0, 0).SquareKms -
                 Calculations.GetAreas(gap, 0, 0).SquareKms,
             actual.SquareKms,
             1);
+    }
+
+    [TestMethod]
+    public void TestWktAreaIsCached()
+    {
+        var wkt = CreateRectangle(10, 51, 1).AsText();
+
+        Calculations.GetAreas(wkt, 0, 0);
+        var first = Calculations.CachedWktCount;
+        var again = Calculations.GetAreas(wkt, 51.5, 10.5);
+
+        Assert.AreEqual(first, Calculations.CachedWktCount);
+        Assert.IsTrue(again.Contains);
     }
 
     private static Polygon CreateRectangle(double x, double y, double d)

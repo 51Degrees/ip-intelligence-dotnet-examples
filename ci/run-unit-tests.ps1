@@ -44,11 +44,13 @@ $RunTestsArgs = @{
     # the deadline and the two raced; the slower macOS runners lost it
     # consistently and took the nightly red.
     #
-    # 12m is ~2.4x the longest test observed (MetricsConsole, 5m), leaving blame
+    # 20m is ~4x the longest test observed (MetricsConsole, 5m), leaving blame
     # as a genuine-hang backstop rather than something the suite trips in normal
-    # operation. Sibling repo ip-intelligence-dotnet raises it for the same
-    # reason. Raising the budget in TestExamples.cs means revisiting this.
-    BlameHangTimeout = "12m"
+    # operation. Example_OnPremise_CompareConsole's run time depends on the
+    # data file, hence the extra margin. Sibling repo ip-intelligence-dotnet
+    # raises it for the same reason. Raising the budget in TestExamples.cs
+    # means revisiting this.
+    BlameHangTimeout = "20m"
 }
 
 ./dotnet/run-unit-tests.ps1 @RunTestsArgs
