@@ -9,6 +9,15 @@
 
     <!-- Bounded test/session timeouts (see Tests/test.runsettings). -->
     <RunSettingsFilePath>$(MSBuildThisFileDirectory)..\test.runsettings</RunSettingsFilePath>
+
+    <!-- Ensure the vstest testhost is framework-dependent and gets its
+         runtimeconfig emitted into the x64 output. Without this, the nightly
+         publish job (which rewrites package refs and re-restores before the
+         msbuild+vstest run) could leave the output without
+         testhost.runtimeconfig.json, making vstest try to launch testhost.exe
+         as a self-contained app and fail with a missing hostpolicy.dll. -->
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <SelfContained>false</SelfContained>
   </PropertyGroup>
 
   <ItemGroup>
