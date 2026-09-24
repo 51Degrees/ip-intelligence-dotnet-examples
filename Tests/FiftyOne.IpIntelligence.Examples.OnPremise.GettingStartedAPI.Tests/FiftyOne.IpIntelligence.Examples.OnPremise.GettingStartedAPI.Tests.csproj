@@ -18,8 +18,8 @@
 
   <ItemGroup>
     <PackageReference Include="FiftyOne.Common.TestHelpers" Version="5.1.8" />
-    <PackageReference Include="FiftyOne.DeviceDetection.Hash.Engine.OnPremise" Version="4.5.160" />
-    <PackageReference Include="FiftyOne.Pipeline.Engines.TestHelpers" Version="4.5.113" />
+    <PackageReference Include="FiftyOne.DeviceDetection.Hash.Engine.OnPremise" Version="4.5.161" />
+    <PackageReference Include="FiftyOne.Pipeline.Engines.TestHelpers" Version="4.5.114" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="4.1.0" />
     <PackageReference Include="MSTest.TestFramework" Version="4.1.0" />
@@ -59,13 +59,8 @@
     runtime installed on the runner, so the copy is framework-dependent and
     launches correctly.
   -->
-  <Target Name="SeedTestHostRuntimeConfig"
-          AfterTargets="Build;GenerateBuildRuntimeConfigurationFiles"
-          Condition="'$(OS)' == 'Windows_NT'">
-    <Copy SourceFiles="$(OutDir)$(AssemblyName).runtimeconfig.json"
-          DestinationFiles="$(OutDir)testhost.runtimeconfig.json"
-          Condition="Exists('$(OutDir)$(AssemblyName).runtimeconfig.json')"
-          SkipUnchangedFiles="true" />
+  <Target Name="SeedTestHostRuntimeConfig" AfterTargets="Build;GenerateBuildRuntimeConfigurationFiles" Condition="'$(OS)' == 'Windows_NT'">
+    <Copy SourceFiles="$(OutDir)$(AssemblyName).runtimeconfig.json" DestinationFiles="$(OutDir)testhost.runtimeconfig.json" Condition="Exists('$(OutDir)$(AssemblyName).runtimeconfig.json')" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>
