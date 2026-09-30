@@ -148,6 +148,145 @@ public class Program
         /// The country associated with the latitude and longitude.
         /// </summary>
         public string Country { get; set; }
+
+        /// <summary>
+        /// The line in the source CSV file the truth was read from. Used to
+        /// identify the record when it can not be processed.
+        /// </summary>
+        [Ignore]
+        public long LineNumber { get; set; }
+    }
+
+    /// <summary>
+    /// Thrown when a truth record can not be compared, for example because
+    /// the area returned for its IP address is not a valid geometry. The
+    /// record is skipped and the comparison continues.
+    /// </summary>
+    public class BadTruthException : Exception
+    {
+        /// <summary>
+        /// Constructs a new instance of <see cref="BadTruthException"/>.
+        /// </summary>
+        /// <param name="message">
+        /// Why the truth record can not be compared.
+        /// </param>
+        /// <param name="innerException">
+        /// The failure that caused the record to be skipped, if any.
+        /// </param>
+        public BadTruthException(
+            string message,
+            Exception innerException = null)
+            : base(message, innerException)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Records the truth records that were skipped because they could not be
+    /// read or compared. Each skipped record is logged, up to a limit, so that
+    /// it can be found in the source file, and a summary is logged once all
+    /// the records have been processed. Safe to use from many consumers.
+    /// </summary>
+    /// <param name="logger">
+    /// Used to report each skipped record and the summary.
+    /// </param>
+    /// <param name="maxLogged">
+    /// The number of skipped records to log individually. Records after this
+    /// are only counted so that a file with many bad records does not flood
+    /// the log.
+    /// </param>
+    public class SkippedTruths(ILogger logger, int maxLogged = 100)
+    {
+        /// <summary>
+        /// The longest detail logged for a skipped record.
+        /// </summary>
+        private const int MaxDetailLength = 500;
+
+        /// <summary>
+        /// Number of records skipped for each reason.
+        /// </summary>
+        private readonly ConcurrentDictionary<string, int> _reasons = new();
+
+        /// <summary>
+        /// Total number of records skipped.
+        /// </summary>
+        private int _count;
+
+        /// <summary>
+        /// Total number of records skipped.
+        /// </summary>
+        public int Count => _count;
+
+        /// <summary>
+        /// Number of records skipped for each reason.
+        /// </summary>
+        public IReadOnlyDictionary<string, int> Reasons => _reasons;
+
+        /// <summary>
+        /// Records and logs a truth record that has been skipped.
+        /// </summary>
+        /// <param name="lineNumber">
+        /// The line in the source file the record was read from.
+        /// </param>
+        /// <param name="ip">
+        /// The IP address of the record, if known.
+        /// </param>
+        /// <param name="reason">
+        /// A short reason used to group skipped records in the summary.
+        /// </param>
+        /// <param name="detail">
+        /// Further detail about why the record was skipped.
+        /// </param>
+        public void Add(long lineNumber, string ip, string reason, string detail)
+        {
+            var count = Interlocked.Increment(ref _count);
+            _reasons.AddOrUpdate(reason, 1, (_, i) => i + 1);
+            if (count <= maxLogged)
+            {
+                if (detail?.Length > MaxDetailLength)
+                {
+                    detail = detail[..MaxDetailLength] + "...";
+                }
+                logger.LogWarning(
+                    "Skipped truth record at line '{0}' with IP '{1}'. " +
+                    "{2}. {3}",
+                    lineNumber,
+                    ip,
+                    reason,
+                    detail);
+                if (count == maxLogged)
+                {
+                    logger.LogWarning(
+                        "Further skipped truth records will be counted but " +
+                        "not logged individually");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Logs the number of records skipped for each reason.
+        /// </summary>
+        /// <param name="source">
+        /// The source file the records were read from.
+        /// </param>
+        public void LogSummary(string source)
+        {
+            if (_count == 0)
+            {
+                logger.LogInformation(
+                    "No truth records skipped from '{0}'",
+                    source);
+                return;
+            }
+            logger.LogWarning(
+                "Skipped '{0}' truth records from '{1}'. {2}",
+                _count,
+                source,
+                String.Join(
+                    ", ",
+                    _reasons.OrderByDescending(i => i.Value).Select(i =>
+                        $"'{i.Value}' {i.Key}")));
+        }
     }
 
     public class Result
@@ -395,17 +534,22 @@ public class Program
             var truth = new BlockingCollection<Truth>(
                 Environment.ProcessorCount);
 
+            // Records that can not be read or compared are logged and
+            // skipped so that one bad record does not stop the comparison.
+            var skipped = new SkippedTruths(logger);
+
             // Stopped by the caller, or by a consumer that failed.
             using var stopping = CancellationTokenSource
                 .CreateLinkedTokenSource(stoppingToken);
 
             // Create consumers that are used to add the result to the truth.
-            // These run in parallel to ensure best performance as the IPI and 
+            // These run in parallel to ensure best performance as the IPI and
             // area calculations can be time consuming compared to reading new
             // truth records.
             var consumers = CreateConsumers(
                 pipeline,
                 truth,
+                skipped,
                 stopping);
             logger.LogInformation(
                 "Created '{0}' consumer processors",
@@ -413,7 +557,19 @@ public class Program
 
             // Use the main thread as the producer adding truths for the
             // consumers to process.
-            AddTruth(logger, source, truth, consumers, stopping.Token);
+            AddTruth(
+                logger,
+                source,
+                truth,
+                consumers,
+                skipped,
+                stopping.Token);
+
+            // Wait for every consumer to stop before going further, even when
+            // one has failed. Awaiting them one at a time would return on the
+            // first failure while the others are still using the pipeline and
+            // the engine, which the caller may then dispose.
+            await Task.WhenAll(consumers.Select(i => i.Task));
 
             // Create the write for the destination output.
             using var writer = new CsvWriter(
@@ -423,16 +579,15 @@ public class Program
                     Delimiter = ","
                 });
 
-            // Wait for the consumer to stop and then write out the records it
-            // generated.
+            // Write out the records each consumer generated.
             foreach (var consumer in consumers)
             {
-                await consumer.Task;
                 logger.LogInformation(
-                    "Finished consumer '{0}'", 
+                    "Finished consumer '{0}'",
                     consumer.Task.Id);
                 writer.WriteRecords(consumer.Task.Result);
             }
+            skipped.LogSummary(csvTruthFile);
 
             // Finally check the data file used for consistency with the other
             // examples.
@@ -448,6 +603,9 @@ public class Program
         /// </summary>
         /// <param name="pipeline"></param>
         /// <param name="truth"></param>
+        /// <param name="skipped">
+        /// Records the truths that could not be compared.
+        /// </param>
         /// <param name="stopping">
         /// Cancelled when a consumer fails so that the producer stops too.
         /// </param>
@@ -455,6 +613,7 @@ public class Program
         private static Consumer[] CreateConsumers(
             IPipeline pipeline,
             BlockingCollection<Truth> truth,
+            SkippedTruths skipped,
             CancellationTokenSource stopping)
         {
             return Enumerable.Range(
@@ -467,8 +626,9 @@ public class Program
                             try
                             {
                                 return ProcessTruth(
-                                    pipeline,
+                                    i => ProcessTruth(pipeline, i),
                                     truth,
+                                    skipped,
                                     stopping.Token);
                             }
                             catch
@@ -486,7 +646,8 @@ public class Program
             ILogger logger,
             CsvReader source,
             BlockingCollection<Truth> truth,
-            Consumer[] consumers, 
+            Consumer[] consumers,
+            SkippedTruths skipped,
             CancellationToken stoppingToken)
         {
             var process = Process.GetCurrentProcess();
@@ -494,7 +655,7 @@ public class Program
             var nextLog = lastLog.Add(_logBuild);
             var lastProcessorTime = process.TotalProcessorTime;
             var ips = new HashSet<string>();
-            foreach (var item in source.GetRecords<Truth>().TakeWhile(
+            foreach (var item in ReadTruths(source, skipped).TakeWhile(
                 _ => stoppingToken.IsCancellationRequested == false))
             {
                 try
@@ -523,6 +684,92 @@ public class Program
             }
             truth.CompleteAdding();
             logger.LogInformation("Finished adding '{0}' sources", ips.Count);
+        }
+
+        /// <summary>
+        /// Reads the truth records from the CSV source. A record that can not
+        /// be read, or is missing the values needed to compare it, is added
+        /// to the skipped records and reading continues with the next line.
+        /// </summary>
+        /// <param name="source">
+        /// CSV reader positioned before the header record.
+        /// </param>
+        /// <param name="skipped">
+        /// Records the truths that could not be read.
+        /// </param>
+        /// <returns>
+        /// The truth records that can be compared.
+        /// </returns>
+        public static IEnumerable<Truth> ReadTruths(
+            CsvReader source,
+            SkippedTruths skipped)
+        {
+            if (source.Read() == false)
+            {
+                yield break;
+            }
+            source.ReadHeader();
+            var columns = source.HeaderRecord.Length;
+            while (source.Read())
+            {
+                var lineNumber = source.Parser.RawRow;
+                Truth item = null;
+                string reason = null;
+                string detail = null;
+                try
+                {
+                    item = source.GetRecord<Truth>();
+                    item.LineNumber = lineNumber;
+                    if (source.Parser.Count < columns)
+                    {
+                        reason = "Malformed record";
+                        detail = $"Found '{source.Parser.Count}' of " +
+                            $"'{columns}' columns";
+                    }
+                    else
+                    {
+                        (reason, detail) = Validate(item);
+                    }
+                }
+                catch (CsvHelperException ex)
+                {
+                    reason = "Malformed record";
+                    detail = ex.InnerException?.Message ?? ex.Message;
+                }
+                if (reason == null)
+                {
+                    yield return item;
+                }
+                else
+                {
+                    skipped.Add(lineNumber, item?.Ip, reason, detail);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks the truth has the values needed to compare it.
+        /// </summary>
+        /// <param name="truth"></param>
+        /// <returns>
+        /// Null values if the truth is valid, otherwise the reason and detail.
+        /// </returns>
+        private static (string, string) Validate(Truth truth)
+        {
+            if (IPAddress.TryParse(truth.Ip, out _) == false)
+            {
+                return ("Invalid IP address", $"'{truth.Ip}'");
+            }
+            if (Double.IsFinite(truth.Latitude) == false ||
+                Math.Abs(truth.Latitude) > 90 ||
+                Double.IsFinite(truth.Longitude) == false ||
+                Math.Abs(truth.Longitude) > 180)
+            {
+                return (
+                    "Invalid latitude or longitude",
+                    $"'{truth.Latitude},{truth.Longitude}'");
+            }
+            return (null, null);
         }
 
         /// <summary>
@@ -603,15 +850,22 @@ public class Program
         /// Processes the truths in the blocking collection until completed or
         /// stopped.
         /// </summary>
-        /// <param name="pipeline"></param>
+        /// <param name="process">
+        /// Compares a single truth returning the result, or null if there is
+        /// no result for the truth.
+        /// </param>
         /// <param name="source"></param>
+        /// <param name="skipped">
+        /// Records the truths that could not be compared.
+        /// </param>
         /// <param name="stoppingToken"></param>
         /// <returns>
         /// A list of the output results.
         /// </returns>
-        private static IReadOnlyList<Output> ProcessTruth(
-            IPipeline pipeline,
+        public static IReadOnlyList<Output> ProcessTruth(
+            Func<Truth, Result> process,
             BlockingCollection<Truth> source,
+            SkippedTruths skipped,
             CancellationToken stoppingToken)
         {
             var output = new List<Output>();
@@ -622,7 +876,21 @@ public class Program
                 {
                     if (source.TryTake(out var truth, -1, stoppingToken))
                     {
-                        var result = ProcessTruth(pipeline, truth);
+                        Result result = null;
+                        try
+                        {
+                            result = process(truth);
+                        }
+                        catch (BadTruthException ex)
+                        {
+                            // Log and skip the record, then carry on with
+                            // the next one.
+                            skipped.Add(
+                                truth.LineNumber,
+                                truth.Ip,
+                                ex.Message,
+                                ex.InnerException?.Message);
+                        }
                         if (result != null)
                         {
                             output.Add(new Output(truth, result));
@@ -660,11 +928,53 @@ public class Program
                 return null;
             }
 
+            return Compare(
+                truth,
+                data.Latitude.Value,
+                data.Longitude.Value,
+                data.Areas.Value.Value,
+                data.LocationConfidence.HasValue
+                    ? data.LocationConfidence.Value
+                    : null);
+        }
+
+        /// <summary>
+        /// Compares the truth with the location and area returned for its IP
+        /// address.
+        /// </summary>
+        /// <param name="truth"></param>
+        /// <param name="latitude">
+        /// Returned for the IP address.
+        /// </param>
+        /// <param name="longitude">
+        /// Returned for the IP address.
+        /// </param>
+        /// <param name="wkt">
+        /// The area returned for the IP address in WKT format.
+        /// </param>
+        /// <param name="confidence">
+        /// Returned for the IP address, if any.
+        /// </param>
+        /// <returns></returns>
+        /// <exception cref="BadTruthException">
+        /// The truth can not be compared, for example because the area is
+        /// not a valid geometry.
+        /// </exception>
+        public static Result Compare(
+            Truth truth,
+            double latitude,
+            double longitude,
+            string wkt,
+            string confidence)
+        {
             // Set the address family of the source truth does not provide it.
             if (String.IsNullOrEmpty(truth.AddressFamily))
             {
-                truth.AddressFamily = IPAddress.Parse(truth.Ip)
-                    .AddressFamily.ToString();
+                if (IPAddress.TryParse(truth.Ip, out var address) == false)
+                {
+                    throw new BadTruthException("Invalid IP address");
+                }
+                truth.AddressFamily = address.AddressFamily.ToString();
             }
 
             // Get the truth and result as points.
@@ -672,15 +982,27 @@ public class Program
                 truth.Latitude,
                 truth.Longitude);
             var resultPoint = new GeoCoordinate(
-                data.Latitude.Value,
-                data.Longitude.Value);
+                latitude,
+                longitude);
 
             // Get the area result for the returned data and the true latitude
             // and longitude.
-            var area = Calculations.GetAreas(
-                data.Areas.Value.Value,
-                truth.Latitude,
-                truth.Longitude);
+            global::Examples.OnPremise.Areas.Result area;
+            try
+            {
+                area = Calculations.GetAreas(
+                    wkt,
+                    truth.Latitude,
+                    truth.Longitude);
+            }
+            catch (Exception ex)
+            {
+                // Any failure working out the area, including a bug in the
+                // area calculation, only affects this record.
+                throw new BadTruthException(
+                    "Area could not be compared",
+                    ex);
+            }
 
             // Return the result including the latitude, longitude, and
             // distance in kilometers between the result and the truth.
@@ -688,9 +1010,7 @@ public class Program
             {
                 Latitude = resultPoint.Latitude,
                 Longitude = resultPoint.Longitude,
-                Confidence = data.LocationConfidence.HasValue
-                    ? data.LocationConfidence.Value
-                    : null,
+                Confidence = confidence,
                 DistanceKms = truthPoint.GetDistanceTo(resultPoint) / 1000,
                 SquareKms = area.SquareKms,
                 Geometries = area.Geometries,

@@ -116,6 +116,58 @@ public class TestAreas
             1);
     }
 
+    /// <summary>
+    /// A MULTIPOLYGON holding one polygon whose intersection with a grid cell
+    /// is in two parts. This threw IndexOutOfRangeException in production
+    /// when the parts were looked up in the area rather than the
+    /// intersection.
+    /// </summary>
+    [TestMethod]
+    public void TestSinglePartMultiPolygonSplitByGridCell()
+    {
+        const string uShape =
+            "((0.2 50.5, 0.8 50.5, 0.8 51.5, 0.6 51.5, 0.6 50.7, " +
+            "0.4 50.7, 0.4 51.5, 0.2 51.5, 0.2 50.5))";
+
+        var polygon = Calculations.GetAreas($"POLYGON {uShape}", 0, 0);
+        var multi = Calculations.GetAreas($"MULTIPOLYGON ({uShape})", 0, 0);
+
+        Assert.AreEqual(polygon.SquareKms, multi.SquareKms);
+    }
+
+    /// <summary>
+    /// A polygon with a hole that spans grid cells, given as WKT. This threw
+    /// "points must form a closed linestring" in production when the hole
+    /// was appended to the outer ring before re-projecting.
+    /// </summary>
+    [TestMethod]
+    public void TestWktPolygonWithHoleAcrossGridCells()
+    {
+        var outer = Calculations.GetAreas(
+            "POLYGON ((-80.8 26.5, -79.9 26.5, -79.9 27.5, -80.8 27.5, " +
+            "-80.8 26.5))",
+            0,
+            0);
+        var hole = Calculations.GetAreas(
+            "POLYGON ((-80.4 26.8, -80.1 26.8, -80.1 27.2, -80.4 27.2, " +
+            "-80.4 26.8))",
+            0,
+            0);
+
+        var actual = Calculations.GetAreas(
+            "POLYGON ((-80.8 26.5, -79.9 26.5, -79.9 27.5, -80.8 27.5, " +
+            "-80.8 26.5), (-80.4 26.8, -80.1 26.8, -80.1 27.2, " +
+            "-80.4 27.2, -80.4 26.8))",
+            27,
+            -80.2);
+
+        Assert.AreEqual(
+            (double)outer.SquareKms - hole.SquareKms,
+            actual.SquareKms,
+            1);
+        Assert.IsFalse(actual.Contains);
+    }
+
     [TestMethod]
     public void TestWktAreaIsCached()
     {
