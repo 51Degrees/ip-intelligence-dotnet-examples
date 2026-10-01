@@ -41,6 +41,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -171,7 +172,21 @@ public class Program
     /// are only counted so that a file with many bad records does not flood
     /// the log.
     /// </param>
-    public class SkippedTruths(ILogger logger, int maxLogged = 100)
+    /// <param name="maxShare">
+    /// The share of the records read that may be skipped before the run is
+    /// failed. A few bad records are expected, but most records failing
+    /// means the source or the comparison is broken and the run should not
+    /// complete as if it had worked.
+    /// </param>
+    /// <param name="minimumSkipped">
+    /// The number of records that must have been skipped before the share is
+    /// checked, so that the first bad record in a file does not fail the run.
+    /// </param>
+    public class SkippedTruths(
+        ILogger logger,
+        int maxLogged = 100,
+        double maxShare = 0.1,
+        int minimumSkipped = 100)
     {
         /// <summary>
         /// The longest detail logged for a skipped record.
@@ -184,6 +199,11 @@ public class Program
         private readonly ConcurrentDictionary<string, int> _reasons = new();
 
         /// <summary>
+        /// Total number of records read from the source.
+        /// </summary>
+        private int _read;
+
+        /// <summary>
         /// Total number of records skipped.
         /// </summary>
         private int _count;
@@ -192,6 +212,12 @@ public class Program
         /// Total number of records skipped.
         /// </summary>
         public int Count => _count;
+
+        /// <summary>
+        /// Counts a record read from the source, whether or not it is then
+        /// skipped.
+        /// </summary>
+        public void Read() => Interlocked.Increment(ref _read);
 
         /// <summary>
         /// Number of records skipped for each reason.
@@ -213,10 +239,22 @@ public class Program
         /// <param name="detail">
         /// Further detail about why the record was skipped.
         /// </param>
+        /// <exception cref="InvalidDataException">
+        /// More than the allowed share of the records read have been skipped.
+        /// </exception>
         public void Add(long lineNumber, string ip, string reason, string detail)
         {
             var count = Interlocked.Increment(ref _count);
             _reasons.AddOrUpdate(reason, 1, (_, i) => i + 1);
+            var read = Volatile.Read(ref _read);
+            if (count >= minimumSkipped && count > read * maxShare)
+            {
+                throw new InvalidDataException(
+                    $"Skipped '{count}' of '{read}' truth records read, " +
+                    $"more than the '{maxShare:P0}' allowed. Last skipped " +
+                    $"at line '{lineNumber}' with IP '{ip}'. {reason}. " +
+                    detail);
+            }
             if (count <= maxLogged)
             {
                 if (detail?.Length > MaxDetailLength)
@@ -532,20 +570,26 @@ public class Program
                 consumers.Length);
 
             // Use the main thread as the producer adding truths for the
-            // consumers to process.
-            AddTruth(
-                logger,
-                source,
-                truth,
-                consumers,
-                skipped,
-                stopping.Token);
-
-            // Wait for every consumer to stop before going further, even when
-            // one has failed. Awaiting them one at a time would return on the
-            // first failure while the others are still using the pipeline and
-            // the engine, which the caller may then dispose.
-            await Task.WhenAll(consumers.Select(i => i.Task));
+            // consumers to process. Every consumer has stopped by the time
+            // this returns, whether the producer finished or failed.
+            try
+            {
+                await ProduceAndConsume(
+                    () => AddTruth(
+                        logger,
+                        source,
+                        truth,
+                        consumers,
+                        skipped,
+                        stopping.Token),
+                    truth,
+                    consumers,
+                    stopping);
+            }
+            finally
+            {
+                skipped.LogSummary(csvTruthFile);
+            }
 
             // Create the write for the destination output.
             using var writer = new CsvWriter(
@@ -592,6 +636,36 @@ public class Program
             SkippedTruths skipped,
             CancellationTokenSource stopping)
         {
+            return CreateConsumers(
+                i => ProcessTruth(pipeline, i),
+                truth,
+                skipped,
+                stopping);
+        }
+
+        /// <summary>
+        /// Create and start the consumers which will be waiting on the
+        /// producer to start. The number of consumers matches the number of
+        /// processor cores.
+        /// </summary>
+        /// <param name="process">
+        /// Compares a single truth returning the result, or null if there is
+        /// no result for the truth.
+        /// </param>
+        /// <param name="truth"></param>
+        /// <param name="skipped">
+        /// Records the truths that could not be compared.
+        /// </param>
+        /// <param name="stopping">
+        /// Cancelled when a consumer fails so that the producer stops too.
+        /// </param>
+        /// <returns></returns>
+        public static Consumer[] CreateConsumers(
+            Func<Truth, Result> process,
+            BlockingCollection<Truth> truth,
+            SkippedTruths skipped,
+            CancellationTokenSource stopping)
+        {
             return Enumerable.Range(
                 0,
                 Environment.ProcessorCount).Select(_ =>
@@ -602,7 +676,7 @@ public class Program
                             try
                             {
                                 return ProcessTruth(
-                                    i => ProcessTruth(pipeline, i),
+                                    process,
                                     truth,
                                     skipped,
                                     stopping.Token);
@@ -616,6 +690,62 @@ public class Program
                         TaskCreationOptions.LongRunning);
                     return consumer;
                 }).ToArray();
+        }
+
+        /// <summary>
+        /// Runs the producer, then waits for every consumer to stop before
+        /// returning, whether the producer finished, failed or was stopped.
+        /// Returning while a consumer is still running would let the caller
+        /// dispose the pipeline and the engine under it.
+        /// </summary>
+        /// <param name="produce">
+        /// Adds the truths to the collection. The collection is completed
+        /// when it returns or throws.
+        /// </param>
+        /// <param name="truth"></param>
+        /// <param name="consumers"></param>
+        /// <param name="stopping">
+        /// Cancelled if the producer fails so that the consumers stop.
+        /// </param>
+        /// <exception cref="Exception">
+        /// The producer's failure once every consumer has stopped, otherwise
+        /// the first consumer's failure.
+        /// </exception>
+        public static async Task ProduceAndConsume(
+            Action produce,
+            BlockingCollection<Truth> truth,
+            Consumer[] consumers,
+            CancellationTokenSource stopping)
+        {
+            ExceptionDispatchInfo failure = null;
+            try
+            {
+                produce();
+            }
+            catch (Exception ex)
+            {
+                failure = ExceptionDispatchInfo.Capture(ex);
+                stopping.Cancel();
+            }
+            finally
+            {
+                truth.CompleteAdding();
+            }
+
+            // Wait for every consumer to stop before going further, even when
+            // one has failed. Awaiting them one at a time would return on the
+            // first failure while the others are still using the pipeline and
+            // the engine.
+            try
+            {
+                await Task.WhenAll(consumers.Select(i => i.Task));
+            }
+            catch when (failure != null)
+            {
+                // The consumers were stopped because the producer failed, so
+                // the producer's failure is the one to report.
+            }
+            failure?.Throw();
         }
 
         private static void AddTruth(
@@ -685,9 +815,14 @@ public class Program
                 yield break;
             }
             source.ReadHeader();
+
+            // A missing or misnamed column would otherwise read as a default
+            // value for every record and the comparison would run on it.
+            source.ValidateHeader<Truth>();
             var columns = source.HeaderRecord.Length;
             while (source.Read())
             {
+                skipped.Read();
                 var lineNumber = source.Parser.RawRow;
                 Truth item = null;
                 string reason = null;

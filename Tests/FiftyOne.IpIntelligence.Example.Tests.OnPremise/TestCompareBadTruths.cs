@@ -34,6 +34,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using static FiftyOne.IpIntelligence.Examples.OnPremise.Compare.Program;
 using static FiftyOne.IpIntelligence.Examples.OnPremise.Compare.Program.Example;
 using Result = FiftyOne.IpIntelligence.Examples.OnPremise.Compare.Program.Result;
@@ -87,6 +88,48 @@ public class TestCompareBadTruths
         Assert.IsTrue(logger.Warnings.Any(i => i.Contains("line '4'")));
         Assert.IsTrue(logger.Warnings.Any(i =>
             i.Contains("line '5'") && i.Contains("not-an-ip")));
+    }
+
+    [TestMethod]
+    public void ReadTruths_MisnamedColumnFailsTheRun()
+    {
+        // A misnamed column must not read as zero for every record.
+        var csv = String.Join("\n",
+            Header.Replace("Latitude", "Lat"),
+            "09/23/2026 14:10:00,32.78,-96.81,1.2.3.4,InterNetwork,North America,United States");
+
+        Assert.ThrowsExactly<HeaderValidationException>(() =>
+            Read(csv, new SkippedTruths(new ListLogger())));
+    }
+
+    [TestMethod]
+    public async Task ProduceAndConsume_ProducerFailureWaitsForConsumers()
+    {
+        var truth = new BlockingCollection<Truth>(1);
+        using var stopping = new CancellationTokenSource();
+        var consumers = CreateConsumers(
+            _ => new Result(),
+            truth,
+            new SkippedTruths(new ListLogger()),
+            stopping);
+
+        var ex = await Assert.ThrowsExactlyAsync<IOException>(() =>
+            ProduceAndConsume(
+                () =>
+                {
+                    truth.Add(new Truth { Ip = "1.1.1.1" });
+                    throw new IOException("truth file");
+                },
+                truth,
+                consumers,
+                stopping));
+
+        // The producer's failure is reported, and only once every consumer
+        // has stopped so that the caller can dispose the engine safely.
+        Assert.AreEqual("truth file", ex.Message);
+        Assert.IsTrue(truth.IsAddingCompleted);
+        Assert.IsTrue(consumers.All(i => i.Task.IsCompleted));
+        Assert.IsTrue(stopping.IsCancellationRequested);
     }
 
     [TestMethod]
@@ -200,6 +243,53 @@ public class TestCompareBadTruths
         // summary.
         Assert.HasCount(4, logger.Warnings);
         Assert.Contains("'5' Invalid IP address", logger.Warnings.Last());
+    }
+
+    [TestMethod]
+    public void SkippedTruths_TooManySkippedFailsTheRun()
+    {
+        // Half of the records may be skipped once two have been.
+        var skipped = new SkippedTruths(
+            new ListLogger(),
+            maxShare: 0.5,
+            minimumSkipped: 2);
+        for (var i = 0; i < 4; i++)
+        {
+            skipped.Read();
+        }
+
+        skipped.Add(2, "1.2.3.4", "Invalid IP address", null);
+        skipped.Add(3, "1.2.3.5", "Invalid IP address", null);
+        var ex = Assert.ThrowsExactly<InvalidDataException>(() =>
+            skipped.Add(4, "1.2.3.6", "Invalid IP address", null));
+
+        Assert.Contains("'3' of '4'", ex.Message);
+        Assert.Contains("line '4'", ex.Message);
+    }
+
+    [TestMethod]
+    public void ProcessTruth_TooManySkippedStopsTheConsumer()
+    {
+        var source = new BlockingCollection<Truth>();
+        var skipped = new SkippedTruths(
+            new ListLogger(),
+            maxShare: 0.5,
+            minimumSkipped: 1);
+        for (var i = 0; i < 2; i++)
+        {
+            skipped.Read();
+            source.Add(new Truth { Ip = "1.1.1.1", LineNumber = i + 2 });
+        }
+        source.CompleteAdding();
+
+        // Every record fails, so the second one fails the run rather than
+        // being skipped.
+        Assert.ThrowsExactly<InvalidDataException>(() => ProcessTruth(
+            _ => throw new InvalidDataException("Area could not be compared"),
+            source,
+            skipped,
+            CancellationToken.None));
+        Assert.AreEqual(2, skipped.Count);
     }
 
     private static List<Truth> Read(string csv, SkippedTruths skipped)
