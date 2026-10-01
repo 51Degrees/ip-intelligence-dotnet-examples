@@ -158,30 +158,6 @@ public class Program
     }
 
     /// <summary>
-    /// Thrown when a truth record can not be compared, for example because
-    /// the area returned for its IP address is not a valid geometry. The
-    /// record is skipped and the comparison continues.
-    /// </summary>
-    public class BadTruthException : Exception
-    {
-        /// <summary>
-        /// Constructs a new instance of <see cref="BadTruthException"/>.
-        /// </summary>
-        /// <param name="message">
-        /// Why the truth record can not be compared.
-        /// </param>
-        /// <param name="innerException">
-        /// The failure that caused the record to be skipped, if any.
-        /// </param>
-        public BadTruthException(
-            string message,
-            Exception innerException = null)
-            : base(message, innerException)
-        {
-        }
-    }
-
-    /// <summary>
     /// Records the truth records that were skipped because they could not be
     /// read or compared. Each skipped record is logged, up to a limit, so that
     /// it can be found in the source file, and a summary is logged once all
@@ -881,7 +857,7 @@ public class Program
                         {
                             result = process(truth);
                         }
-                        catch (BadTruthException ex)
+                        catch (InvalidDataException ex)
                         {
                             // Log and skip the record, then carry on with
                             // the next one.
@@ -956,7 +932,7 @@ public class Program
         /// Returned for the IP address, if any.
         /// </param>
         /// <returns></returns>
-        /// <exception cref="BadTruthException">
+        /// <exception cref="InvalidDataException">
         /// The truth can not be compared, for example because the area is
         /// not a valid geometry.
         /// </exception>
@@ -972,7 +948,7 @@ public class Program
             {
                 if (IPAddress.TryParse(truth.Ip, out var address) == false)
                 {
-                    throw new BadTruthException("Invalid IP address");
+                    throw new InvalidDataException("Invalid IP address");
                 }
                 truth.AddressFamily = address.AddressFamily.ToString();
             }
@@ -999,7 +975,7 @@ public class Program
             {
                 // Any failure working out the area, including a bug in the
                 // area calculation, only affects this record.
-                throw new BadTruthException(
+                throw new InvalidDataException(
                     "Area could not be compared",
                     ex);
             }

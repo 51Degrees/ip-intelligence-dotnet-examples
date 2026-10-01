@@ -29,6 +29,7 @@ using ProjNet.CoordinateSystems.Transformations;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Examples.OnPremise.Areas;
 
@@ -86,7 +87,7 @@ public static class Calculations
     /// Of the point being tested for inclusion in the geographic area.
     /// </param>
     /// <returns></returns>
-    /// <exception cref="InvalidAreaException">
+    /// <exception cref="InvalidDataException">
     /// The WKT can not be parsed, or its area can not be worked out.
     /// </exception>
     public static Result GetAreas(
@@ -97,7 +98,7 @@ public static class Calculations
         var (geo, area, error) = _wktAreas.GetOrAdd(wkt, Measure);
         if (error != null)
         {
-            throw new InvalidAreaException(error);
+            throw new InvalidDataException(error);
         }
         if (geo != null)
         {

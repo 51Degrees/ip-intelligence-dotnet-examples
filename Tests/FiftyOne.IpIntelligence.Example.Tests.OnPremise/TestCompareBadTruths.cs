@@ -103,7 +103,7 @@ public class TestCompareBadTruths
 
         var output = ProcessTruth(
             i => i.Ip == "2.2.2.2"
-                ? throw new BadTruthException(
+                ? throw new InvalidDataException(
                     "Area could not be compared",
                     new IndexOutOfRangeException())
                 : new Result(),
@@ -162,7 +162,7 @@ public class TestCompareBadTruths
         "POLYGON ((0.1 51.1, 0.2 51.1",
         "could not be parsed",
         DisplayName = "Truncated WKT")]
-    public void Compare_BadArea_ThrowsBadTruth(string wkt, string reason)
+    public void Compare_BadArea_ThrowsInvalidData(string wkt, string reason)
     {
         var truth = new Truth
         {
@@ -171,15 +171,15 @@ public class TestCompareBadTruths
             Longitude = 0.15
         };
 
-        var ex = Assert.ThrowsExactly<BadTruthException>(() =>
+        var ex = Assert.ThrowsExactly<InvalidDataException>(() =>
             Compare(truth, 51.15, 0.15, wkt, null));
 
-        Assert.IsInstanceOfType<InvalidAreaException>(ex.InnerException);
+        Assert.IsInstanceOfType<InvalidDataException>(ex.InnerException);
         Assert.Contains(reason, ex.InnerException.Message);
 
         // The failure is cached with the WKT and repeated for the next record
         // with the same area.
-        Assert.ThrowsExactly<BadTruthException>(() =>
+        Assert.ThrowsExactly<InvalidDataException>(() =>
             Compare(truth, 51.15, 0.15, wkt, null));
     }
 
