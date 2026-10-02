@@ -24,10 +24,12 @@
 
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
+using NetTopologySuite.Operation.Valid;
 using ProjNet.CoordinateSystems.Transformations;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Examples.OnPremise.Areas;
 
@@ -51,10 +53,13 @@ public static class Calculations
 
     /// <summary>
     /// Parsed geometry and area in square meters for each WKT string seen,
-    /// so that an area is only worked out once.
+    /// so that an area is only worked out once. When the WKT can not be
+    /// measured the geometry is null and the error explains why, so that a
+    /// bad area is only examined once however many records refer to it.
     /// </summary>
-    private static readonly ConcurrentDictionary<string, (Geometry, double)>
-        _wktAreas = new();
+    private static readonly ConcurrentDictionary<
+        string,
+        (Geometry Geometry, double Area, string Error)> _wktAreas = new();
 
     /// <summary>
     /// Number of WKT strings with a cached area.
@@ -82,16 +87,19 @@ public static class Calculations
     /// Of the point being tested for inclusion in the geographic area.
     /// </param>
     /// <returns></returns>
+    /// <exception cref="InvalidDataException">
+    /// The WKT can not be parsed, or its area can not be worked out.
+    /// </exception>
     public static Result GetAreas(
         string wkt, 
         double latitude,
         double longitude)
     {
-        var (geo, area) = _wktAreas.GetOrAdd(wkt, key =>
+        var (geo, area, error) = _wktAreas.GetOrAdd(wkt, Measure);
+        if (error != null)
         {
-            var parsed = _wktReader.Read(key);
-            return (parsed, parsed == null ? 0 : GetAreas(parsed));
-        });
+            throw new InvalidDataException(error);
+        }
         if (geo != null)
         {
             return new(
@@ -100,6 +108,56 @@ public static class Calculations
                 geo.Contains(new Point(longitude, latitude)));
         }
         return new(0,0,false);
+    }
+
+    /// <summary>
+    /// Parses and measures the WKT. Any failure is returned as the error
+    /// rather than thrown so that it is cached with the WKT.
+    /// </summary>
+    /// <param name="wkt">
+    /// WKT format geometric area(s).
+    /// </param>
+    /// <returns>
+    /// The geometry and area in square meters, or the reason the WKT can
+    /// not be measured.
+    /// </returns>
+    private static (Geometry, double, string) Measure(string wkt)
+    {
+        Geometry parsed;
+        try
+        {
+            parsed = _wktReader.Read(wkt);
+        }
+        catch (Exception ex)
+        {
+            return (null, 0, $"WKT could not be parsed. {ex.Message}");
+        }
+        if (parsed == null)
+        {
+            return (null, 0, null);
+        }
+
+        try
+        {
+            return (parsed, GetAreas(parsed), null);
+        }
+        catch (Exception ex)
+        {
+            // Many areas that are not strictly valid, for example where a
+            // ring touches itself, can still be measured, so validity is only
+            // checked to explain a failure.
+            var root = ex.GetBaseException();
+            var validation = new IsValidOp(parsed).ValidationError;
+            return (
+                null,
+                0,
+                $"Area could not be worked out. {root.GetType().Name}: " +
+                root.Message +
+                (validation == null
+                    ? ""
+                    : $". Geometry is not valid. {validation.Message} at " +
+                        $"{validation.Coordinate}"));
+        }
     }
 
     /// <summary>
