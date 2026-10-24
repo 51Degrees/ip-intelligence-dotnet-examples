@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FiftyOne.DeviceDetection" Version="4.5.173" />
+    <PackageReference Include="FiftyOne.DeviceDetection" Version="4.5.174" />
     <PackageReference Include="FiftyOne.Pipeline.Web" Version="4.5.125" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.32" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.32" />
