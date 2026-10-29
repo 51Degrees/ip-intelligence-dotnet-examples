@@ -24,7 +24,7 @@ namespace FiftyOne.IpIntelligence.Examples.Mixed.OnPremise.GettingStartedConsole
 {
     public static class Constants
     {
-        // Device Detection data file names in priority order (matching device-detection-cxx)
+        // Device Detection data file names in priority order (matching 51degrees-cxx)
         public static readonly string[] HASH_FILE_NAMES = { 
             "TAC-HashV41.hash", 
             "51Degrees-EnterpriseV4.1.hash", 
