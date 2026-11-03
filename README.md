@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This repo has been merged into the monorepo https://github.com/51Degrees/51degrees-dotnet, under `examples/ip-intelligence/`. Please refer to the new monorepository for issues and PRs.
+
 # ![51Degrees](https://51degrees.com/img/logo.png?utm_source=github&utm_medium=readme&utm_campaign=ip-intelligence-dotnet-examples&utm_content=readme.md&utm_term=top "Data rewards the curious") IP Intelligence Engine Examples
 
 This repository contains the examples for [[ip-intelligence-dotnet](https://github.com/51Degrees/ip-intelligence-dotnet/)].
